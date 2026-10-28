@@ -1,0 +1,13 @@
+{
+  "name": "@effect-biz/core",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "test": "vp test run",
+    "build": "echo \"nothing to build yet\""
+  },
+  "devDependencies": {
+    "vite-plus": "^1.4.0"
+  }
+}
