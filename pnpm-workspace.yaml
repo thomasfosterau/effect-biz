@@ -12,17 +12,41 @@
 # lockfile fails CI at once with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
 #
 # The toolchain entries (vite-plus, the TypeScript 6/7 pair, @effect/tsgo,
-# changesets) and the Effect pin are copied from the effect-finance
-# repository and kept in lockstep with it: effect-biz depends on
-# effect-finance's packages, so both must resolve the same `effect` singleton.
+# changesets) and the Effect pin came from the effect-finance repository,
+# whose payments packages now live here.
 packages:
   - packages/*
+  - tests/*
 
 catalogMode: strict
 
 catalog:
   "@changesets/changelog-github": ^1.0.1
   "@changesets/cli": ^3.0.3
+  # Distilled's Stripe client (alchemy-run/distilled, Apache-2.0): the
+  # operations, wire encoding and typed errors `StripePayments` and every
+  # Stripe resource module run on (effect-finance#146). A runtime dependency of
+  # @thomasfosterau/effect-biz-payments-stripe, pinned EXACTLY: it is pre-1.0 and
+  # ships a new rc every week or two, so a release moves only through the
+  # ordinary dependency-update flow. Its schemas are generated from Stripe's
+  # 2026-09-30.endive spec, which the wrapper pins in `Stripe-Version`
+  # (DISTILLED_API_VERSION) on every request. A bump also regenerates the
+  # resource modules (`generate:resources`) and updates the followed version
+  # (`tests/distilledApiVersion.test.ts` and `tests/resources.test.ts` fail
+  # until both are done).
+  "@distilled.cloud/stripe": 1.0.0-rc.15
+  # Distilled's PayPal client (same repository and licence): the operations
+  # and wire encoding `PayPalPayments` runs on (effect-finance#146). A runtime dependency
+  # of @thomasfosterau/effect-biz-payments-paypal, pinned EXACTLY for the same
+  # reason, and moved together with the Stripe client and core. Its access
+  # token comes from the wrapper's own OAuth login, never from Distilled's
+  # `CredentialsFromEnv` (which reads `process.env`).
+  "@distilled.cloud/paypal": 1.0.0-rc.15
+  # Distilled's shared runtime, a direct dependency too: each wrapper pins its
+  # `ResponseValidation` reference to lenient. MUST equal the version
+  # @distilled.cloud/stripe and @distilled.cloud/paypal depend on (each pins
+  # core exactly), or two copies of core install.
+  "@distilled.cloud/core": 1.0.0-rc.15
   # Compiles AND RUNS every JSDoc `@example` (the `docgen` task). Exact, like
   # the Effect pin: 4.0.1 and 4.0.2 depend on `effect ^4.0.1` / `^4.0.2`,
   # which the `effect` singleton override below would contradict. Needs `tsx`
@@ -30,6 +54,7 @@ catalog:
   # satisfies it; the examples themselves type-check under the native `tsc`.
   "@effect/docgen": 4.0.6
   "@effect/language-service": ^0.87.5
+  "@effect/platform-node": 4.0.6
   # Effect Language Service as a native (TypeScript-Go) binary — the TS7 side
   # of the 6/7 split. `effect-tsgo patch` overwrites the native `tsc` binary
   # with an Effect-patched build matched by gitHead, so this pins in lockstep
@@ -48,6 +73,19 @@ catalog:
   effect: 4.0.6
   # Runs docgen's compiled examples (a peer of @effect/docgen).
   tsx: ^4.23.15
+  # The official Stripe SDK: a dev dependency of
+  # @thomasfosterau/effect-biz-payments-stripe, and an OPTIONAL peer there
+  # (`catalogs.peers`). Its types serve only the SDK-based `./Webhook`
+  # verifier (`constructEvent*`), and its client is built only by the tests
+  # and doc `@example`s that run that verifier; no module loads it at runtime
+  # (effect-finance#146). Pinned EXACTLY to a release whose API version is
+  # DISTILLED_API_VERSION (23.0.0 ships `2026-09-30.endive`), so the tests
+  # and examples type the events Distilled's `Stripe-Version` produces
+  # (effect-finance#160). It moves with
+  # DISTILLED_API_VERSION on a Distilled bump, never on its own:
+  # `tests/distilledApiVersion.test.ts` fails when the SDK's API_VERSION
+  # differs.
+  stripe: 23.0.0
   # TypeScript 6/7 side-by-side: TS7 (the native Go compiler) ships no JS API
   # until 7.1, so JS-API consumers (@effect/language-service, tsdown's
   # declaration bundler, @effect/docgen's peer) stay on TS6 while native `tsc`
@@ -75,9 +113,26 @@ catalogs:
   peers:
     # Effect 4: rc.118 moved every `effect/unstable/<x>` module to `effect/<x>`
     # (and `httpapi` to `http-api`); the packages are built against 4.0.x.
+    # Also the floor of @distilled.cloud/stripe, -paypal and -core (rc.15
+    # declares `effect: ^4.0.0`), the hard dependencies of the Stripe and
+    # PayPal providers: raise it with Distilled's own peer range.
     effect: ^4.0.0
+    # Optional (`peerDependenciesMeta`): only the types of the SDK-based
+    # `./Webhook` verifier (`constructEvent*`, which runs on an SDK client the
+    # program builds) name it; no module loads it (effect-finance#146). Caret, not `>=`:
+    # the verifier's `Stripe.Event` is the SDK's type at its API version.
+    # The floor is the first stripe-node release for DISTILLED_API_VERSION
+    # (23.0.0, `2026-09-30.endive`); the caret admits the later monthly endive
+    # releases of the same major, and moves with the next major (effect-finance#160).
+    stripe: ^23.0.0
 
 overrides:
+  # undici <8.12.2 — GHSA-xjj6-f33q-929c (high): an unhandled error on a
+  # response with excessive content-encodings is a denial of service
+  # (effect-finance#213). Reached transitively (@effect/platform-node > undici), whose
+  # range admits the fix but whose lockfile resolution stayed below it.
+  # Drop once that resolution reaches >=8.12.2 on its own.
+  undici: ^8.12.2
   vite: "catalog:"
   vitest: "catalog:"
   # `effect` MUST be a singleton (see the header): force every resolution to

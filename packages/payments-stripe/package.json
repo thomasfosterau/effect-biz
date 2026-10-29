@@ -1,0 +1,609 @@
+{
+  "$schema": "https://www.schemastore.org/package",
+  "name": "@thomasfosterau/effect-biz-payments-stripe",
+  "version": "0.0.0",
+  "description": "A Stripe implementation of effect-biz's vendor-neutral payments core",
+  "keywords": [
+    "api",
+    "effect",
+    "payments",
+    "stripe",
+    "typescript"
+  ],
+  "homepage": "https://github.com/thomasfosterau/effect-biz#readme",
+  "bugs": {
+    "url": "https://github.com/thomasfosterau/effect-biz/issues"
+  },
+  "license": "MIT",
+  "author": "Thomas Foster <me@thomasfoster.au>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomasfosterau/effect-biz.git",
+    "directory": "packages/payments-stripe"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./StripeHttp": {
+      "types": "./dist/StripeHttp.d.ts",
+      "default": "./dist/StripeHttp.js"
+    },
+    "./StripePayments": {
+      "types": "./dist/StripePayments.d.ts",
+      "default": "./dist/StripePayments.js"
+    },
+    "./Customer": {
+      "types": "./dist/Customer.d.ts",
+      "default": "./dist/Customer.js"
+    },
+    "./Product": {
+      "types": "./dist/Product.d.ts",
+      "default": "./dist/Product.js"
+    },
+    "./Price": {
+      "types": "./dist/Price.d.ts",
+      "default": "./dist/Price.js"
+    },
+    "./PaymentIntent": {
+      "types": "./dist/PaymentIntent.d.ts",
+      "default": "./dist/PaymentIntent.js"
+    },
+    "./Subscription": {
+      "types": "./dist/Subscription.d.ts",
+      "default": "./dist/Subscription.js"
+    },
+    "./Treasury": {
+      "types": "./dist/Treasury.d.ts",
+      "default": "./dist/Treasury.js"
+    },
+    "./Treasury.FinancialAccount": {
+      "types": "./dist/Treasury.FinancialAccount.d.ts",
+      "default": "./dist/Treasury.FinancialAccount.js"
+    },
+    "./Treasury.Transaction": {
+      "types": "./dist/Treasury.Transaction.d.ts",
+      "default": "./dist/Treasury.Transaction.js"
+    },
+    "./Treasury.InboundTransfer": {
+      "types": "./dist/Treasury.InboundTransfer.d.ts",
+      "default": "./dist/Treasury.InboundTransfer.js"
+    },
+    "./Treasury.OutboundTransfer": {
+      "types": "./dist/Treasury.OutboundTransfer.d.ts",
+      "default": "./dist/Treasury.OutboundTransfer.js"
+    },
+    "./Balance": {
+      "types": "./dist/Balance.d.ts",
+      "default": "./dist/Balance.js"
+    },
+    "./Event": {
+      "types": "./dist/Event.d.ts",
+      "default": "./dist/Event.js"
+    },
+    "./WebhookEndpoint": {
+      "types": "./dist/WebhookEndpoint.d.ts",
+      "default": "./dist/WebhookEndpoint.js"
+    },
+    "./Review": {
+      "types": "./dist/Review.d.ts",
+      "default": "./dist/Review.js"
+    },
+    "./CountrySpec": {
+      "types": "./dist/CountrySpec.d.ts",
+      "default": "./dist/CountrySpec.js"
+    },
+    "./Issuing.Card": {
+      "types": "./dist/Issuing.Card.d.ts",
+      "default": "./dist/Issuing.Card.js"
+    },
+    "./Issuing.Cardholder": {
+      "types": "./dist/Issuing.Cardholder.d.ts",
+      "default": "./dist/Issuing.Cardholder.js"
+    },
+    "./Issuing.Authorization": {
+      "types": "./dist/Issuing.Authorization.d.ts",
+      "default": "./dist/Issuing.Authorization.js"
+    },
+    "./Issuing.Transaction": {
+      "types": "./dist/Issuing.Transaction.d.ts",
+      "default": "./dist/Issuing.Transaction.js"
+    },
+    "./Issuing.Dispute": {
+      "types": "./dist/Issuing.Dispute.d.ts",
+      "default": "./dist/Issuing.Dispute.js"
+    },
+    "./Identity.VerificationSession": {
+      "types": "./dist/Identity.VerificationSession.d.ts",
+      "default": "./dist/Identity.VerificationSession.js"
+    },
+    "./Identity.VerificationReport": {
+      "types": "./dist/Identity.VerificationReport.d.ts",
+      "default": "./dist/Identity.VerificationReport.js"
+    },
+    "./Terminal.Reader": {
+      "types": "./dist/Terminal.Reader.d.ts",
+      "default": "./dist/Terminal.Reader.js"
+    },
+    "./Terminal.Location": {
+      "types": "./dist/Terminal.Location.d.ts",
+      "default": "./dist/Terminal.Location.js"
+    },
+    "./Terminal.ConnectionToken": {
+      "types": "./dist/Terminal.ConnectionToken.d.ts",
+      "default": "./dist/Terminal.ConnectionToken.js"
+    },
+    "./Account": {
+      "types": "./dist/Account.d.ts",
+      "default": "./dist/Account.js"
+    },
+    "./AccountLink": {
+      "types": "./dist/AccountLink.d.ts",
+      "default": "./dist/AccountLink.js"
+    },
+    "./Person": {
+      "types": "./dist/Person.d.ts",
+      "default": "./dist/Person.js"
+    },
+    "./ExternalAccount": {
+      "types": "./dist/ExternalAccount.d.ts",
+      "default": "./dist/ExternalAccount.js"
+    },
+    "./Transfer": {
+      "types": "./dist/Transfer.d.ts",
+      "default": "./dist/Transfer.js"
+    },
+    "./Topup": {
+      "types": "./dist/Topup.d.ts",
+      "default": "./dist/Topup.js"
+    },
+    "./PaymentMethod": {
+      "types": "./dist/PaymentMethod.d.ts",
+      "default": "./dist/PaymentMethod.js"
+    },
+    "./Invoice": {
+      "types": "./dist/Invoice.d.ts",
+      "default": "./dist/Invoice.js"
+    },
+    "./Charge": {
+      "types": "./dist/Charge.d.ts",
+      "default": "./dist/Charge.js"
+    },
+    "./Refund": {
+      "types": "./dist/Refund.d.ts",
+      "default": "./dist/Refund.js"
+    },
+    "./BalanceTransaction": {
+      "types": "./dist/BalanceTransaction.d.ts",
+      "default": "./dist/BalanceTransaction.js"
+    },
+    "./SetupIntent": {
+      "types": "./dist/SetupIntent.d.ts",
+      "default": "./dist/SetupIntent.js"
+    },
+    "./Payout": {
+      "types": "./dist/Payout.d.ts",
+      "default": "./dist/Payout.js"
+    },
+    "./Dispute": {
+      "types": "./dist/Dispute.d.ts",
+      "default": "./dist/Dispute.js"
+    },
+    "./File": {
+      "types": "./dist/File.d.ts",
+      "default": "./dist/File.js"
+    },
+    "./TaxRate": {
+      "types": "./dist/TaxRate.d.ts",
+      "default": "./dist/TaxRate.js"
+    },
+    "./PromotionCode": {
+      "types": "./dist/PromotionCode.d.ts",
+      "default": "./dist/PromotionCode.js"
+    },
+    "./Coupon": {
+      "types": "./dist/Coupon.d.ts",
+      "default": "./dist/Coupon.js"
+    },
+    "./CheckoutSession": {
+      "types": "./dist/CheckoutSession.d.ts",
+      "default": "./dist/CheckoutSession.js"
+    },
+    "./BillingPortal.Session": {
+      "types": "./dist/BillingPortal.Session.d.ts",
+      "default": "./dist/BillingPortal.Session.js"
+    },
+    "./SubscriptionSchedule": {
+      "types": "./dist/SubscriptionSchedule.d.ts",
+      "default": "./dist/SubscriptionSchedule.js"
+    },
+    "./AccountSession": {
+      "types": "./dist/AccountSession.d.ts",
+      "default": "./dist/AccountSession.js"
+    },
+    "./ApplePayDomain": {
+      "types": "./dist/ApplePayDomain.d.ts",
+      "default": "./dist/ApplePayDomain.js"
+    },
+    "./ApplicationFee": {
+      "types": "./dist/ApplicationFee.d.ts",
+      "default": "./dist/ApplicationFee.js"
+    },
+    "./Apps.Install": {
+      "types": "./dist/Apps.Install.d.ts",
+      "default": "./dist/Apps.Install.js"
+    },
+    "./Apps.Secret": {
+      "types": "./dist/Apps.Secret.d.ts",
+      "default": "./dist/Apps.Secret.js"
+    },
+    "./BalanceSettings": {
+      "types": "./dist/BalanceSettings.d.ts",
+      "default": "./dist/BalanceSettings.js"
+    },
+    "./Billing.Alert": {
+      "types": "./dist/Billing.Alert.d.ts",
+      "default": "./dist/Billing.Alert.js"
+    },
+    "./Billing.CreditBalanceSummary": {
+      "types": "./dist/Billing.CreditBalanceSummary.d.ts",
+      "default": "./dist/Billing.CreditBalanceSummary.js"
+    },
+    "./Billing.CreditBalanceTransaction": {
+      "types": "./dist/Billing.CreditBalanceTransaction.d.ts",
+      "default": "./dist/Billing.CreditBalanceTransaction.js"
+    },
+    "./Billing.CreditGrant": {
+      "types": "./dist/Billing.CreditGrant.d.ts",
+      "default": "./dist/Billing.CreditGrant.js"
+    },
+    "./Billing.FeedbackOption": {
+      "types": "./dist/Billing.FeedbackOption.d.ts",
+      "default": "./dist/Billing.FeedbackOption.js"
+    },
+    "./Billing.Meter": {
+      "types": "./dist/Billing.Meter.d.ts",
+      "default": "./dist/Billing.Meter.js"
+    },
+    "./Billing.MeterEvent": {
+      "types": "./dist/Billing.MeterEvent.d.ts",
+      "default": "./dist/Billing.MeterEvent.js"
+    },
+    "./Billing.MeterEventAdjustment": {
+      "types": "./dist/Billing.MeterEventAdjustment.d.ts",
+      "default": "./dist/Billing.MeterEventAdjustment.js"
+    },
+    "./BillingPortal.Configuration": {
+      "types": "./dist/BillingPortal.Configuration.d.ts",
+      "default": "./dist/BillingPortal.Configuration.js"
+    },
+    "./Climate.Order": {
+      "types": "./dist/Climate.Order.d.ts",
+      "default": "./dist/Climate.Order.js"
+    },
+    "./Climate.Product": {
+      "types": "./dist/Climate.Product.d.ts",
+      "default": "./dist/Climate.Product.js"
+    },
+    "./Climate.Supplier": {
+      "types": "./dist/Climate.Supplier.d.ts",
+      "default": "./dist/Climate.Supplier.js"
+    },
+    "./ConfirmationToken": {
+      "types": "./dist/ConfirmationToken.d.ts",
+      "default": "./dist/ConfirmationToken.js"
+    },
+    "./CreditNote": {
+      "types": "./dist/CreditNote.d.ts",
+      "default": "./dist/CreditNote.js"
+    },
+    "./CustomerSession": {
+      "types": "./dist/CustomerSession.d.ts",
+      "default": "./dist/CustomerSession.js"
+    },
+    "./Entitlements.ActiveEntitlement": {
+      "types": "./dist/Entitlements.ActiveEntitlement.d.ts",
+      "default": "./dist/Entitlements.ActiveEntitlement.js"
+    },
+    "./Entitlements.Feature": {
+      "types": "./dist/Entitlements.Feature.d.ts",
+      "default": "./dist/Entitlements.Feature.js"
+    },
+    "./EphemeralKey": {
+      "types": "./dist/EphemeralKey.d.ts",
+      "default": "./dist/EphemeralKey.js"
+    },
+    "./ExchangeRate": {
+      "types": "./dist/ExchangeRate.d.ts",
+      "default": "./dist/ExchangeRate.js"
+    },
+    "./FileLink": {
+      "types": "./dist/FileLink.d.ts",
+      "default": "./dist/FileLink.js"
+    },
+    "./FinancialConnections.Account": {
+      "types": "./dist/FinancialConnections.Account.d.ts",
+      "default": "./dist/FinancialConnections.Account.js"
+    },
+    "./FinancialConnections.Session": {
+      "types": "./dist/FinancialConnections.Session.d.ts",
+      "default": "./dist/FinancialConnections.Session.js"
+    },
+    "./FinancialConnections.Transaction": {
+      "types": "./dist/FinancialConnections.Transaction.d.ts",
+      "default": "./dist/FinancialConnections.Transaction.js"
+    },
+    "./Forwarding.Request": {
+      "types": "./dist/Forwarding.Request.d.ts",
+      "default": "./dist/Forwarding.Request.js"
+    },
+    "./InvoiceItem": {
+      "types": "./dist/InvoiceItem.d.ts",
+      "default": "./dist/InvoiceItem.js"
+    },
+    "./InvoicePayment": {
+      "types": "./dist/InvoicePayment.d.ts",
+      "default": "./dist/InvoicePayment.js"
+    },
+    "./InvoiceRenderingTemplate": {
+      "types": "./dist/InvoiceRenderingTemplate.d.ts",
+      "default": "./dist/InvoiceRenderingTemplate.js"
+    },
+    "./Issuing.PersonalizationDesign": {
+      "types": "./dist/Issuing.PersonalizationDesign.d.ts",
+      "default": "./dist/Issuing.PersonalizationDesign.js"
+    },
+    "./Issuing.PhysicalBundle": {
+      "types": "./dist/Issuing.PhysicalBundle.d.ts",
+      "default": "./dist/Issuing.PhysicalBundle.js"
+    },
+    "./Issuing.Token": {
+      "types": "./dist/Issuing.Token.d.ts",
+      "default": "./dist/Issuing.Token.js"
+    },
+    "./Mandate": {
+      "types": "./dist/Mandate.d.ts",
+      "default": "./dist/Mandate.js"
+    },
+    "./PaymentAttemptRecord": {
+      "types": "./dist/PaymentAttemptRecord.d.ts",
+      "default": "./dist/PaymentAttemptRecord.js"
+    },
+    "./PaymentLink": {
+      "types": "./dist/PaymentLink.d.ts",
+      "default": "./dist/PaymentLink.js"
+    },
+    "./PaymentMethodConfiguration": {
+      "types": "./dist/PaymentMethodConfiguration.d.ts",
+      "default": "./dist/PaymentMethodConfiguration.js"
+    },
+    "./PaymentMethodDomain": {
+      "types": "./dist/PaymentMethodDomain.d.ts",
+      "default": "./dist/PaymentMethodDomain.js"
+    },
+    "./PaymentRecord": {
+      "types": "./dist/PaymentRecord.d.ts",
+      "default": "./dist/PaymentRecord.js"
+    },
+    "./Plan": {
+      "types": "./dist/Plan.d.ts",
+      "default": "./dist/Plan.js"
+    },
+    "./ProductCatalog.TrialOffer": {
+      "types": "./dist/ProductCatalog.TrialOffer.d.ts",
+      "default": "./dist/ProductCatalog.TrialOffer.js"
+    },
+    "./Quote": {
+      "types": "./dist/Quote.d.ts",
+      "default": "./dist/Quote.js"
+    },
+    "./Radar.EarlyFraudWarning": {
+      "types": "./dist/Radar.EarlyFraudWarning.d.ts",
+      "default": "./dist/Radar.EarlyFraudWarning.js"
+    },
+    "./Radar.PaymentEvaluation": {
+      "types": "./dist/Radar.PaymentEvaluation.d.ts",
+      "default": "./dist/Radar.PaymentEvaluation.js"
+    },
+    "./Radar.ValueList": {
+      "types": "./dist/Radar.ValueList.d.ts",
+      "default": "./dist/Radar.ValueList.js"
+    },
+    "./Radar.ValueListItem": {
+      "types": "./dist/Radar.ValueListItem.d.ts",
+      "default": "./dist/Radar.ValueListItem.js"
+    },
+    "./Reporting.ReportRun": {
+      "types": "./dist/Reporting.ReportRun.d.ts",
+      "default": "./dist/Reporting.ReportRun.js"
+    },
+    "./Reporting.ReportType": {
+      "types": "./dist/Reporting.ReportType.d.ts",
+      "default": "./dist/Reporting.ReportType.js"
+    },
+    "./SetupAttempt": {
+      "types": "./dist/SetupAttempt.d.ts",
+      "default": "./dist/SetupAttempt.js"
+    },
+    "./ShippingRate": {
+      "types": "./dist/ShippingRate.d.ts",
+      "default": "./dist/ShippingRate.js"
+    },
+    "./Sigma.ScheduledQueryRun": {
+      "types": "./dist/Sigma.ScheduledQueryRun.d.ts",
+      "default": "./dist/Sigma.ScheduledQueryRun.js"
+    },
+    "./Source": {
+      "types": "./dist/Source.d.ts",
+      "default": "./dist/Source.js"
+    },
+    "./SubscriptionItem": {
+      "types": "./dist/SubscriptionItem.d.ts",
+      "default": "./dist/SubscriptionItem.js"
+    },
+    "./Tax.Association": {
+      "types": "./dist/Tax.Association.d.ts",
+      "default": "./dist/Tax.Association.js"
+    },
+    "./Tax.Calculation": {
+      "types": "./dist/Tax.Calculation.d.ts",
+      "default": "./dist/Tax.Calculation.js"
+    },
+    "./Tax.Location": {
+      "types": "./dist/Tax.Location.d.ts",
+      "default": "./dist/Tax.Location.js"
+    },
+    "./Tax.Registration": {
+      "types": "./dist/Tax.Registration.d.ts",
+      "default": "./dist/Tax.Registration.js"
+    },
+    "./Tax.Settings": {
+      "types": "./dist/Tax.Settings.d.ts",
+      "default": "./dist/Tax.Settings.js"
+    },
+    "./Tax.Transaction": {
+      "types": "./dist/Tax.Transaction.d.ts",
+      "default": "./dist/Tax.Transaction.js"
+    },
+    "./TaxCode": {
+      "types": "./dist/TaxCode.d.ts",
+      "default": "./dist/TaxCode.js"
+    },
+    "./TaxId": {
+      "types": "./dist/TaxId.d.ts",
+      "default": "./dist/TaxId.js"
+    },
+    "./Terminal.Configuration": {
+      "types": "./dist/Terminal.Configuration.d.ts",
+      "default": "./dist/Terminal.Configuration.js"
+    },
+    "./Terminal.OnboardingLink": {
+      "types": "./dist/Terminal.OnboardingLink.d.ts",
+      "default": "./dist/Terminal.OnboardingLink.js"
+    },
+    "./TestHelpers.TestClock": {
+      "types": "./dist/TestHelpers.TestClock.d.ts",
+      "default": "./dist/TestHelpers.TestClock.js"
+    },
+    "./ThreeDSecure.Authentication": {
+      "types": "./dist/ThreeDSecure.Authentication.d.ts",
+      "default": "./dist/ThreeDSecure.Authentication.js"
+    },
+    "./Token": {
+      "types": "./dist/Token.d.ts",
+      "default": "./dist/Token.js"
+    },
+    "./Treasury.CreditReversal": {
+      "types": "./dist/Treasury.CreditReversal.d.ts",
+      "default": "./dist/Treasury.CreditReversal.js"
+    },
+    "./Treasury.DebitReversal": {
+      "types": "./dist/Treasury.DebitReversal.d.ts",
+      "default": "./dist/Treasury.DebitReversal.js"
+    },
+    "./Treasury.OutboundPayment": {
+      "types": "./dist/Treasury.OutboundPayment.d.ts",
+      "default": "./dist/Treasury.OutboundPayment.js"
+    },
+    "./Treasury.ReceivedCredit": {
+      "types": "./dist/Treasury.ReceivedCredit.d.ts",
+      "default": "./dist/Treasury.ReceivedCredit.js"
+    },
+    "./Treasury.ReceivedDebit": {
+      "types": "./dist/Treasury.ReceivedDebit.d.ts",
+      "default": "./dist/Treasury.ReceivedDebit.js"
+    },
+    "./Treasury.TransactionEntry": {
+      "types": "./dist/Treasury.TransactionEntry.d.ts",
+      "default": "./dist/Treasury.TransactionEntry.js"
+    },
+    "./V2.Billing.MeterEvent": {
+      "types": "./dist/V2.Billing.MeterEvent.d.ts",
+      "default": "./dist/V2.Billing.MeterEvent.js"
+    },
+    "./V2.Billing.MeterEventAdjustment": {
+      "types": "./dist/V2.Billing.MeterEventAdjustment.d.ts",
+      "default": "./dist/V2.Billing.MeterEventAdjustment.js"
+    },
+    "./V2.Billing.MeterEventSession": {
+      "types": "./dist/V2.Billing.MeterEventSession.d.ts",
+      "default": "./dist/V2.Billing.MeterEventSession.js"
+    },
+    "./V2.Commerce.ProductCatalogImport": {
+      "types": "./dist/V2.Commerce.ProductCatalogImport.d.ts",
+      "default": "./dist/V2.Commerce.ProductCatalogImport.js"
+    },
+    "./V2.Core.Account": {
+      "types": "./dist/V2.Core.Account.d.ts",
+      "default": "./dist/V2.Core.Account.js"
+    },
+    "./V2.Core.AccountLink": {
+      "types": "./dist/V2.Core.AccountLink.d.ts",
+      "default": "./dist/V2.Core.AccountLink.js"
+    },
+    "./V2.Core.AccountPerson": {
+      "types": "./dist/V2.Core.AccountPerson.d.ts",
+      "default": "./dist/V2.Core.AccountPerson.js"
+    },
+    "./V2.Core.AccountPersonToken": {
+      "types": "./dist/V2.Core.AccountPersonToken.d.ts",
+      "default": "./dist/V2.Core.AccountPersonToken.js"
+    },
+    "./V2.Core.AccountToken": {
+      "types": "./dist/V2.Core.AccountToken.d.ts",
+      "default": "./dist/V2.Core.AccountToken.js"
+    },
+    "./V2.Core.Event": {
+      "types": "./dist/V2.Core.Event.d.ts",
+      "default": "./dist/V2.Core.Event.js"
+    },
+    "./V2.Core.EventDestination": {
+      "types": "./dist/V2.Core.EventDestination.d.ts",
+      "default": "./dist/V2.Core.EventDestination.js"
+    },
+    "./Webhook": {
+      "types": "./dist/Webhook.d.ts",
+      "default": "./dist/Webhook.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "generate:resources": "node scripts/generate-resources.ts"
+  },
+  "dependencies": {
+    "@distilled.cloud/core": "catalog:",
+    "@distilled.cloud/stripe": "catalog:",
+    "@thomasfosterau/effect-biz": "workspace:^"
+  },
+  "devDependencies": {
+    "@effect/language-service": "catalog:",
+    "@effect/platform-node": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-istanbul": "catalog:",
+    "effect": "catalog:",
+    "stripe": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:peers",
+    "stripe": "catalog:peers"
+  },
+  "peerDependenciesMeta": {
+    "stripe": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

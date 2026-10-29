@@ -12,4 +12,4 @@ Run the gates in [AGENTS.md → Verification](https://github.com/thomasfosterau/
 
 ## Notes
 
-Anything reviewers should pay special attention to: exported signatures, peer ranges, SQL migrations, `sideEffects: false` (no top-level statements in `dist/`), the boundary with effect-finance.
+Anything reviewers should pay special attention to: exported signatures, peer ranges, SQL migrations, `sideEffects: false` (no top-level statements in `dist/`), vendor vocabulary leaking into core, behaviour a consuming application already depends on.

@@ -1,5 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/Effect-TS/language-service/refs/heads/main/schema.json",
   "files": [],
-  "references": [{ "path": "packages/core" }]
+  "references": [
+    { "path": "packages/core" },
+    { "path": "packages/payments-stripe" },
+    { "path": "packages/payments-paypal" },
+    { "path": "packages/payments-airwallex" },
+    { "path": "tests/dist-consumer" }
+  ]
 }

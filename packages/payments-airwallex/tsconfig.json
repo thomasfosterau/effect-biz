@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Effect-TS/language-service/refs/heads/main/schema.json",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    // A test may import this package by its own name, as a consumer would;
+    // the mapping resolves that name to `src/` so the type gate never needs
+    // this package's `dist/` first (vite.package.ts aliases it the same way
+    // for the test runner). Siblings resolve through `exports` to `dist/`.
+    // Relative to this file; TypeScript 7 removed `baseUrl`.
+    "paths": {
+      "@thomasfosterau/effect-biz-payments-airwallex": ["./src/index.ts"],
+      "@thomasfosterau/effect-biz-payments-airwallex/*": ["./src/*.ts"]
+    }
+  },
+  "include": ["src", "tests"]
+}

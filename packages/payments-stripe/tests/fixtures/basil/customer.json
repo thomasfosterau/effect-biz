@@ -1,0 +1,36 @@
+{
+  "id": "cus_QxAbCdEfGhIjKl",
+  "object": "customer",
+  "address": {
+    "city": "Brisbane",
+    "country": "AU",
+    "line1": "1 Example Street",
+    "line2": null,
+    "postal_code": "4000",
+    "state": "QLD"
+  },
+  "balance": 0,
+  "created": 1759190000,
+  "currency": "aud",
+  "default_source": null,
+  "delinquent": false,
+  "description": null,
+  "discount": null,
+  "email": "jane@example.com",
+  "invoice_prefix": "7C1F2A3B",
+  "invoice_settings": {
+    "custom_fields": null,
+    "default_payment_method": "pm_1SABcDEfGhIjKlMnOpQrStUv",
+    "footer": null,
+    "rendering_options": null
+  },
+  "livemode": false,
+  "metadata": { "account_id": "6735" },
+  "name": "Jane Smith",
+  "next_invoice_sequence": 1,
+  "phone": null,
+  "preferred_locales": ["en-AU"],
+  "shipping": null,
+  "tax_exempt": "none",
+  "test_clock": null
+}

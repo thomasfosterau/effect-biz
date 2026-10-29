@@ -8,15 +8,15 @@
  * the rest of `docs/`), one module per README. The package's `docgen` task then
  * runs docgen a second time over that directory, so each block is type-checked
  * and run exactly as a JSDoc example is: imports resolve by package name
- * through `exports` to `dist/`. a package's task also passes the root
- * `README.md`, whose blocks import several packages.
+ * through `exports` to `dist/`. payments-stripe's task also passes the root
+ * `README.md`, whose blocks import the core and the Stripe package.
  *
  * The info string is copied verbatim, so docgen's own opt-out applies: a block
  * fenced as `ts skip-type-checking` is a fragment, neither compiled nor run.
  * Each export is named after the block's line in its README (`line19`), which
  * docgen puts in the name of the example file it reports a failure in; the
  * module is named after the README's path from the workspace root
- * (`README.ts` for the root one, `packages.a package.README.ts`).
+ * (`README.ts` for the root one, `packages.payments-stripe.README.ts`).
  */
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";

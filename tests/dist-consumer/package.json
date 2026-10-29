@@ -1,0 +1,16 @@
+{
+  "name": "@effect-biz/dist-consumer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Type-checks a consumer fixture against the EMITTED declarations of all four packages, asserting the exported types a consumer depends on — the gate for the declaration-emit hazard of a library that ships `.d.ts`.",
+  "type": "module",
+  "dependencies": {
+    "@distilled.cloud/paypal": "catalog:",
+    "@distilled.cloud/stripe": "catalog:",
+    "effect": "catalog:",
+    "stripe": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
+}

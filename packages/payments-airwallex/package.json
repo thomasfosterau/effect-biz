@@ -1,0 +1,64 @@
+{
+  "$schema": "https://www.schemastore.org/package",
+  "name": "@thomasfosterau/effect-biz-payments-airwallex",
+  "version": "0.0.0",
+  "description": "An Airwallex implementation of effect-biz's vendor-neutral payments core",
+  "keywords": [
+    "airwallex",
+    "api",
+    "effect",
+    "payments",
+    "typescript"
+  ],
+  "homepage": "https://github.com/thomasfosterau/effect-biz#readme",
+  "bugs": {
+    "url": "https://github.com/thomasfosterau/effect-biz/issues"
+  },
+  "license": "MIT",
+  "author": "Thomas Foster <me@thomasfoster.au>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomasfosterau/effect-biz.git",
+    "directory": "packages/payments-airwallex"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./Airwallex": {
+      "types": "./dist/Airwallex.d.ts",
+      "default": "./dist/Airwallex.js"
+    },
+    "./AirwallexPayments": {
+      "types": "./dist/AirwallexPayments.d.ts",
+      "default": "./dist/AirwallexPayments.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@thomasfosterau/effect-biz": "workspace:^"
+  },
+  "devDependencies": {
+    "@effect/language-service": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-istanbul": "catalog:",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:peers"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "bps_1SABcDEfGhIjKlMnOpQrStUv",
+  "object": "billing_portal.session",
+  "configuration": "bpc_1SAAbBcCdDeEfFgGhHiIjJkK",
+  "created": 1759190000,
+  "customer": "cus_QxAbCdEfGhIjKl",
+  "flow": null,
+  "livemode": false,
+  "locale": null,
+  "on_behalf_of": null,
+  "return_url": "https://example.com/account",
+  "url": "https://billing.stripe.com/p/session/test_YWNjdF8xU0FCY0RF"
+}

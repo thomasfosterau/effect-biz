@@ -1,0 +1,62 @@
+{
+  "$schema": "https://www.schemastore.org/package",
+  "name": "@thomasfosterau/effect-biz-payments-paypal",
+  "version": "0.0.0",
+  "description": "A PayPal implementation of effect-biz's vendor-neutral payments core",
+  "keywords": [
+    "api",
+    "effect",
+    "payments",
+    "paypal",
+    "typescript"
+  ],
+  "homepage": "https://github.com/thomasfosterau/effect-biz#readme",
+  "bugs": {
+    "url": "https://github.com/thomasfosterau/effect-biz/issues"
+  },
+  "license": "MIT",
+  "author": "Thomas Foster <me@thomasfoster.au>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomasfosterau/effect-biz.git",
+    "directory": "packages/payments-paypal"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./PayPalPayments": {
+      "types": "./dist/PayPalPayments.d.ts",
+      "default": "./dist/PayPalPayments.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@distilled.cloud/core": "catalog:",
+    "@distilled.cloud/paypal": "catalog:",
+    "@thomasfosterau/effect-biz": "workspace:^"
+  },
+  "devDependencies": {
+    "@effect/language-service": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-istanbul": "catalog:",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:peers"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

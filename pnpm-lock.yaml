@@ -12,12 +12,24 @@ catalogs:
     '@changesets/cli':
       specifier: ^3.0.3
       version: 3.0.3
+    '@distilled.cloud/core':
+      specifier: 1.0.0-rc.15
+      version: 1.0.0-rc.15
+    '@distilled.cloud/paypal':
+      specifier: 1.0.0-rc.15
+      version: 1.0.0-rc.15
+    '@distilled.cloud/stripe':
+      specifier: 1.0.0-rc.15
+      version: 1.0.0-rc.15
     '@effect/docgen':
       specifier: 4.0.6
       version: 4.0.6
     '@effect/language-service':
       specifier: ^0.87.5
       version: 0.87.5
+    '@effect/platform-node':
+      specifier: 4.0.6
+      version: 4.0.6
     '@effect/tsgo':
       specifier: 0.55.0
       version: 0.55.0
@@ -33,6 +45,9 @@ catalogs:
     '@vitest/coverage-istanbul':
       specifier: 5.0.5
       version: 5.0.5
+    stripe:
+      specifier: 23.0.0
+      version: 23.0.0
     tsx:
       specifier: ^4.23.15
       version: 4.23.15
@@ -44,6 +59,7 @@ catalogs:
       version: 1.3.0
 
 overrides:
+  undici: ^8.12.2
   vite: npm:@voidzero-dev/vite-plus-core@1.3.0
   vitest: 5.0.5
   effect: 4.0.6
@@ -73,6 +89,15 @@ importers:
       '@thomasfosterau/effect-biz':
         specifier: workspace:*
         version: link:packages/core
+      '@thomasfosterau/effect-biz-payments-airwallex':
+        specifier: workspace:*
+        version: link:packages/payments-airwallex
+      '@thomasfosterau/effect-biz-payments-paypal':
+        specifier: workspace:*
+        version: link:packages/payments-paypal
+      '@thomasfosterau/effect-biz-payments-stripe':
+        specifier: workspace:*
+        version: link:packages/payments-stripe
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.5
@@ -99,16 +124,116 @@ importers:
         version: 1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)
       vitest:
         specifier: 5.0.5
-        version: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/core:
+    devDependencies:
+      '@effect/language-service':
+        specifier: 'catalog:'
+        version: 0.87.5
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.5
+      '@vitest/coverage-istanbul':
+        specifier: 'catalog:'
+        version: 5.0.5(vitest@5.0.5)
+      effect:
+        specifier: 4.0.6
+        version: 4.0.6
+
+  packages/payments-airwallex:
+    dependencies:
+      '@thomasfosterau/effect-biz':
+        specifier: workspace:^
+        version: link:../core
+    devDependencies:
+      '@effect/language-service':
+        specifier: 'catalog:'
+        version: 0.87.5
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.5
+      '@vitest/coverage-istanbul':
+        specifier: 'catalog:'
+        version: 5.0.5(vitest@5.0.5)
+      effect:
+        specifier: 4.0.6
+        version: 4.0.6
+
+  packages/payments-paypal:
+    dependencies:
+      '@distilled.cloud/core':
+        specifier: 'catalog:'
+        version: 1.0.0-rc.15(effect@4.0.6)
+      '@distilled.cloud/paypal':
+        specifier: 'catalog:'
+        version: 1.0.0-rc.15(effect@4.0.6)
+      '@thomasfosterau/effect-biz':
+        specifier: workspace:^
+        version: link:../core
+    devDependencies:
+      '@effect/language-service':
+        specifier: 'catalog:'
+        version: 0.87.5
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.5
+      '@vitest/coverage-istanbul':
+        specifier: 'catalog:'
+        version: 5.0.5(vitest@5.0.5)
+      effect:
+        specifier: 4.0.6
+        version: 4.0.6
+
+  packages/payments-stripe:
+    dependencies:
+      '@distilled.cloud/core':
+        specifier: 'catalog:'
+        version: 1.0.0-rc.15(effect@4.0.6)
+      '@distilled.cloud/stripe':
+        specifier: 'catalog:'
+        version: 1.0.0-rc.15(effect@4.0.6)
+      '@thomasfosterau/effect-biz':
+        specifier: workspace:^
+        version: link:../core
+    devDependencies:
+      '@effect/language-service':
+        specifier: 'catalog:'
+        version: 0.87.5
+      '@effect/platform-node':
+        specifier: 'catalog:'
+        version: 4.0.6(effect@4.0.6)(redis@6.3.0)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.5
+      '@vitest/coverage-istanbul':
+        specifier: 'catalog:'
+        version: 5.0.5(vitest@5.0.5)
+      effect:
+        specifier: 4.0.6
+        version: 4.0.6
+      stripe:
+        specifier: 'catalog:'
+        version: 23.0.0(@types/node@26.6.5)
+
+  tests/dist-consumer:
+    dependencies:
+      '@distilled.cloud/paypal':
+        specifier: 'catalog:'
+        version: 1.0.0-rc.15(effect@4.0.6)
+      '@distilled.cloud/stripe':
+        specifier: 'catalog:'
+        version: 1.0.0-rc.15(effect@4.0.6)
+      effect:
+        specifier: 4.0.6
+        version: 4.0.6
+      stripe:
+        specifier: 'catalog:'
+        version: 23.0.0(@types/node@26.6.5)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.5
-      effect:
-        specifier: 4.0.6
-        version: 4.0.6
 
 packages:
 
@@ -273,6 +398,21 @@ packages:
   '@clack/prompts@1.8.1':
     resolution: {integrity: sha512-dlT1m5e/0yUL0kRNcQn7yGLVThkgbB0Ga/1AmfDDC/8ik6AIiSf2QLQO2zPYvefsHP0aFgxO93cVLCCfDp7kzQ==}
     engines: {node: '>= 20.12.0'}
+
+  '@distilled.cloud/core@1.0.0-rc.15':
+    resolution: {integrity: sha512-TPXxuwcxQ85Pvm0g7ZQSLTQkPc1Wmcb6p6KOk+Be2fP14Xpj5a+7HOSUyPNwbqOP+vPK5Sj0ZLN7M6spKnO2LA==}
+    peerDependencies:
+      effect: 4.0.6
+
+  '@distilled.cloud/paypal@1.0.0-rc.15':
+    resolution: {integrity: sha512-b08Z5bSggS8EsfLo05TY1laumOl3k85cEUZA0KdRwEcrZR1Fx9rzJ/6eWlnFMlbMhv78COF+P4mDFqPzZqS6Ww==}
+    peerDependencies:
+      effect: 4.0.6
+
+  '@distilled.cloud/stripe@1.0.0-rc.15':
+    resolution: {integrity: sha512-sYIPEg1MKZrj6aSy4o08anO5dVpyFJHzgEk0WfiMm5BT0oEFtldUuPe/FjEOoY+mFvZ+o+26lJ5voEnWLJSCUA==}
+    peerDependencies:
+      effect: 4.0.6
 
   '@effect/docgen@4.0.6':
     resolution: {integrity: sha512-LdFlzNDDr1lPr7/2TyAM+geIWE8By9pybCG9cO4SsNPMULpQWiKGCdEmB7unRldy5g48rq3iop8yZgfRUcafQQ==}
@@ -1865,6 +2005,15 @@ packages:
     resolution: {integrity: sha512-p9LsUieSjWNNAxVCXLeilaDlmuUOrDS5/dF9znM1nZc7EGX5+zEFC0bEevsNIaldjlks+2jns5Siz6F9iK6jwA==}
     engines: {node: '>=0.10.0'}
 
+  stripe@23.0.0:
+    resolution: {integrity: sha512-MDE2A5ZVVluYURORaZEVghSmnLJc3w6aHAlZSxDQMsOjOb3V0O6ro/CiaeFlJS4N7uIVmsg98ocRsPmUK6YfyA==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@types/node': '>=20'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
   through2@2.0.5:
     resolution: {integrity: sha512-/mrRod8xqpA+IHSLyGCQ2s8SPHiCDEeQJSep1jqLYeEUClOFG2Qsh+4FU6G9VeqpZnGW/Su8LQGc4YKni5rYSQ==}
 
@@ -2269,6 +2418,20 @@ snapshots:
       fast-string-width: 3.0.2
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
+
+  '@distilled.cloud/core@1.0.0-rc.15(effect@4.0.6)':
+    dependencies:
+      effect: 4.0.6
+
+  '@distilled.cloud/paypal@1.0.0-rc.15(effect@4.0.6)':
+    dependencies:
+      '@distilled.cloud/core': 1.0.0-rc.15(effect@4.0.6)
+      effect: 4.0.6
+
+  '@distilled.cloud/stripe@1.0.0-rc.15(effect@4.0.6)':
+    dependencies:
+      '@distilled.cloud/core': 1.0.0-rc.15(effect@4.0.6)
+      effect: 4.0.6
 
   '@effect/docgen@4.0.6(@typescript/typescript6@6.0.2)(redis@6.3.0)(tsx@4.23.15)':
     dependencies:
@@ -2751,7 +2914,7 @@ snapshots:
       '@testing-library/dom': 10.4.2
       '@testing-library/user-event': 14.6.8(@testing-library/dom@10.4.2)
       '@vitest/browser': 5.0.5(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))(vitest@5.0.5)
-      vitest: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -2768,7 +2931,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
       ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
@@ -2787,7 +2950,7 @@ snapshots:
       magicast: 0.5.5
       obug: 3.0.0
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
 
   '@vitest/istanbul-lib-coverage@1.0.2': {}
 
@@ -2839,7 +3002,7 @@ snapshots:
       pathe: 2.0.3
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
 
   '@vitest/utils@5.0.5':
     dependencies:
@@ -3464,6 +3627,10 @@ snapshots:
 
   strip-color@0.1.0: {}
 
+  stripe@23.0.0(@types/node@26.6.5):
+    optionalDependencies:
+      '@types/node': 26.6.5
+
   through2@2.0.5:
     dependencies:
       readable-stream: 2.3.8
@@ -3559,7 +3726,7 @@ snapshots:
       oxlint: 1.88.0(oxlint-tsgolint@7.0.2004)(vite-plus@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
       oxlint-tsgolint: 7.0.2004
       vite: '@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)'
-      vitest: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
     optionalDependencies:
       '@voidzero-dev/vite-plus-darwin-arm64': 1.3.0
       '@voidzero-dev/vite-plus-darwin-x64': 1.3.0
@@ -3604,7 +3771,7 @@ snapshots:
       - vue-tsc
       - yaml
 
-  vitest@5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5(vitest@5.0.5))(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)):
+  vitest@5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.5(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))

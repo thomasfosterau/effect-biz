@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Scope this as a vertical slice an agent can finish end-to-end (domain model → service → SQL adapter → HttpApi/RPC → tests → README), not a timid increment. Anything ledger-, invoice-, AR/AP- or payment-shaped belongs in effect-finance, not here.
+        Scope this as a vertical slice an agent can finish end-to-end (domain model → service → SQL adapter → HttpApi/RPC → tests → README), not a timid increment.
   - type: textarea
     id: problem
     attributes:
@@ -35,6 +35,6 @@ body:
     id: context
     attributes:
       label: Context & links
-      description: Parent epic, effect-finance issues, standards or regulator docs.
+      description: Parent epic, effect-finance issues (the payments packages' history), vendor API docs, standards or regulator docs.
     validations:
       required: false
