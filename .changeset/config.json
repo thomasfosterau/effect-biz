@@ -13,7 +13,7 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": [],
+  "ignore": ["@effect-biz/dist-consumer"],
   "privatePackages": {
     "version": false,
     "tag": false

@@ -2,13 +2,16 @@
 
 **Disclaimer:** This is an experiment. Don't use it in production.
 
-Modular ERP and business-process services for [Effect](https://effect.website), built to be embedded in other applications: parties, the product catalogue, sales, purchasing, inventory, manufacturing, CRM, HR, projects and payroll, each as a package of Effect services you compose with the layers you choose.
+Modular ERP and business-process services for [Effect](https://effect.website), built to be embedded in other applications: parties, the product catalogue, sales, purchasing, inventory, manufacturing, CRM, HR, projects and payroll, plus the money side (payments today; the ledger, invoices, AR/AP and tax as the roadmap lands them), each as a package of Effect services you compose with the layers you choose.
 
-Money is handled by the sibling [effect-finance](https://github.com/thomasfosterau/effect-finance) repository (payments, ledger, invoices, AR/AP, tax); effect-biz hands documents to it and never duplicates it.
+Payments are vendor-neutral: write a program against the core's payment capabilities and choose Stripe, PayPal or Airwallex by the layer you provide. (These packages began in the effect-finance repository, which this one has absorbed.)
 
 | Package | Purpose |
 | --- | --- |
-| [`@thomasfosterau/effect-biz`](packages/core) | The foundation: identifiers, tenancy context, error channel, domain events and repository conventions. Peer: `effect`. |
+| [`@thomasfosterau/effect-biz`](packages/core) | The foundation: identifiers, tenancy context, error channel, domain events and repository conventions; and, under `./Payments`, the vendor-neutral payments core (capability services, neutral entities, `Money`, `Page`, `IdempotencyKey`, `Stub` and the `PaymentsError` channel). Peer: `effect`. |
+| [`@thomasfosterau/effect-biz-payments-stripe`](packages/payments-stripe) | Every payment capability over Distilled's Stripe operations (`@distilled.cloud/stripe`), plus the raw Stripe resource modules (thin wrappers of every Distilled operation on each resource) and the WebCrypto webhook verifier. Peer: `effect`; optional peer: `stripe`. |
+| [`@thomasfosterau/effect-biz-payments-paypal`](packages/payments-paypal) | `Products`, `Prices`, `PaymentIntents`, `Subscriptions`, `Refunds` over Distilled's PayPal operations (`@distilled.cloud/paypal`), with the package's own OAuth login. Peer: `effect`. |
+| [`@thomasfosterau/effect-biz-payments-airwallex`](packages/payments-airwallex) | `Customers`, `PaymentIntents`, `Refunds` over Airwallex. Peer: `effect`. |
 
 More packages arrive as the roadmap's slices land; see the issue tracker.
 
@@ -26,7 +29,27 @@ More packages arrive as the roadmap's slices land; see the issue tracker.
 pnpm add effect @thomasfosterau/effect-biz
 ```
 
-`effect` is a peer: your application owns the single copy.
+`effect` is a peer: your application owns the single copy. For payments, add the provider you use too (`@thomasfosterau/effect-biz-payments-stripe`, say).
+
+## Example
+
+```typescript
+import { Effect, Layer, Redacted } from "effect";
+import { FetchHttpClient } from "effect/http";
+import * as Customer from "@thomasfosterau/effect-biz/Payments.Customer";
+import * as StripePayments from "@thomasfosterau/effect-biz-payments-stripe/StripePayments";
+
+const program = Customer.create({ email: "jane@example.com" }); // needs only `Customers`
+
+const layer = StripePayments.layer({ apiKey: Redacted.make("sk_test_...") }).pipe(
+  Layer.provide(FetchHttpClient.layer),
+);
+
+// Calls Stripe when invoked: `const customer = await createCustomer();`
+const createCustomer = () => Effect.runPromise(program.pipe(Effect.provide(layer)));
+```
+
+Each package's README is its API reference. Runnable payments examples are in [`packages/payments-stripe/examples`](packages/payments-stripe/examples).
 
 ## Development
 

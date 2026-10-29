@@ -10,8 +10,14 @@
 #   and `effect-tsgo patch` matches the native `tsc` (@typescript/native) and
 #   vite-plus's `oxlint` by gitHead / version, failing `pnpm install` on any
 #   pairing it has no artifact for. One PR moves them all.
+# - `distilled`: the three @distilled.cloud packages pin each other exactly.
+#   A Distilled bump also regenerates the Stripe resource modules, which
+#   Dependabot cannot do: finish the PR by hand (AGENTS.md, Common pitfalls).
+#   The optional `stripe` SDK peer tracks Distilled's Stripe API version
+#   (effect-finance#160), so it rides in this group; its majors and minors are
+#   ignored below because they move only on a Distilled bump.
 # - `effect`: the Effect 4 release line is a lockstep-versioned singleton set,
-#   moved together with effect-finance (both must resolve one `effect`).
+#   moved together with the consuming applications.
 # - `docgen`: @effect/docgen runs its examples with `tsx`.
 # - `changesets`: release tooling.
 # - `minor-and-patch`: everything else that is not a major, in one PR.
@@ -51,6 +57,11 @@ updates:
           - "typescript"
           - "@typescript/typescript6"
           - "@mpsuesser/oxlint-plugin-effect"
+      distilled:
+        applies-to: version-updates
+        patterns:
+          - "@distilled.cloud/*"
+          - "stripe"
       effect:
         applies-to: version-updates
         patterns:
@@ -87,9 +98,20 @@ updates:
           - "effect"
           - "tsx"
           - "@changesets/*"
+          - "@distilled.cloud/*"
+          - "stripe"
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # The SDK is only an optional peer: its types serve the SDK-based
+      # `./Webhook` verifier (`constructEvent*`), and no module loads it
+      # (effect-finance#146). Its dev pin follows DISTILLED_API_VERSION
+      # (effect-finance#160), so its majors and minors move by hand on a
+      # Distilled bump (`tests/distilledApiVersion.test.ts` fails otherwise).
+      # Scoped to the version-update types, so security updates stay enabled.
+      - dependency-name: "stripe"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

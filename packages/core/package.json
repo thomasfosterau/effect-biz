@@ -2,11 +2,12 @@
   "$schema": "https://www.schemastore.org/package",
   "name": "@thomasfosterau/effect-biz",
   "version": "0.0.0",
-  "description": "The foundation of effect-biz: modular ERP and business-process services for Effect",
+  "description": "The foundation of effect-biz (modular ERP and business-process services for Effect) and its vendor-neutral payments core",
   "keywords": [
     "business",
     "effect",
     "erp",
+    "payments",
     "typescript"
   ],
   "homepage": "https://github.com/thomasfosterau/effect-biz#readme",
@@ -32,10 +33,79 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./Payments": {
+      "types": "./dist/Payments.d.ts",
+      "default": "./dist/Payments.js"
+    },
+    "./Payments.Customer": {
+      "types": "./dist/Payments.Customer.d.ts",
+      "default": "./dist/Payments.Customer.js"
+    },
+    "./Payments.Product": {
+      "types": "./dist/Payments.Product.d.ts",
+      "default": "./dist/Payments.Product.js"
+    },
+    "./Payments.Price": {
+      "types": "./dist/Payments.Price.d.ts",
+      "default": "./dist/Payments.Price.js"
+    },
+    "./Payments.PaymentIntent": {
+      "types": "./dist/Payments.PaymentIntent.d.ts",
+      "default": "./dist/Payments.PaymentIntent.js"
+    },
+    "./Payments.Subscription": {
+      "types": "./dist/Payments.Subscription.d.ts",
+      "default": "./dist/Payments.Subscription.js"
+    },
+    "./Payments.Refund": {
+      "types": "./dist/Payments.Refund.d.ts",
+      "default": "./dist/Payments.Refund.js"
+    },
+    "./Payments.CheckoutSession": {
+      "types": "./dist/Payments.CheckoutSession.d.ts",
+      "default": "./dist/Payments.CheckoutSession.js"
+    },
+    "./Payments.BillingPortal": {
+      "types": "./dist/Payments.BillingPortal.d.ts",
+      "default": "./dist/Payments.BillingPortal.js"
+    },
+    "./Payments.Enumeration": {
+      "types": "./dist/Payments.Enumeration.d.ts",
+      "default": "./dist/Payments.Enumeration.js"
+    },
+    "./Payments.IdempotencyKey": {
+      "types": "./dist/Payments.IdempotencyKey.d.ts",
+      "default": "./dist/Payments.IdempotencyKey.js"
+    },
+    "./Payments.Money": {
+      "types": "./dist/Payments.Money.d.ts",
+      "default": "./dist/Payments.Money.js"
+    },
+    "./Payments.Page": {
+      "types": "./dist/Payments.Page.d.ts",
+      "default": "./dist/Payments.Page.js"
+    },
+    "./Payments.PaymentsError": {
+      "types": "./dist/Payments.PaymentsError.d.ts",
+      "default": "./dist/Payments.PaymentsError.js"
+    },
+    "./Payments.Stub": {
+      "types": "./dist/Payments.Stub.d.ts",
+      "default": "./dist/Payments.Stub.js"
+    },
+    "./Payments.internal": {
+      "types": "./dist/Payments.internal.d.ts",
+      "default": "./dist/Payments.internal.js"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
+    "@effect/language-service": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/coverage-istanbul": "catalog:",
     "effect": "catalog:"
   },
   "peerDependencies": {

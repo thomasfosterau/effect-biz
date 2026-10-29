@@ -1,0 +1,25 @@
+{
+  "id": "prod_SxAbCdEfGhIjKl",
+  "object": "product",
+  "active": true,
+  "created": 1759190000,
+  "default_price": "price_1SABcDEfGhIjKlMnOpQrStUv",
+  "description": "Everything in the starter plan, plus priority support.",
+  "images": [],
+  "livemode": false,
+  "marketing_features": [{ "name": "Priority support" }],
+  "metadata": { "tier": "premium" },
+  "name": "Premium",
+  "package_dimensions": null,
+  "shippable": null,
+  "statement_descriptor": null,
+  "tax_code": "txcd_10000000",
+  "tax_details": {
+    "performance_location": null,
+    "tax_code": "txcd_10000000"
+  },
+  "type": "service",
+  "unit_label": null,
+  "updated": 1759190000,
+  "url": null
+}

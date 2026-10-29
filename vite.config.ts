@@ -8,7 +8,8 @@
  * ./vite.package.ts; this file deliberately compiles nothing.
  *
  * Copied from the effect-finance repository (itself from the effect-web and
- * effect-drizzle-ext libraries and the gardeneria application): every comment
+ * effect-drizzle-ext libraries and the gardeneria application), whose payments
+ * packages now live here: every comment
  * that explains a load-bearing decision is part of the standard and travels
  * with the config.
  */
@@ -18,7 +19,12 @@ import { recommended } from "@effect/tsgo/oxlint-presets";
 import effect from "@mpsuesser/oxlint-plugin-effect";
 
 /** Every published package, in dependency order. A new package adds itself here. */
-const packages = ["@thomasfosterau/effect-biz"];
+const packages = [
+  "@thomasfosterau/effect-biz",
+  "@thomasfosterau/effect-biz-payments-stripe",
+  "@thomasfosterau/effect-biz-payments-paypal",
+  "@thomasfosterau/effect-biz-payments-airwallex",
+];
 
 export default defineConfig({
   // Staged-file checks run by `vp staged` (pre-commit).
@@ -27,7 +33,9 @@ export default defineConfig({
   },
   fmt: {
     // `**/generated/**`: reserved for machine-written code that is not
-    // formatted (none today).
+    // formatted (none today: the Stripe resource modules, written by
+    // packages/payments-stripe/scripts/generate-resources.ts, are formatted by
+    // the generator itself, which `tests/resources.test.ts` checks).
     ignorePatterns: ["**/dist/**", "**/coverage/**", "**/generated/**", "pnpm-lock.yaml"],
     overrides: [
       {
@@ -123,6 +131,29 @@ export default defineConfig({
           "effect/avoid-ts-ignore": "off",
         },
       },
+      // Vendor wire schemas decode a provider's JSON under the provider's own
+      // field names (`active`, `livemode`, `has_more`); renaming them to
+      // `is*` would decode nothing. The neutral entities they map onto keep
+      // the rule.
+      {
+        files: ["packages/*/src/internal/mapping.ts"],
+        rules: {
+          "effect/require-is-prefix-for-boolean-schema-field": "off",
+        },
+      },
+      // The examples are runnable scripts: the process edge, where the
+      // program is run, logs to the terminal and reads its key from the
+      // environment.
+      {
+        files: ["**/examples/**/*.ts"],
+        rules: {
+          "effect/effect-run-in-body": "off",
+          "effect/use-console-service": "off",
+          "effect/avoid-process-env": "off",
+          "effect/use-clock-service": "off",
+          "effect/require-safety-comment-for-type-assertion": "warn",
+        },
+      },
       // Test suites ARE the runtime boundary: `Effect.runPromise` in a test
       // body is the harness running the effect under test, and a bare
       // `new Error("boom")` there is a fixture. Fixture casts and a wall-clock
@@ -136,6 +167,9 @@ export default defineConfig({
           "effect/use-clock-service": "warn",
           "effect/avoid-process-env": "warn",
           "effect/require-effect-concurrency": "warn",
+          // The webhook suite exercises the `Buffer` payload the SDK-based
+          // verifier accepts; the WebCrypto verifier (effect-finance#41) drops it.
+          "eslint/no-restricted-globals": "warn",
         },
       },
     ],
@@ -154,18 +188,19 @@ export default defineConfig({
   },
   run: {
     tasks: {
-      // The CI typecheck gate, as one task: every package's `check`. A pure
-      // graph node. The packages are named explicitly — a
+      // The CI typecheck gate, as one task: every package's `check`, plus the
+      // dist-consumer check that type-checks a consumer fixture against the
+      // EMITTED declarations. A pure graph node. The packages are named explicitly — a
       // `from: "dependencies"` edge does not traverse the workspace root's own
       // devDependencies.
       check: {
         command: "echo 'check: every type gate green'",
-        dependsOn: packages.map((name) => `${name}#check`),
+        dependsOn: [...packages.map((name) => `${name}#check`), "@effect-biz/dist-consumer#check"],
         cache: false,
       },
       // Every package's docgen: type-checks AND RUNS each JSDoc `@example`
-      // and each `ts` / `typescript` block of the package README against the
-      // built `dist/`, then writes the API reference under that package's
+      // and each `ts` / `typescript` block of the package README (and, in
+      // payments-stripe's, of this root README) against the built `dist/`, then writes the API reference under that package's
       // (git-ignored) `docs/`.
       docgen: {
         command: "echo 'docgen: every example compiled and ran'",
@@ -189,7 +224,9 @@ export default defineConfig({
       provider: "istanbul",
       reporter: ["text-summary", "json-summary", "json"],
       reportsDirectory: "./coverage",
-      include: ["packages/*/src/**/*.ts"],
+      // `examples/`: the runnable examples a package's suite executes
+      // (payments-stripe's `tests/examples.test.ts`) count too.
+      include: ["packages/*/src/**/*.ts", "packages/*/examples/**/*.ts"],
       exclude: ["**/*.d.ts", "**/generated/**"],
     },
   },

@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Fill in enough that someone — human or agent — can reproduce and fix this without coming back to ask. Never paste credentials or real customer data.
+        Fill in enough that someone — human or agent — can reproduce and fix this without coming back to ask. Never paste credentials (a live API key, a webhook secret) or real customer data.
   - type: textarea
     id: summary
     attributes:
@@ -25,7 +25,7 @@ body:
     id: repro
     attributes:
       label: Reproduction
-      description: A minimal program or the failing test, against the in-memory or SQLite layers where possible.
+      description: A minimal program or the failing test, against the in-memory or SQLite layers where possible; stub a payments vendor at the client seam rather than calling a live account.
     validations:
       required: true
   - type: textarea
