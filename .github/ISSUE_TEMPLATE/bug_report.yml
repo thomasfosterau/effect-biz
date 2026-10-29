@@ -1,0 +1,43 @@
+name: Bug report
+description: Something behaves wrong, throws, or computes a wrong business result.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill in enough that someone — human or agent — can reproduce and fix this without coming back to ask. Never paste credentials or real customer data.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What's wrong
+      description: The behaviour, in one or two sentences.
+    validations:
+      required: true
+  - type: input
+    id: package
+    attributes:
+      label: Package and version
+      placeholder: "e.g. @thomasfosterau/effect-biz-sales@0.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: A minimal program or the failing test, against the in-memory or SQLite layers where possible.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: I searched existing issues and this isn't a duplicate.
+          required: true

@@ -1,0 +1,109 @@
+# Dependabot version-update configuration. Copied in shape from the
+# effect-finance repository.
+#
+# `groups` collect dependencies that MUST move together, so a set never
+# drifts apart across two PRs. Dependabot puts a dependency in the FIRST group
+# that matches it, so the groups run specific → general and every broad
+# pattern carries `exclude-patterns` for the sets above it.
+#
+# - `toolchain`: vite-plus pins the `oxlint`, `oxfmt` and `vitest` it carries,
+#   and `effect-tsgo patch` matches the native `tsc` (@typescript/native) and
+#   vite-plus's `oxlint` by gitHead / version, failing `pnpm install` on any
+#   pairing it has no artifact for. One PR moves them all.
+# - `effect`: the Effect 4 release line is a lockstep-versioned singleton set,
+#   moved together with effect-finance (both must resolve one `effect`).
+# - `docgen`: @effect/docgen runs its examples with `tsx`.
+# - `changesets`: release tooling.
+# - `minor-and-patch`: everything else that is not a major, in one PR.
+#
+# `cooldown` mirrors pnpm-workspace.yaml's `minimumReleaseAge` (1 day), with
+# @thomasfosterau/* exempt as `minimumReleaseAgeExclude` exempts it.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+    cooldown:
+      default-days: 1
+      exclude:
+        - "@thomasfosterau/*"
+    groups:
+      toolchain:
+        applies-to: version-updates
+        patterns:
+          - "vite-plus"
+          - "vite"
+          - "vitest"
+          - "@vitest/*"
+          - "oxlint"
+          - "oxfmt"
+          - "oxlint-tsgolint"
+          - "@effect/tsgo"
+          - "@typescript/native"
+          - "typescript"
+          - "@typescript/typescript6"
+          - "@mpsuesser/oxlint-plugin-effect"
+      effect:
+        applies-to: version-updates
+        patterns:
+          - "effect"
+          - "@effect/*"
+        exclude-patterns:
+          - "@effect/tsgo"
+          - "@effect/docgen"
+      docgen:
+        applies-to: version-updates
+        patterns:
+          - "@effect/docgen"
+          - "tsx"
+      changesets:
+        applies-to: version-updates
+        patterns:
+          - "@changesets/*"
+      minor-and-patch:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "vite-plus"
+          - "vite"
+          - "vitest"
+          - "@vitest/*"
+          - "oxlint"
+          - "oxfmt"
+          - "oxlint-tsgolint"
+          - "@effect/*"
+          - "@typescript/*"
+          - "typescript"
+          - "@mpsuesser/oxlint-plugin-effect"
+          - "effect"
+          - "tsx"
+          - "@changesets/*"
+        update-types:
+          - "minor"
+          - "patch"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore"
+    cooldown:
+      default-days: 1
+    groups:
+      github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"

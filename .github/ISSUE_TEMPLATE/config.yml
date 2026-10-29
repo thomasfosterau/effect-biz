@@ -1,0 +1,11 @@
+# Issue template chooser config. Blank issues stay enabled for the
+# maintainer's quick capture; the forms exist to make agent-grabbable issues
+# the path of least resistance.
+blank_issues_enabled: true
+contact_links:
+  - name: Report a vulnerability privately
+    url: https://github.com/thomasfosterau/effect-biz/security/advisories/new
+    about: Security issues go through a private advisory, never a public issue — see SECURITY.md.
+  - name: How this repo is built
+    url: https://github.com/thomasfosterau/effect-biz/blob/main/CONTRIBUTING.md
+    about: Branch model, pre-PR checklist and CI expectations.
