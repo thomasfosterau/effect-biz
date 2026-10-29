@@ -1,13 +1,47 @@
 {
-  "name": "@effect-biz/core",
+  "$schema": "https://www.schemastore.org/package",
+  "name": "@thomasfosterau/effect-biz",
   "version": "0.0.0",
+  "description": "The foundation of effect-biz: modular ERP and business-process services for Effect",
+  "keywords": [
+    "business",
+    "effect",
+    "erp",
+    "typescript"
+  ],
+  "homepage": "https://github.com/thomasfosterau/effect-biz#readme",
+  "bugs": {
+    "url": "https://github.com/thomasfosterau/effect-biz/issues"
+  },
+  "license": "MIT",
+  "author": "Thomas Foster <me@thomasfoster.au>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomasfosterau/effect-biz.git",
+    "directory": "packages/core"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
-  "main": "./src/index.ts",
-  "scripts": {
-    "test": "vp test run",
-    "build": "echo \"nothing to build yet\""
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "devDependencies": {
-    "vite-plus": "^1.4.0"
+    "@types/node": "catalog:",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:peers"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

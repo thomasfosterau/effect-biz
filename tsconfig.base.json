@@ -1,0 +1,72 @@
+{
+  "$schema": "./node_modules/@effect/tsgo/schema.json",
+  "compilerOptions": {
+    // Copied from effect-finance (itself from the effect-drizzle-ext library and the gardeneria
+    // application), so every package here compiles under
+    // exactly the options its consumers use. `erasableSyntaxOnly` because the
+    // apps load TypeScript under Node's strip-only loader; a library file that
+    // uses enums / namespaces / parameter properties would fail there.
+    "erasableSyntaxOnly": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "target": "esnext",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    // Source imports are written `./x.ts`; the build rewrites them to `./x.js`
+    // in the emitted JavaScript. The emitted `.d.ts` keeps `./x.ts`, which
+    // both `bundler` and `nodenext` consumers resolve (verified 2026-09-18).
+    "rewriteRelativeImportExtensions": true,
+    "allowJs": true,
+    "checkJs": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    // Optional members are spelled `?: T | undefined` because of this flag: a
+    // consumer forwarding an optional of its own must still compile.
+    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        // The severities below keep every Effect rule visible in the editor,
+        // but a "warning" still fails the patched tsc by default — this flag
+        // is what actually makes warnings non-blocking in the check tasks.
+        "ignoreEffectWarningsInTscExitCode": true,
+        "diagnosticSeverity": {
+          "abortControllerInEffect": "warning",
+          "asyncFunction": "warning",
+          "cryptoRandomUUID": "warning",
+          "cryptoRandomUUIDInEffect": "warning",
+          "extendsNativeError": "warning",
+          "globalConsole": "warning",
+          "globalConsoleInEffect": "warning",
+          "globalDate": "warning",
+          "globalDateInEffect": "warning",
+          "globalFetch": "warning",
+          "globalFetchInEffect": "warning",
+          "globalRandom": "warning",
+          "globalRandomInEffect": "warning",
+          "globalTimers": "warning",
+          "globalTimersInEffect": "warning",
+          "instanceOfSchema": "warning",
+          "newPromise": "warning",
+          "nodeBuiltinImport": "warning",
+          "preferSchemaOverJson": "warning",
+          "processEnv": "warning",
+          "processEnvInEffect": "warning",
+          "unsafeEffectTypeAssertion": "warning",
+          // Effect 4 marks most of `effect/http` / `effect/http-api`
+          // `@stability unstable`, so at "warning" every HTTP import drowns
+          // the warnings that matter. A suggestion stays visible.
+          "unstableApiUsage": "suggestion"
+        }
+      }
+    ]
+  }
+}

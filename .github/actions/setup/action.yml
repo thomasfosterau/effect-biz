@@ -1,0 +1,56 @@
+# Composite setup shared by every CI job that needs the toolchain.
+# Sets up Node.js + pnpm, restores the pnpm store cache (keyed on
+# pnpm-lock.yaml by setup-node), and installs dependencies with a frozen
+# lockfile (retried — see the Install step's own comment for why).
+# `vp` and the dev bins land in node_modules/.bin, which this adds to PATH so
+# later steps invoke `vp …` directly. Copied from effect-finance (itself from the effect-email library,
+# the effect-drizzle-ext library and the gardeneria application).
+#
+# Callers must run `actions/checkout` BEFORE this (a local composite action
+# needs the repo on disk first).
+name: Setup toolchain
+description: Set up Node.js and pnpm, restore the package cache, and install dependencies.
+runs:
+  using: composite
+  steps:
+    # pnpm before Node so setup-node's `cache: pnpm` can resolve the store path.
+    # The pnpm version comes from the `packageManager` field in package.json.
+    - name: Setup pnpm
+      uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+    # CI tests on one Node version, the latest stable release.
+    # The published `engines.node` floor is deliberately not tested.
+    - name: Setup Node.js
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: latest
+        cache: pnpm
+
+    # The install is RETRIED, deliberately — do not collapse this back to a bare
+    # `pnpm install`. pnpm's linker has an upstream race (a package that
+    # resolves into the tree twice and builds can lose its atomic import when
+    # the store is cold — observed on the gardeneria application's trunk,
+    # 2026-07-26) that cannot be reproduced on demand, so CI is the only place
+    # it is ever observed. Retrying is safe because `pnpm install` is
+    # idempotent: it reconciles node_modules against the committed lockfile on
+    # every attempt. What this deliberately does NOT do, because each trades a
+    # flaky install for an unverified dependency tree: skip `--frozen-lockfile`
+    # or bypass the supply-chain policy. A genuinely deterministic failure
+    # (lockfile drift) simply fails all three attempts and still turns the job
+    # red — it costs seconds, since those checks fail fast.
+    - name: Install dependencies
+      shell: bash
+      run: |
+        for attempt in 1 2 3; do
+          if pnpm install --frozen-lockfile; then
+            break
+          fi
+          if [ "$attempt" -eq 3 ]; then
+            echo "::error::pnpm install failed after 3 attempts"
+            exit 1
+          fi
+          delay=$((attempt * 15))
+          echo "::warning::pnpm install failed (attempt ${attempt}/3); retrying in ${delay}s"
+          sleep "$delay"
+        done
+        echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"

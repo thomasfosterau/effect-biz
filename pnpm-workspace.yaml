@@ -1,2 +1,102 @@
+# pnpm workspace — the @thomasfosterau/effect-biz package family.
+#
+# The `catalog:` protocol pins versions that MUST be singletons across the
+# workspace. Effect especially: two copies of `effect` break Context / Layer /
+# Schema identity at runtime, so every package references `catalog:`.
+#
+# EVERY external dependency version lives here — package.json files reference
+# only `catalog:` / `catalog:peers` (or `workspace:` for internal packages).
+# `catalogMode: strict` makes `pnpm add` enforce this at add time and
+# `pnpm install` reject non-catalog specifiers. After editing this catalog,
+# ALWAYS run `pnpm install` and commit the regenerated pnpm-lock.yaml — a stale
+# lockfile fails CI at once with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+#
+# The toolchain entries (vite-plus, the TypeScript 6/7 pair, @effect/tsgo,
+# changesets) and the Effect pin are copied from the effect-finance
+# repository and kept in lockstep with it: effect-biz depends on
+# effect-finance's packages, so both must resolve the same `effect` singleton.
 packages:
   - packages/*
+
+catalogMode: strict
+
+catalog:
+  "@changesets/changelog-github": ^1.0.1
+  "@changesets/cli": ^3.0.3
+  # Compiles AND RUNS every JSDoc `@example` (the `docgen` task). Exact, like
+  # the Effect pin: 4.0.1 and 4.0.2 depend on `effect ^4.0.1` / `^4.0.2`,
+  # which the `effect` singleton override below would contradict. Needs `tsx`
+  # and a TypeScript JS API (peer `typescript <7`) — the TS6 alias below
+  # satisfies it; the examples themselves type-check under the native `tsc`.
+  "@effect/docgen": 4.0.6
+  "@effect/language-service": ^0.87.5
+  # Effect Language Service as a native (TypeScript-Go) binary — the TS7 side
+  # of the 6/7 split. `effect-tsgo patch` overwrites the native `tsc` binary
+  # with an Effect-patched build matched by gitHead, so this pins in lockstep
+  # with `@typescript/native` below (0.55.0 ships against typescript 7.0.2) and
+  # with the `oxlint` that `vite-plus` pulls in (0.55.0 supports oxlint 1.87.0
+  # through 1.89.0 and oxlint-tsgolint 7.0.2003 / 7.0.2004; vite-plus 1.3.0
+  # carries oxlint 1.88.0 and oxlint-tsgolint 7.0.2004).
+  # Each @effect/tsgo release hard-errors (UnsupportedTargetPackageVersionError)
+  # on any other component version, failing `pnpm install` itself. Read the
+  # `components` table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs
+  # before bumping any of the three.
+  "@effect/tsgo": 0.55.0
+  "@mpsuesser/oxlint-plugin-effect": ^0.6.0
+  "@types/node": ^26.6.5
+  "@vitest/coverage-istanbul": 5.0.5
+  effect: 4.0.6
+  # Runs docgen's compiled examples (a peer of @effect/docgen).
+  tsx: ^4.23.15
+  # TypeScript 6/7 side-by-side: TS7 (the native Go compiler) ships no JS API
+  # until 7.1, so JS-API consumers (@effect/language-service, tsdown's
+  # declaration bundler, @effect/docgen's peer) stay on TS6 while native `tsc`
+  # type-checks. The alias keeps the package importable as `typescript`
+  # name-stable at the TS6 JS compiler (bin `tsc6`); `@typescript/native` is
+  # TS7 (bin `tsc`). Pinned exact: @typescript/native's gitHead must match
+  # @effect/tsgo's bundled binary.
+  typescript: "npm:@typescript/typescript6@6.0.2"
+  "@typescript/native": "npm:typescript@7.0.2"
+  # vite-plus pins `oxlint`, `oxfmt` and `vitest` to exact versions, so this
+  # entry decides the oxlint version `effect-tsgo patch --oxlint` has to
+  # support (see the @effect/tsgo note above). `vite` is the same release
+  # under its aliased core package, and `vitest` (and
+  # `@vitest/coverage-istanbul`, whose peer is exact) must match vite-plus's
+  # exact pin (1.3.0 → 5.0.5) because the `vitest: "catalog:"` override forces
+  # every resolution to the catalog singleton.
+  vite-plus: 1.3.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.3.0
+  vitest: 5.0.5
+
+# Peer ranges the PUBLISHED packages declare. Kept as a named catalog so the
+# strict catalog mode still governs them while they stay ranges. `pnpm publish`
+# replaces `catalog:peers` with these ranges in the published manifest.
+catalogs:
+  peers:
+    # Effect 4: rc.118 moved every `effect/unstable/<x>` module to `effect/<x>`
+    # (and `httpapi` to `http-api`); the packages are built against 4.0.x.
+    effect: ^4.0.0
+
+overrides:
+  vite: "catalog:"
+  vitest: "catalog:"
+  # `effect` MUST be a singleton (see the header): force every resolution to
+  # the catalog version so a hoisting reshuffle cannot introduce a second copy.
+  effect: "catalog:"
+nodeLinker: hoisted
+allowBuilds:
+  esbuild: true
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: "*"
+    vitest: "*"
+
+# Supply-chain delay (owner's policy): hold newly published versions for 1 day
+# (unit: MINUTES) before pnpm will install them.
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  # @thomasfosterau/* is first-party — exempt so our own releases install immediately.
+  - "@thomasfosterau/*"

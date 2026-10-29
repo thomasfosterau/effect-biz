@@ -1,22 +1,39 @@
 {
-  "name": "effect-biz",
+  "$schema": "https://www.schemastore.org/package",
+  "name": "effect-biz-workspace",
   "version": "0.0.0",
   "private": true,
+  "description": "Workspace for the @thomasfosterau/effect-biz package family: modular ERP and business-process services for Effect.",
+  "license": "MIT",
+  "author": "Thomas Foster <me@thomasfoster.au>",
   "type": "module",
   "scripts": {
-    "check": "vp check",
-    "test": "pnpm -r test",
-    "build": "pnpm -r build",
     "changeset": "changeset",
-    "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "version": "changeset version && vp fmt && pnpm install --lockfile-only",
+    "release": "vp run -r build && pnpm -r --filter './packages/*' publish --access public --no-git-checks && changeset tag",
+    "prepare": "vp config && effect-tsgo patch --typescript --oxlint"
   },
   "devDependencies": {
-    "@changesets/cli": "^3.0.3",
-    "vite-plus": "^1.4.0"
+    "@changesets/changelog-github": "catalog:",
+    "@changesets/cli": "catalog:",
+    "@effect/docgen": "catalog:",
+    "@effect/language-service": "catalog:",
+    "@effect/tsgo": "catalog:",
+    "@mpsuesser/oxlint-plugin-effect": "catalog:",
+    "@thomasfosterau/effect-biz": "workspace:*",
+    "@types/node": "catalog:",
+    "@typescript/native": "catalog:",
+    "@vitest/coverage-istanbul": "catalog:",
+    "effect": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22",
+    "pnpm": ">=11"
   },
-  "packageManager": "pnpm@10.34.9"
+  "packageManager": "pnpm@11.18.0"
 }

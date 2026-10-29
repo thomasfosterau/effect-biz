@@ -1,0 +1,40 @@
+name: Feature / enhancement
+description: A new module, capability or adapter, or an improvement to an existing one.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Scope this as a vertical slice an agent can finish end-to-end (domain model → service → SQL adapter → HttpApi/RPC → tests → README), not a timid increment. Anything ledger-, invoice-, AR/AP- or payment-shaped belongs in effect-finance, not here.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / outcome
+      description: What should be true for consumers that isn't today, and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed slice
+      description: The change you have in mind. Name the packages it touches and any exported signature it adds or changes.
+    validations:
+      required: false
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Done when
+      description: Concrete, checkable statements.
+      placeholder: |
+        - [ ] …
+        - [ ] …
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context & links
+      description: Parent epic, effect-finance issues, standards or regulator docs.
+    validations:
+      required: false
