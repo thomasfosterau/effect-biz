@@ -1,13 +1,21 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
-  "changelog": ["@changesets/changelog-github", { "repo": "thomasfosterau/effect-biz" }],
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "thomasfosterau/effect-biz"
+    }
+  ],
   "format": false,
   "commit": false,
-  "fixed": [],
+  "fixed": [["@thomasfosterau/effect-biz*"]],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [],
-  "privatePackages": { "version": false, "tag": false }
+  "privatePackages": {
+    "version": false,
+    "tag": false
+  }
 }
