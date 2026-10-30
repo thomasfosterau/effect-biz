@@ -50,8 +50,8 @@ export {
  */
 export const createRefund: (
   id: string,
-  params?: Omit<Distilled.CreateApplicationFeeRefundRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateApplicationFeeRefundRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FeeRefund, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateApplicationFeeRefund,
   { method: "POST", path: "/v1/application_fees/{id}/refunds", ids: ["id"], params: true },
@@ -62,8 +62,8 @@ export const createRefund: (
  * `GetApplicationFees`.
  */
 export const list: (
-  params?: Distilled.GetApplicationFeesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetApplicationFeesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetApplicationFeesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetApplicationFees, {
     method: "GET",
@@ -78,8 +78,8 @@ export const list: (
  */
 export const listRefunds: (
   id: string,
-  params?: Omit<Distilled.GetApplicationFeeRefundsRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetApplicationFeeRefundsRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetApplicationFeeRefundsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetApplicationFeeRefunds, {
     method: "GET",
@@ -94,8 +94,8 @@ export const listRefunds: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetApplicationFeeRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetApplicationFeeRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ApplicationFee, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetApplicationFee,
   { method: "GET", path: "/v1/application_fees/{id}", ids: ["id"], params: true },
@@ -108,8 +108,8 @@ export const retrieve: (
 export const retrieveRefund: (
   fee: string,
   id: string,
-  params?: Omit<Distilled.GetApplicationFeeRefundRequest, "fee" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetApplicationFeeRefundRequest, "fee" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FeeRefund, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetApplicationFeeRefund,
   {
@@ -127,8 +127,8 @@ export const retrieveRefund: (
 export const updateRefund: (
   fee: string,
   id: string,
-  params?: Omit<Distilled.UpdateApplicationFeeRefundRequest, "fee" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateApplicationFeeRefundRequest, "fee" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FeeRefund, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateApplicationFeeRefund,
   {

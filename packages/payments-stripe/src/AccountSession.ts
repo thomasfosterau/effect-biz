@@ -39,7 +39,7 @@ export { AccountSession, CreateAccountSessionRequest } from "@distilled.cloud/st
  */
 export const create: (
   params: Distilled.CreateAccountSessionRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.AccountSession, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateAccountSession,
   { method: "POST", path: "/v1/account_sessions", ids: [], params: true },

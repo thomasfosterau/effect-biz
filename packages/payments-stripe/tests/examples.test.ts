@@ -359,6 +359,8 @@ describe("examples", () => {
   });
 
   Arr.forEach(Rec.toEntries(suites), ([file, suite]) => {
-    describe(`examples/${file}`, suite);
+    describe(`examples/${file}`, () => {
+      suite();
+    });
   });
 });

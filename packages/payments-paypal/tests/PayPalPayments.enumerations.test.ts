@@ -12,26 +12,26 @@ import { capabilitiesOver, stubPayPal } from "./support.ts";
  * A value PayPal sends that the neutral model does not cover must decode to
  * `Other` carrying the raw string, never fail the object or the page (effect-finance#58).
  */
-const answering = <A, E, Body>(
+const answering = <A, E>(
   effect: Effect.Effect<A, E, Layer.Success<typeof PayPalPayments.capabilities>>,
-  body: Body,
+  body: unknown,
 ): Effect.Effect<A, E> =>
   effect.pipe(Effect.provide(capabilitiesOver(stubPayPal(() => body).layer)));
 
-const run = <A, E, Body>(
+const run = <A, E>(
   effect: Effect.Effect<A, E, Layer.Success<typeof PayPalPayments.capabilities>>,
-  body: Body,
+  body: unknown,
 ): Promise<A> => Effect.runPromise(answering(effect, body));
 
 /** Check, one case at a time, that each wire status maps onto its neutral one. */
-const expectStatuses = <E, Body>(
+const expectStatuses = <E>(
   cases: ReadonlyArray<readonly [string, string]>,
   retrieve: Effect.Effect<
     { readonly status: unknown },
     E,
     Layer.Success<typeof PayPalPayments.capabilities>
   >,
-  body: (wire: string) => Body,
+  body: (wire: string) => unknown,
 ): Promise<void> =>
   Effect.runPromise(
     Effect.forEach(

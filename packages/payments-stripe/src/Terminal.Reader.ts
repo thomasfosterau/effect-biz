@@ -62,8 +62,8 @@ export {
  */
 export const cancelAction: (
   reader: string,
-  params?: Omit<Distilled.CreateTerminalReaderCancelActionRequest, "reader"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTerminalReaderCancelActionRequest, "reader">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CreateTerminalReaderCancelActionResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTerminalReaderCancelAction, {
     method: "POST",
@@ -79,7 +79,7 @@ export const cancelAction: (
 export const collectInputs: (
   reader: string,
   params: Omit<Distilled.CreateTerminalReaderCollectInputRequest, "reader">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalReader, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTerminalReaderCollectInput,
   {
@@ -97,7 +97,7 @@ export const collectInputs: (
 export const collectPaymentMethod: (
   reader: string,
   params: Omit<Distilled.CreateTerminalReaderCollectPaymentMethodRequest, "reader">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalReader, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTerminalReaderCollectPaymentMethod,
   {
@@ -115,7 +115,7 @@ export const collectPaymentMethod: (
 export const confirmPaymentIntent: (
   reader: string,
   params: Omit<Distilled.CreateTerminalReaderConfirmPaymentIntentRequest, "reader">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalReader, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTerminalReaderConfirmPaymentIntent,
   {
@@ -132,7 +132,7 @@ export const confirmPaymentIntent: (
  */
 export const create: (
   params: Distilled.CreateTerminalReaderRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalReader, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTerminalReader,
   { method: "POST", path: "/v1/terminal/readers", ids: [], params: true },
@@ -144,7 +144,7 @@ export const create: (
  */
 export const del: (
   reader: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedTerminalReader, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteTerminalReader, {
     method: "DELETE",
@@ -158,8 +158,8 @@ export const del: (
  * `GetTerminalReaders`.
  */
 export const list: (
-  params?: Distilled.GetTerminalReadersRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTerminalReadersRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTerminalReadersResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTerminalReaders, {
     method: "GET",
@@ -175,7 +175,7 @@ export const list: (
 export const processPaymentIntent: (
   reader: string,
   params: Omit<Distilled.CreateTerminalReaderProcessPaymentIntentRequest, "reader">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalReader, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTerminalReaderProcessPaymentIntent,
   {
@@ -193,7 +193,7 @@ export const processPaymentIntent: (
 export const processSetupIntent: (
   reader: string,
   params: Omit<Distilled.CreateTerminalReaderProcessSetupIntentRequest, "reader">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalReader, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTerminalReaderProcessSetupIntent,
   {
@@ -210,8 +210,8 @@ export const processSetupIntent: (
  */
 export const refundPayment: (
   reader: string,
-  params?: Omit<Distilled.CreateTerminalReaderRefundPaymentRequest, "reader"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTerminalReaderRefundPaymentRequest, "reader">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalReader, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTerminalReaderRefundPayment,
   {
@@ -228,8 +228,8 @@ export const refundPayment: (
  */
 export const retrieve: (
   reader: string,
-  params?: Omit<Distilled.GetTerminalReaderRequest, "reader"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTerminalReaderRequest, "reader">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTerminalReaderResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTerminalReader, {
     method: "GET",
@@ -245,7 +245,7 @@ export const retrieve: (
 export const setReaderDisplay: (
   reader: string,
   params: Omit<Distilled.CreateTerminalReaderSetReaderDisplayRequest, "reader">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalReader, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTerminalReaderSetReaderDisplay,
   {
@@ -262,10 +262,8 @@ export const setReaderDisplay: (
  */
 export const testHelpersPresentPaymentMethod: (
   reader: string,
-  params?:
-    | Omit<Distilled.CreateTestHelpersTerminalReaderPresentPaymentMethodRequest, "reader">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTestHelpersTerminalReaderPresentPaymentMethodRequest, "reader">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalReader, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTestHelpersTerminalReaderPresentPaymentMethod,
   {
@@ -282,10 +280,8 @@ export const testHelpersPresentPaymentMethod: (
  */
 export const testHelpersSucceedInputCollection: (
   reader: string,
-  params?:
-    | Omit<Distilled.CreateTestHelpersTerminalReaderSucceedInputCollectionRequest, "reader">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTestHelpersTerminalReaderSucceedInputCollectionRequest, "reader">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalReader, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTestHelpersTerminalReaderSucceedInputCollection,
   {
@@ -302,10 +298,8 @@ export const testHelpersSucceedInputCollection: (
  */
 export const testHelpersTimeoutInputCollection: (
   reader: string,
-  params?:
-    | Omit<Distilled.CreateTestHelpersTerminalReaderTimeoutInputCollectionRequest, "reader">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTestHelpersTerminalReaderTimeoutInputCollectionRequest, "reader">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalReader, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTestHelpersTerminalReaderTimeoutInputCollection,
   {
@@ -322,8 +316,8 @@ export const testHelpersTimeoutInputCollection: (
  */
 export const update: (
   reader: string,
-  params?: Omit<Distilled.UpdateTerminalReaderRequest, "reader"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateTerminalReaderRequest, "reader">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.UpdateTerminalReaderResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateTerminalReader, {
     method: "POST",

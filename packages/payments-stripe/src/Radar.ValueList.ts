@@ -48,7 +48,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateRadarValueListRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.RadarValueList, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateRadarValueList,
   { method: "POST", path: "/v1/radar/value_lists", ids: [], params: true },
@@ -60,7 +60,7 @@ export const create: (
  */
 export const del: (
   value_list: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedRadarValueList, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteRadarValueList, {
     method: "DELETE",
@@ -74,8 +74,8 @@ export const del: (
  * `GetRadarValueLists`.
  */
 export const list: (
-  params?: Distilled.GetRadarValueListsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetRadarValueListsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetRadarValueListsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetRadarValueLists, {
     method: "GET",
@@ -90,8 +90,8 @@ export const list: (
  */
 export const retrieve: (
   value_list: string,
-  params?: Omit<Distilled.GetRadarValueListRequest, "value_list"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetRadarValueListRequest, "value_list">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.RadarValueList, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetRadarValueList,
   { method: "GET", path: "/v1/radar/value_lists/{value_list}", ids: ["value_list"], params: true },
@@ -103,8 +103,8 @@ export const retrieve: (
  */
 export const update: (
   value_list: string,
-  params?: Omit<Distilled.UpdateRadarValueListRequest, "value_list"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateRadarValueListRequest, "value_list">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.RadarValueList, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateRadarValueList,
   { method: "POST", path: "/v1/radar/value_lists/{value_list}", ids: ["value_list"], params: true },

@@ -412,7 +412,9 @@ describe("PayPalPayments session: configuration", () => {
   });
 
   it("keeps the clientSecret out of the config's string and JSON forms", () => {
-    expect(String(config().clientSecret)).not.toContain("secret_1");
+    // Through `unknown`: the stringification a consumer's logger applies.
+    const asText = (value: unknown): string => String(value);
+    expect(asText(config().clientSecret)).not.toContain("secret_1");
     expect(toJson(config())).not.toContain("secret_1");
   });
 });

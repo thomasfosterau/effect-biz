@@ -46,8 +46,8 @@ export {
  */
 export const close: (
   dispute: string,
-  params?: Omit<Distilled.CreateDisputeCloseRequest, "dispute"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateDisputeCloseRequest, "dispute">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Dispute, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateDisputeClose,
   { method: "POST", path: "/v1/disputes/{dispute}/close", ids: ["dispute"], params: true },
@@ -58,8 +58,8 @@ export const close: (
  * `GetDisputes`.
  */
 export const list: (
-  params?: Distilled.GetDisputesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetDisputesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetDisputesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetDisputes, {
     method: "GET",
@@ -74,8 +74,8 @@ export const list: (
  */
 export const retrieve: (
   dispute: string,
-  params?: Omit<Distilled.GetDisputeRequest, "dispute"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetDisputeRequest, "dispute">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Dispute, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetDispute,
   { method: "GET", path: "/v1/disputes/{dispute}", ids: ["dispute"], params: true },
@@ -87,8 +87,8 @@ export const retrieve: (
  */
 export const update: (
   dispute: string,
-  params?: Omit<Distilled.UpdateDisputeRequest, "dispute"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateDisputeRequest, "dispute">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Dispute, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateDispute,
   { method: "POST", path: "/v1/disputes/{dispute}", ids: ["dispute"], params: true },

@@ -49,10 +49,8 @@ export {
  */
 export const cancel: (
   inbound_transfer: string,
-  params?:
-    | Omit<Distilled.CreateTreasuryInboundTransferCancelRequest, "inbound_transfer">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTreasuryInboundTransferCancelRequest, "inbound_transfer">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryInboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTreasuryInboundTransferCancel, {
     method: "POST",
@@ -67,7 +65,7 @@ export const cancel: (
  */
 export const create: (
   params: Distilled.CreateTreasuryInboundTransferRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryInboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTreasuryInboundTransfer, {
     method: "POST",
@@ -82,7 +80,7 @@ export const create: (
  */
 export const list: (
   params: Distilled.GetTreasuryInboundTransfersRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTreasuryInboundTransfersResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryInboundTransfers, {
     method: "GET",
@@ -97,8 +95,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetTreasuryInboundTransferRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTreasuryInboundTransferRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryInboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryInboundTransfer, {
     method: "GET",
@@ -113,8 +111,8 @@ export const retrieve: (
  */
 export const testHelpersFail: (
   id: string,
-  params?: Omit<Distilled.CreateTestHelpersTreasuryInboundTransferFailRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTestHelpersTreasuryInboundTransferFailRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryInboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersTreasuryInboundTransferFail, {
     method: "POST",
@@ -129,8 +127,8 @@ export const testHelpersFail: (
  */
 export const testHelpersReturn: (
   id: string,
-  params?: Omit<Distilled.CreateTestHelpersTreasuryInboundTransferReturnRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTestHelpersTreasuryInboundTransferReturnRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryInboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersTreasuryInboundTransferReturn, {
     method: "POST",
@@ -145,8 +143,8 @@ export const testHelpersReturn: (
  */
 export const testHelpersSucceed: (
   id: string,
-  params?: Omit<Distilled.CreateTestHelpersTreasuryInboundTransferSucceedRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTestHelpersTreasuryInboundTransferSucceedRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryInboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersTreasuryInboundTransferSucceed, {
     method: "POST",

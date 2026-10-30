@@ -45,7 +45,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateForwardingRequestRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ForwardingRequest, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateForwardingRequest, {
     method: "POST",
@@ -59,8 +59,8 @@ export const create: (
  * `GetForwardingRequests`.
  */
 export const list: (
-  params?: Distilled.GetForwardingRequestsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetForwardingRequestsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetForwardingRequestsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetForwardingRequests, {
     method: "GET",
@@ -75,8 +75,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetForwardingRequestRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetForwardingRequestRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ForwardingRequest, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetForwardingRequest, {
     method: "GET",

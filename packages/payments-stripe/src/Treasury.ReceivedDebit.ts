@@ -45,7 +45,7 @@ export {
  */
 export const list: (
   params: Distilled.GetTreasuryReceivedDebitsRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTreasuryReceivedDebitsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryReceivedDebits, {
     method: "GET",
@@ -60,8 +60,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetTreasuryReceivedDebitRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTreasuryReceivedDebitRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryReceivedDebit, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryReceivedDebit, {
     method: "GET",
@@ -76,7 +76,7 @@ export const retrieve: (
  */
 export const testHelpersCreate: (
   params: Distilled.CreateTestHelpersTreasuryReceivedDebitRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryReceivedDebit, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersTreasuryReceivedDebit, {
     method: "POST",

@@ -161,7 +161,7 @@ describe("a retried write after a lost response is one logical write (effect-fin
     let writes = 0;
     let attempts = 0;
     const fetchImpl: typeof globalThis.fetch = async (input, init) => {
-      const url = String(input);
+      const url = input instanceof Request ? input.url : String(input);
       if (url.endsWith(LOGIN_PATH)) {
         return Response.json(
           {
@@ -172,8 +172,7 @@ describe("a retried write after a lost response is one logical write (effect-fin
         );
       }
       attempts += 1;
-      const raw = init?.body;
-      const text = raw instanceof Uint8Array ? new TextDecoder().decode(raw) : String(raw);
+      const text = await new Response(init?.body).text();
       const requestId = Schema.decodeUnknownSync(RequestIdBody)(text).request_id;
       sent.push(requestId);
       const customerId = Option.getOrElse(

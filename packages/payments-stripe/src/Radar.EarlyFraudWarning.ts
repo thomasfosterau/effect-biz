@@ -43,8 +43,8 @@ export {
  * `GetRadarEarlyFraudWarnings`.
  */
 export const list: (
-  params?: Distilled.GetRadarEarlyFraudWarningsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetRadarEarlyFraudWarningsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetRadarEarlyFraudWarningsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetRadarEarlyFraudWarnings, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   early_fraud_warning: string,
-  params?: Omit<Distilled.GetRadarEarlyFraudWarningRequest, "early_fraud_warning"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetRadarEarlyFraudWarningRequest, "early_fraud_warning">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.RadarEarlyFraudWarning, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetRadarEarlyFraudWarning, {
     method: "GET",

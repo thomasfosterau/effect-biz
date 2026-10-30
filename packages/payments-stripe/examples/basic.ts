@@ -4,6 +4,7 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import { FetchHttpClient } from "effect/http";
 import * as Customer from "@thomasfosterau/effect-biz/Payments.Customer";
+import * as Enumeration from "@thomasfosterau/effect-biz/Payments.Enumeration";
 import * as PaymentIntent from "@thomasfosterau/effect-biz/Payments.PaymentIntent";
 import * as StripePayments from "@thomasfosterau/effect-biz-payments-stripe/StripePayments";
 
@@ -40,7 +41,8 @@ export const program = Effect.gen(function* () {
   });
 
   yield* Console.log(`Payment intent created: ${paymentIntent.id}`);
-  yield* Console.log(`Status: ${paymentIntent.status}`);
+  const status = paymentIntent.status;
+  yield* Console.log(`Status: ${Enumeration.isOther(status) ? status.raw : status}`);
   yield* Console.log(`Amount: $${paymentIntent.amount / 100}`);
 
   return { customer, paymentIntent };
@@ -70,6 +72,7 @@ if (import.meta.main) {
       console.log("\nSuccess!");
       console.log("Customer ID:", result.customer.id);
       console.log("Payment Intent ID:", result.paymentIntent.id);
+      return result;
     })
     .catch((error) => {
       console.error("\nFailed:", error);

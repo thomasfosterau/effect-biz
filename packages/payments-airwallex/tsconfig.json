@@ -8,9 +8,16 @@
     // this package's `dist/` first (vite.package.ts aliases it the same way
     // for the test runner). Siblings resolve through `exports` to `dist/`.
     // Relative to this file; TypeScript 7 removed `baseUrl`.
+    //
+    // The core sibling ALSO resolves to its `src/` here, so type-aware lint
+    // (oxlint-tsgolint, which reads this file and runs before any build in CI)
+    // never depends on `packages/core/dist`. The type gate keeps consuming
+    // the core through `dist/`: `tsconfig.check.json` drops that mapping.
     "paths": {
       "@thomasfosterau/effect-biz-payments-airwallex": ["./src/index.ts"],
-      "@thomasfosterau/effect-biz-payments-airwallex/*": ["./src/*.ts"]
+      "@thomasfosterau/effect-biz-payments-airwallex/*": ["./src/*.ts"],
+      "@thomasfosterau/effect-biz": ["../core/src/index.ts"],
+      "@thomasfosterau/effect-biz/*": ["../core/src/*.ts"]
     }
   },
   "include": ["src", "tests"]

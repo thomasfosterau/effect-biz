@@ -65,7 +65,7 @@ export {
 export const addLines: (
   invoice: string,
   params: Omit<Distilled.CreateInvoiceAddLineRequest, "invoice">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoiceAddLine,
   { method: "POST", path: "/v1/invoices/{invoice}/add_lines", ids: ["invoice"], params: true },
@@ -77,8 +77,8 @@ export const addLines: (
  */
 export const attachPayment: (
   invoice: string,
-  params?: Omit<Distilled.CreateInvoiceAttachPaymentRequest, "invoice"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateInvoiceAttachPaymentRequest, "invoice">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoiceAttachPayment,
   { method: "POST", path: "/v1/invoices/{invoice}/attach_payment", ids: ["invoice"], params: true },
@@ -89,8 +89,8 @@ export const attachPayment: (
  * `CreateInvoice`.
  */
 export const create: (
-  params?: Distilled.CreateInvoiceRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateInvoiceRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoice,
   { method: "POST", path: "/v1/invoices", ids: [], params: true },
@@ -101,8 +101,8 @@ export const create: (
  * `CreateInvoicesCreatePreview`.
  */
 export const createPreview: (
-  params?: Distilled.CreateInvoicesCreatePreviewRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateInvoicesCreatePreviewRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoicesCreatePreview,
   { method: "POST", path: "/v1/invoices/create_preview", ids: [], params: true },
@@ -114,7 +114,7 @@ export const createPreview: (
  */
 export const del: (
   invoice: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedInvoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.DeleteInvoice,
   { method: "DELETE", path: "/v1/invoices/{invoice}", ids: ["invoice"], params: false },
@@ -126,8 +126,8 @@ export const del: (
  */
 export const finalize: (
   invoice: string,
-  params?: Omit<Distilled.CreateInvoiceFinalizeRequest, "invoice"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateInvoiceFinalizeRequest, "invoice">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoiceFinalize,
   { method: "POST", path: "/v1/invoices/{invoice}/finalize", ids: ["invoice"], params: true },
@@ -138,8 +138,8 @@ export const finalize: (
  * `GetInvoices`.
  */
 export const list: (
-  params?: Distilled.GetInvoicesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetInvoicesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetInvoicesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetInvoices, {
     method: "GET",
@@ -154,8 +154,8 @@ export const list: (
  */
 export const listLines: (
   invoice: string,
-  params?: Omit<Distilled.GetInvoiceLinesRequest, "invoice"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetInvoiceLinesRequest, "invoice">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetInvoiceLinesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetInvoiceLines, {
     method: "GET",
@@ -170,8 +170,8 @@ export const listLines: (
  */
 export const markUncollectible: (
   invoice: string,
-  params?: Omit<Distilled.CreateInvoiceMarkUncollectibleRequest, "invoice"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateInvoiceMarkUncollectibleRequest, "invoice">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoiceMarkUncollectible,
   {
@@ -188,8 +188,8 @@ export const markUncollectible: (
  */
 export const pay: (
   invoice: string,
-  params?: Omit<Distilled.CreateInvoicePayRequest, "invoice"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateInvoicePayRequest, "invoice">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoicePay,
   { method: "POST", path: "/v1/invoices/{invoice}/pay", ids: ["invoice"], params: true },
@@ -202,7 +202,7 @@ export const pay: (
 export const removeLines: (
   invoice: string,
   params: Omit<Distilled.CreateInvoiceRemoveLineRequest, "invoice">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoiceRemoveLine,
   { method: "POST", path: "/v1/invoices/{invoice}/remove_lines", ids: ["invoice"], params: true },
@@ -214,8 +214,8 @@ export const removeLines: (
  */
 export const retrieve: (
   invoice: string,
-  params?: Omit<Distilled.GetInvoiceRequest, "invoice"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetInvoiceRequest, "invoice">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetInvoice,
   { method: "GET", path: "/v1/invoices/{invoice}", ids: ["invoice"], params: true },
@@ -227,7 +227,7 @@ export const retrieve: (
  */
 export const search: (
   params: Distilled.GetInvoicesSearchRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetInvoicesSearchResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetInvoicesSearch, {
     method: "GET",
@@ -242,8 +242,8 @@ export const search: (
  */
 export const send: (
   invoice: string,
-  params?: Omit<Distilled.CreateInvoiceSendRequest, "invoice"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateInvoiceSendRequest, "invoice">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoiceSend,
   { method: "POST", path: "/v1/invoices/{invoice}/send", ids: ["invoice"], params: true },
@@ -255,8 +255,8 @@ export const send: (
  */
 export const update: (
   invoice: string,
-  params?: Omit<Distilled.UpdateInvoiceRequest, "invoice"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateInvoiceRequest, "invoice">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateInvoice,
   { method: "POST", path: "/v1/invoices/{invoice}", ids: ["invoice"], params: true },
@@ -269,8 +269,8 @@ export const update: (
 export const updateLine: (
   invoice: string,
   line_item_id: string,
-  params?: Omit<Distilled.UpdateInvoiceLineRequest, "invoice" | "line_item_id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateInvoiceLineRequest, "invoice" | "line_item_id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.LineItem, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateInvoiceLine,
   {
@@ -288,7 +288,7 @@ export const updateLine: (
 export const updateLines: (
   invoice: string,
   params: Omit<Distilled.CreateInvoiceUpdateLineRequest, "invoice">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoiceUpdateLine,
   { method: "POST", path: "/v1/invoices/{invoice}/update_lines", ids: ["invoice"], params: true },
@@ -300,8 +300,8 @@ export const updateLines: (
  */
 export const voidInvoice: (
   invoice: string,
-  params?: Omit<Distilled.CreateInvoiceVoidRequest, "invoice"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateInvoiceVoidRequest, "invoice">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoice, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoiceVoid,
   { method: "POST", path: "/v1/invoices/{invoice}/void", ids: ["invoice"], params: true },

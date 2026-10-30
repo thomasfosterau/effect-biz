@@ -38,8 +38,8 @@ export { Balance, GetBalanceRequest } from "@distilled.cloud/stripe/stripe";
  * `GetBalance`.
  */
 export const retrieve: (
-  params?: Distilled.GetBalanceRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetBalanceRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Balance, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetBalance,
   { method: "GET", path: "/v1/balance", ids: [], params: true },

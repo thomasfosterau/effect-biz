@@ -50,10 +50,8 @@ export {
  */
 export const disconnect: (
   account: string,
-  params?:
-    | Omit<Distilled.CreateFinancialConnectionsAccountDisconnectRequest, "account">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateFinancialConnectionsAccountDisconnectRequest, "account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FinancialConnectionsAccount, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateFinancialConnectionsAccountDisconnect, {
     method: "POST",
@@ -67,8 +65,8 @@ export const disconnect: (
  * `GetFinancialConnectionsAccounts`.
  */
 export const list: (
-  params?: Distilled.GetFinancialConnectionsAccountsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetFinancialConnectionsAccountsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetFinancialConnectionsAccountsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetFinancialConnectionsAccounts, {
     method: "GET",
@@ -84,7 +82,7 @@ export const list: (
 export const listOwners: (
   account: string,
   params: Omit<Distilled.GetFinancialConnectionsAccountOwnersRequest, "account">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<
   Distilled.GetFinancialConnectionsAccountOwnersResponse,
   PaymentsError,
@@ -103,7 +101,7 @@ export const listOwners: (
 export const refresh: (
   account: string,
   params: Omit<Distilled.CreateFinancialConnectionsAccountRefreshRequest, "account">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FinancialConnectionsAccount, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateFinancialConnectionsAccountRefresh, {
     method: "POST",
@@ -118,8 +116,8 @@ export const refresh: (
  */
 export const retrieve: (
   account: string,
-  params?: Omit<Distilled.GetFinancialConnectionsAccountRequest, "account"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetFinancialConnectionsAccountRequest, "account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FinancialConnectionsAccount, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetFinancialConnectionsAccount, {
     method: "GET",
@@ -135,7 +133,7 @@ export const retrieve: (
 export const subscribe: (
   account: string,
   params: Omit<Distilled.CreateFinancialConnectionsAccountSubscribeRequest, "account">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FinancialConnectionsAccount, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateFinancialConnectionsAccountSubscribe, {
     method: "POST",
@@ -151,7 +149,7 @@ export const subscribe: (
 export const unsubscribe: (
   account: string,
   params: Omit<Distilled.CreateFinancialConnectionsAccountUnsubscribeRequest, "account">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FinancialConnectionsAccount, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateFinancialConnectionsAccountUnsubscribe, {
     method: "POST",

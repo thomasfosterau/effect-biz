@@ -82,7 +82,7 @@ const Metadata = /* @__PURE__ */ Maybe(/* @__PURE__ */ Schema.Record(Schema.Stri
 const Secret = /* @__PURE__ */ Schema.Union([
   Schema.String,
   /* @__PURE__ */ Schema.declare(
-    (value): value is Redacted.Redacted<string> =>
+    (value): value is Redacted.Redacted =>
       Redacted.isRedacted(value) && Predicate.isString(Redacted.value(value)),
   ),
 ]);

@@ -31,16 +31,16 @@ const epochSeconds = (timestamp: string): number =>
   Math.floor(DateTime.toEpochMillis(DateTime.makeUnsafe(timestamp)) / 1000);
 
 /** Run `effect` against a stub answering `body`, and return its failure. */
-const failureOf = <A, E, Body>(
+const failureOf = <A, E>(
   effect: Effect.Effect<A, E, Layer.Success<typeof PayPalPayments.capabilities>>,
-  body: (req: PayPalCall) => Body,
+  body: (req: PayPalCall) => unknown,
 ): Effect.Effect<E, A> =>
   Effect.flip(effect).pipe(Effect.provide(provide(makeFakeClient(body).client)));
 
 /** {@link failureOf}, run. */
-const failure = <A, E, Body>(
+const failure = <A, E>(
   effect: Effect.Effect<A, E, Layer.Success<typeof PayPalPayments.capabilities>>,
-  body: (req: PayPalCall) => Body,
+  body: (req: PayPalCall) => unknown,
 ): Promise<E> => Effect.runPromise(failureOf(effect, body));
 
 describe("PayPalPayments capabilities", () => {

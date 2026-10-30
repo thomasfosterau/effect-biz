@@ -45,7 +45,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateTreasuryCreditReversalRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryCreditReversal, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTreasuryCreditReversal, {
     method: "POST",
@@ -60,7 +60,7 @@ export const create: (
  */
 export const list: (
   params: Distilled.GetTreasuryCreditReversalsRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTreasuryCreditReversalsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryCreditReversals, {
     method: "GET",
@@ -75,8 +75,8 @@ export const list: (
  */
 export const retrieve: (
   credit_reversal: string,
-  params?: Omit<Distilled.GetTreasuryCreditReversalRequest, "credit_reversal"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTreasuryCreditReversalRequest, "credit_reversal">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryCreditReversal, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryCreditReversal, {
     method: "GET",

@@ -52,7 +52,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateCreditNoteRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CreditNote, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateCreditNote,
   { method: "POST", path: "/v1/credit_notes", ids: [], params: true },
@@ -63,8 +63,8 @@ export const create: (
  * `GetCreditNotes`.
  */
 export const list: (
-  params?: Distilled.GetCreditNotesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetCreditNotesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCreditNotesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCreditNotes, {
     method: "GET",
@@ -79,8 +79,8 @@ export const list: (
  */
 export const listLines: (
   credit_note: string,
-  params?: Omit<Distilled.GetCreditNoteLinesRequest, "credit_note"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCreditNoteLinesRequest, "credit_note">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCreditNoteLinesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCreditNoteLines, {
     method: "GET",
@@ -95,7 +95,7 @@ export const listLines: (
  */
 export const listPreviewLines: (
   params: Distilled.GetCreditNotesPreviewLinesRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCreditNotesPreviewLinesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCreditNotesPreviewLines, {
     method: "GET",
@@ -110,7 +110,7 @@ export const listPreviewLines: (
  */
 export const preview: (
   params: Distilled.GetCreditNotesPreviewRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CreditNote, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetCreditNotesPreview,
   { method: "GET", path: "/v1/credit_notes/preview", ids: [], params: true },
@@ -122,8 +122,8 @@ export const preview: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetCreditNoteRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCreditNoteRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CreditNote, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetCreditNote,
   { method: "GET", path: "/v1/credit_notes/{id}", ids: ["id"], params: true },
@@ -135,8 +135,8 @@ export const retrieve: (
  */
 export const update: (
   id: string,
-  params?: Omit<Distilled.UpdateCreditNoteRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateCreditNoteRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CreditNote, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateCreditNote,
   { method: "POST", path: "/v1/credit_notes/{id}", ids: ["id"], params: true },
@@ -148,8 +148,8 @@ export const update: (
  */
 export const voidCreditNote: (
   id: string,
-  params?: Omit<Distilled.CreateCreditNoteVoidRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateCreditNoteVoidRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CreditNote, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateCreditNoteVoid,
   { method: "POST", path: "/v1/credit_notes/{id}/void", ids: ["id"], params: true },

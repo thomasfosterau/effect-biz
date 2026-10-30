@@ -51,7 +51,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateTransferRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<unknown, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTransfer,
   { method: "POST", path: "/v1/transfers", ids: [], params: true },
@@ -63,8 +63,8 @@ export const create: (
  */
 export const createReversal: (
   id: string,
-  params?: Omit<Distilled.CreateTransferReversalRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTransferReversalRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TransferReversal, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTransferReversal, {
     method: "POST",
@@ -78,8 +78,8 @@ export const createReversal: (
  * `GetTransfers`.
  */
 export const list: (
-  params?: Distilled.GetTransfersRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTransfersRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTransfersResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTransfers, {
     method: "GET",
@@ -94,8 +94,8 @@ export const list: (
  */
 export const listReversals: (
   id: string,
-  params?: Omit<Distilled.GetTransferReversalsRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTransferReversalsRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTransferReversalsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTransferReversals, {
     method: "GET",
@@ -110,8 +110,8 @@ export const listReversals: (
  */
 export const retrieve: (
   transfer: string,
-  params?: Omit<Distilled.GetTransferRequest, "transfer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTransferRequest, "transfer">,
+  options?: RequestOptions,
 ) => Effect.Effect<unknown, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetTransfer,
   { method: "GET", path: "/v1/transfers/{transfer}", ids: ["transfer"], params: true },
@@ -124,8 +124,8 @@ export const retrieve: (
 export const retrieveReversal: (
   transfer: string,
   id: string,
-  params?: Omit<Distilled.GetTransferReversalRequest, "transfer" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTransferReversalRequest, "transfer" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TransferReversal, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTransferReversal, {
     method: "GET",
@@ -140,8 +140,8 @@ export const retrieveReversal: (
  */
 export const update: (
   transfer: string,
-  params?: Omit<Distilled.UpdateTransferRequest, "transfer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateTransferRequest, "transfer">,
+  options?: RequestOptions,
 ) => Effect.Effect<unknown, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateTransfer,
   { method: "POST", path: "/v1/transfers/{transfer}", ids: ["transfer"], params: true },
@@ -154,8 +154,8 @@ export const update: (
 export const updateReversal: (
   transfer: string,
   id: string,
-  params?: Omit<Distilled.UpdateTransferReversalRequest, "transfer" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateTransferReversalRequest, "transfer" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TransferReversal, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateTransferReversal, {
     method: "POST",

@@ -49,7 +49,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateCommerceProductCatalogImportRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CommerceProductCatalogImport, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCommerceProductCatalogImport, {
     method: "POST",
@@ -63,8 +63,8 @@ export const create: (
  * `GetCommerceProductCatalogImports`.
  */
 export const list: (
-  params?: Distilled.GetCommerceProductCatalogImportsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetCommerceProductCatalogImportsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCommerceProductCatalogImportsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCommerceProductCatalogImports, {
     method: "GET",
@@ -79,7 +79,7 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CommerceProductCatalogImport, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCommerceProductCatalogImport, {
     method: "GET",

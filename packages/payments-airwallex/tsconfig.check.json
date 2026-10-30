@@ -1,0 +1,13 @@
+{
+  // The type gate (`check` task): the same program as tsconfig.json, but the
+  // core sibling resolves through its `exports` to the built `dist/`, the way
+  // a consumer sees it (hence the task's sibling build edge). tsconfig.json
+  // maps it to `src/` for type-aware lint, which runs before any build.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@thomasfosterau/effect-biz-payments-airwallex": ["./src/index.ts"],
+      "@thomasfosterau/effect-biz-payments-airwallex/*": ["./src/*.ts"]
+    }
+  }
+}

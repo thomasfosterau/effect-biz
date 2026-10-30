@@ -43,8 +43,8 @@ export {
  * `GetIdentityVerificationReports`.
  */
 export const list: (
-  params?: Distilled.GetIdentityVerificationReportsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetIdentityVerificationReportsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetIdentityVerificationReportsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIdentityVerificationReports, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   report: string,
-  params?: Omit<Distilled.GetIdentityVerificationReportRequest, "report"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetIdentityVerificationReportRequest, "report">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IdentityVerificationReport, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIdentityVerificationReport, {
     method: "GET",

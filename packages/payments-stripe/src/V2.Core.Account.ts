@@ -51,8 +51,8 @@ export {
  */
 export const close: (
   id: string,
-  params?: Omit<Distilled.CreateCoreAccountCloseRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateCoreAccountCloseRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreAccount, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateCoreAccountClose,
   { method: "POST", path: "/v2/core/accounts/{id}/close", ids: ["id"], params: true },
@@ -63,8 +63,8 @@ export const close: (
  * `CreateCoreAccount`.
  */
 export const create: (
-  params?: Distilled.CreateCoreAccountRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateCoreAccountRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreAccount, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateCoreAccount,
   { method: "POST", path: "/v2/core/accounts", ids: [], params: true },
@@ -75,8 +75,8 @@ export const create: (
  * `GetCoreAccounts`.
  */
 export const list: (
-  params?: Distilled.GetCoreAccountsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetCoreAccountsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCoreAccountsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCoreAccounts, {
     method: "GET",
@@ -91,8 +91,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetCoreAccountRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCoreAccountRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreAccount, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetCoreAccount,
   { method: "GET", path: "/v2/core/accounts/{id}", ids: ["id"], params: true },
@@ -104,8 +104,8 @@ export const retrieve: (
  */
 export const update: (
   id: string,
-  params?: Omit<Distilled.UpdateCoreAccountRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateCoreAccountRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreAccount, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateCoreAccount,
   { method: "POST", path: "/v2/core/accounts/{id}", ids: ["id"], params: true },

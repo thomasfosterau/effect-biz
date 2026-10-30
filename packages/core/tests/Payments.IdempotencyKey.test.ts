@@ -63,7 +63,7 @@ describe("IdempotencyKey", () => {
   });
 
   it("make throws on a bad shape", () => {
-    expect(() => IdempotencyKey.IdempotencyKey.make("bad key")).toThrow();
+    expect(() => IdempotencyKey.IdempotencyKey.make("bad key")).toThrow("Schema validation failed");
   });
 });
 
@@ -81,7 +81,7 @@ describe("where the neutral key is accepted (type level)", () => {
     expectTypeOf<CheckoutSession.CreateParams["idempotencyKey"]>().toEqualTypeOf<Key>();
     // Optional: a call without a key compiles.
     expectTypeOf<{ email: string }>().toExtend<Customer.CreateParams>();
-    expectTypeOf<Record<never, never>>().toExtend<PaymentIntent.ConfirmParams>();
+    expectTypeOf<Record<string, never>>().toExtend<PaymentIntent.ConfirmParams>();
   });
 
   it("is not a plain string", () => {

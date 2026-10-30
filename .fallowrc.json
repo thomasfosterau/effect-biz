@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": [
+    "packages/*/tests/**/*.ts",
+    "packages/*/examples/*.ts",
+    "packages/*/scripts/*.ts",
+    "packages/*/vite.config.ts",
+    "tests/stubs.ts",
+    "tests/dist-consumer/src/*.ts",
+    "tests/dist-consumer/vite.config.ts",
+    "scripts/*.ts",
+    "vite.config.ts",
+    "vite.package.ts"
+  ],
+  "ignoreDependencies": ["@effect/docgen", "@typescript/native", "effect"],
+  "rules": {
+    "unused-files": "error",
+    "unused-exports": "error",
+    "unused-types": "error",
+    "unused-dependencies": "error",
+    "unused-dev-dependencies": "warn",
+    "unused-enum-members": "error",
+    "unused-class-members": "warn",
+    "unresolved-imports": "error",
+    "unlisted-dependencies": "error",
+    "duplicate-exports": "error",
+    "circular-dependencies": "error",
+    "boundary-violation": "error",
+    "stale-suppressions": "warn"
+  },
+  "boundaries": {
+    "zones": [
+      { "name": "core", "patterns": ["packages/core/src/**"] },
+      { "name": "stripe", "patterns": ["packages/payments-stripe/src/**"] },
+      { "name": "paypal", "patterns": ["packages/payments-paypal/src/**"] },
+      { "name": "airwallex", "patterns": ["packages/payments-airwallex/src/**"] }
+    ],
+    "rules": [
+      { "from": "core", "allow": [] },
+      { "from": "stripe", "allow": ["core"] },
+      { "from": "paypal", "allow": ["core"] },
+      { "from": "airwallex", "allow": ["core"] }
+    ]
+  },
+  "health": {
+    "maxCyclomatic": 20,
+    "maxCognitive": 15,
+    "maxCrap": 30,
+    "coverage": "coverage/coverage-final.json"
+  }
+}

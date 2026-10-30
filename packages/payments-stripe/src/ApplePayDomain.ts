@@ -47,7 +47,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateApplePayDomainRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ApplePayDomain, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateApplePayDomain,
   { method: "POST", path: "/v1/apple_pay/domains", ids: [], params: true },
@@ -59,7 +59,7 @@ export const create: (
  */
 export const del: (
   domain: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedApplePayDomain, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteApplePayDomain, {
     method: "DELETE",
@@ -73,8 +73,8 @@ export const del: (
  * `GetApplePayDomains`.
  */
 export const list: (
-  params?: Distilled.GetApplePayDomainsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetApplePayDomainsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetApplePayDomainsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetApplePayDomains, {
     method: "GET",
@@ -89,8 +89,8 @@ export const list: (
  */
 export const retrieve: (
   domain: string,
-  params?: Omit<Distilled.GetApplePayDomainRequest, "domain"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetApplePayDomainRequest, "domain">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ApplePayDomain, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetApplePayDomain,
   { method: "GET", path: "/v1/apple_pay/domains/{domain}", ids: ["domain"], params: true },

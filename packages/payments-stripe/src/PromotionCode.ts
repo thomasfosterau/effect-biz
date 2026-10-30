@@ -46,7 +46,7 @@ export {
  */
 export const create: (
   params: Distilled.CreatePromotionCodeRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PromotionCode, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePromotionCode,
   { method: "POST", path: "/v1/promotion_codes", ids: [], params: true },
@@ -57,8 +57,8 @@ export const create: (
  * `GetPromotionCodes`.
  */
 export const list: (
-  params?: Distilled.GetPromotionCodesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetPromotionCodesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPromotionCodesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPromotionCodes, {
     method: "GET",
@@ -73,8 +73,8 @@ export const list: (
  */
 export const retrieve: (
   promotion_code: string,
-  params?: Omit<Distilled.GetPromotionCodeRequest, "promotion_code"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPromotionCodeRequest, "promotion_code">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PromotionCode, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetPromotionCode,
   {
@@ -91,8 +91,8 @@ export const retrieve: (
  */
 export const update: (
   promotion_code: string,
-  params?: Omit<Distilled.UpdatePromotionCodeRequest, "promotion_code"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdatePromotionCodeRequest, "promotion_code">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PromotionCode, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdatePromotionCode,
   {

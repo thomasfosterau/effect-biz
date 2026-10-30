@@ -46,8 +46,8 @@ export {
  * `CreateSource`.
  */
 export const create: (
-  params?: Distilled.CreateSourceRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateSourceRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Source, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateSource,
   { method: "POST", path: "/v1/sources", ids: [], params: true },
@@ -59,8 +59,8 @@ export const create: (
  */
 export const listSourceTransactions: (
   source: string,
-  params?: Omit<Distilled.GetSourceTransactionsRequest, "source"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetSourceTransactionsRequest, "source">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetSourceTransactionsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetSourceTransactions, {
     method: "GET",
@@ -75,8 +75,8 @@ export const listSourceTransactions: (
  */
 export const retrieve: (
   source: string,
-  params?: Omit<Distilled.GetSourceRequest, "source"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetSourceRequest, "source">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Source, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetSource,
   { method: "GET", path: "/v1/sources/{source}", ids: ["source"], params: true },
@@ -88,8 +88,8 @@ export const retrieve: (
  */
 export const update: (
   source: string,
-  params?: Omit<Distilled.UpdateSourceRequest, "source"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateSourceRequest, "source">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Source, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateSource,
   { method: "POST", path: "/v1/sources/{source}", ids: ["source"], params: true },
@@ -102,7 +102,7 @@ export const update: (
 export const verify: (
   source: string,
   params: Omit<Distilled.CreateSourceVerifyRequest, "source">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Source, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateSourceVerify,
   { method: "POST", path: "/v1/sources/{source}/verify", ids: ["source"], params: true },

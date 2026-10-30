@@ -49,8 +49,8 @@ export {
  * `CreateTerminalLocation`.
  */
 export const create: (
-  params?: Distilled.CreateTerminalLocationRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateTerminalLocationRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalLocation, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTerminalLocation, {
     method: "POST",
@@ -65,7 +65,7 @@ export const create: (
  */
 export const del: (
   location: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedTerminalLocation, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteTerminalLocation, {
     method: "DELETE",
@@ -79,8 +79,8 @@ export const del: (
  * `GetTerminalLocations`.
  */
 export const list: (
-  params?: Distilled.GetTerminalLocationsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTerminalLocationsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTerminalLocationsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTerminalLocations, {
     method: "GET",
@@ -95,8 +95,8 @@ export const list: (
  */
 export const retrieve: (
   location: string,
-  params?: Omit<Distilled.GetTerminalLocationRequest, "location"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTerminalLocationRequest, "location">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTerminalLocationResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTerminalLocation, {
     method: "GET",
@@ -111,8 +111,8 @@ export const retrieve: (
  */
 export const update: (
   location: string,
-  params?: Omit<Distilled.UpdateTerminalLocationRequest, "location"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateTerminalLocationRequest, "location">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.UpdateTerminalLocationResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateTerminalLocation, {
     method: "POST",

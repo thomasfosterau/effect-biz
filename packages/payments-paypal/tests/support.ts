@@ -48,7 +48,7 @@ const encodeJson = Schema.encodeSync(JsonText);
 const parseJson = (text: string) => decodeJson(text);
 
 /** Serialise a value as JSON text, honouring `toJSON` as `JSON.stringify` does. */
-export const toJson = <A>(value: A): string => encodeJson(value);
+export const toJson = (value: unknown): string => encodeJson(value);
 
 /** A captured request as a {@link PayPalCall}. */
 export const callOf = (request: CapturedRequest): PayPalCall => ({

@@ -47,8 +47,8 @@ export {
  * `CreateInvoiceitem`.
  */
 export const create: (
-  params?: Distilled.CreateInvoiceitemRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateInvoiceitemRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoiceitem, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateInvoiceitem,
   { method: "POST", path: "/v1/invoiceitems", ids: [], params: true },
@@ -60,7 +60,7 @@ export const create: (
  */
 export const del: (
   invoiceitem: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedInvoiceitem, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteInvoiceitem, {
     method: "DELETE",
@@ -74,8 +74,8 @@ export const del: (
  * `GetInvoiceitems`.
  */
 export const list: (
-  params?: Distilled.GetInvoiceitemsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetInvoiceitemsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetInvoiceitemsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetInvoiceitems, {
     method: "GET",
@@ -90,8 +90,8 @@ export const list: (
  */
 export const retrieve: (
   invoiceitem: string,
-  params?: Omit<Distilled.GetInvoiceitemRequest, "invoiceitem"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetInvoiceitemRequest, "invoiceitem">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoiceitem, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetInvoiceitem,
   { method: "GET", path: "/v1/invoiceitems/{invoiceitem}", ids: ["invoiceitem"], params: true },
@@ -103,8 +103,8 @@ export const retrieve: (
  */
 export const update: (
   invoiceitem: string,
-  params?: Omit<Distilled.UpdateInvoiceitemRequest, "invoiceitem"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateInvoiceitemRequest, "invoiceitem">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Invoiceitem, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateInvoiceitem,
   { method: "POST", path: "/v1/invoiceitems/{invoiceitem}", ids: ["invoiceitem"], params: true },

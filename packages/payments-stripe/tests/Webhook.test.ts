@@ -7,7 +7,7 @@ import * as Schema from "effect/Schema";
 import * as Webhook from "../src/Webhook.ts";
 import { StripeService } from "../src/Webhook.ts";
 import { SignatureVerificationError } from "@thomasfosterau/effect-biz/Payments";
-import Stripe from "stripe";
+import { Stripe } from "stripe";
 import { DISTILLED_API_VERSION } from "../src/StripePayments.ts";
 
 /** A test event's body: the event serialised as `JSON.stringify` does. */

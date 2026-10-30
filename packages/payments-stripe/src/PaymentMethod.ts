@@ -48,8 +48,8 @@ export {
  */
 export const attach: (
   payment_method: string,
-  params?: Omit<Distilled.CreatePaymentMethodAttachRequest, "payment_method"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreatePaymentMethodAttachRequest, "payment_method">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentMethod, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentMethodAttach,
   {
@@ -65,8 +65,8 @@ export const attach: (
  * `CreatePaymentMethod`.
  */
 export const create: (
-  params?: Distilled.CreatePaymentMethodRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreatePaymentMethodRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentMethod, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentMethod,
   { method: "POST", path: "/v1/payment_methods", ids: [], params: true },
@@ -78,8 +78,8 @@ export const create: (
  */
 export const detach: (
   payment_method: string,
-  params?: Omit<Distilled.CreatePaymentMethodDetachRequest, "payment_method"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreatePaymentMethodDetachRequest, "payment_method">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentMethod, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentMethodDetach,
   {
@@ -95,8 +95,8 @@ export const detach: (
  * `GetPaymentMethods`.
  */
 export const list: (
-  params?: Distilled.GetPaymentMethodsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetPaymentMethodsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPaymentMethodsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPaymentMethods, {
     method: "GET",
@@ -111,8 +111,8 @@ export const list: (
  */
 export const retrieve: (
   payment_method: string,
-  params?: Omit<Distilled.GetPaymentMethodRequest, "payment_method"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPaymentMethodRequest, "payment_method">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentMethod, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetPaymentMethod,
   {
@@ -129,8 +129,8 @@ export const retrieve: (
  */
 export const update: (
   payment_method: string,
-  params?: Omit<Distilled.UpdatePaymentMethodRequest, "payment_method"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdatePaymentMethodRequest, "payment_method">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentMethod, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdatePaymentMethod,
   {

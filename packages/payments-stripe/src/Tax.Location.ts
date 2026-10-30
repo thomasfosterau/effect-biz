@@ -45,7 +45,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateTaxLocationRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxLocation, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTaxLocation,
   { method: "POST", path: "/v1/tax/locations", ids: [], params: true },
@@ -57,7 +57,7 @@ export const create: (
  */
 export const list: (
   params: Distilled.GetTaxLocationsRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTaxLocationsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTaxLocations, {
     method: "GET",
@@ -72,8 +72,8 @@ export const list: (
  */
 export const retrieve: (
   location: string,
-  params?: Omit<Distilled.GetTaxLocationRequest, "location"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTaxLocationRequest, "location">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxLocation, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetTaxLocation,
   { method: "GET", path: "/v1/tax/locations/{location}", ids: ["location"], params: true },

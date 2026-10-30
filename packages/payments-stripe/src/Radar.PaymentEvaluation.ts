@@ -42,7 +42,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateRadarPaymentEvaluationRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.RadarPaymentEvaluation, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateRadarPaymentEvaluation, {
     method: "POST",

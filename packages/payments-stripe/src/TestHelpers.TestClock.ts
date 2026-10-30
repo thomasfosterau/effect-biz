@@ -49,7 +49,7 @@ export {
 export const advance: (
   test_clock: string,
   params: Omit<Distilled.CreateTestHelpersTestClockAdvanceRequest, "test_clock">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TestHelpersTestClock, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersTestClockAdvance, {
     method: "POST",
@@ -64,7 +64,7 @@ export const advance: (
  */
 export const create: (
   params: Distilled.CreateTestHelpersTestClockRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TestHelpersTestClock, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersTestClock, {
     method: "POST",
@@ -79,7 +79,7 @@ export const create: (
  */
 export const del: (
   test_clock: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedTestHelpersTestClock, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteTestHelpersTestClock, {
     method: "DELETE",
@@ -93,8 +93,8 @@ export const del: (
  * `GetTestHelpersTestClocks`.
  */
 export const list: (
-  params?: Distilled.GetTestHelpersTestClocksRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTestHelpersTestClocksRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTestHelpersTestClocksResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTestHelpersTestClocks, {
     method: "GET",
@@ -109,8 +109,8 @@ export const list: (
  */
 export const retrieve: (
   test_clock: string,
-  params?: Omit<Distilled.GetTestHelpersTestClockRequest, "test_clock"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTestHelpersTestClockRequest, "test_clock">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TestHelpersTestClock, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTestHelpersTestClock, {
     method: "GET",

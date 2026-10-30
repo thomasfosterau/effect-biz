@@ -46,8 +46,8 @@ export {
  */
 export const archive: (
   template: string,
-  params?: Omit<Distilled.CreateInvoiceRenderingTemplateArchiveRequest, "template"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateInvoiceRenderingTemplateArchiveRequest, "template">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.InvoiceRenderingTemplate, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateInvoiceRenderingTemplateArchive, {
     method: "POST",
@@ -61,8 +61,8 @@ export const archive: (
  * `GetInvoiceRenderingTemplates`.
  */
 export const list: (
-  params?: Distilled.GetInvoiceRenderingTemplatesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetInvoiceRenderingTemplatesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetInvoiceRenderingTemplatesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetInvoiceRenderingTemplates, {
     method: "GET",
@@ -77,8 +77,8 @@ export const list: (
  */
 export const retrieve: (
   template: string,
-  params?: Omit<Distilled.GetInvoiceRenderingTemplateRequest, "template"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetInvoiceRenderingTemplateRequest, "template">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.InvoiceRenderingTemplate, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetInvoiceRenderingTemplate, {
     method: "GET",
@@ -93,8 +93,8 @@ export const retrieve: (
  */
 export const unarchive: (
   template: string,
-  params?: Omit<Distilled.CreateInvoiceRenderingTemplateUnarchiveRequest, "template"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateInvoiceRenderingTemplateUnarchiveRequest, "template">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.InvoiceRenderingTemplate, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateInvoiceRenderingTemplateUnarchive, {
     method: "POST",

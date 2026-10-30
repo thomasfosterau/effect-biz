@@ -43,8 +43,8 @@ export {
  * `GetClimateSuppliers`.
  */
 export const list: (
-  params?: Distilled.GetClimateSuppliersRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetClimateSuppliersRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetClimateSuppliersResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetClimateSuppliers, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   supplier: string,
-  params?: Omit<Distilled.GetClimateSupplierRequest, "supplier"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetClimateSupplierRequest, "supplier">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ClimateSupplier, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetClimateSupplier, {
     method: "GET",

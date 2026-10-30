@@ -39,7 +39,7 @@ export { CreateCustomerSessionRequest, CustomerSession } from "@distilled.cloud/
  */
 export const create: (
   params: Distilled.CreateCustomerSessionRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CustomerSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCustomerSession, {
     method: "POST",

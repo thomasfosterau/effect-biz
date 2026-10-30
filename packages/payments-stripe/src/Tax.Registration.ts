@@ -46,7 +46,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateTaxRegistrationRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxRegistration, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTaxRegistration, {
     method: "POST",
@@ -60,8 +60,8 @@ export const create: (
  * `GetTaxRegistrations`.
  */
 export const list: (
-  params?: Distilled.GetTaxRegistrationsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTaxRegistrationsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTaxRegistrationsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTaxRegistrations, {
     method: "GET",
@@ -76,8 +76,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetTaxRegistrationRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTaxRegistrationRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxRegistration, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTaxRegistration, {
     method: "GET",
@@ -92,8 +92,8 @@ export const retrieve: (
  */
 export const update: (
   id: string,
-  params?: Omit<Distilled.UpdateTaxRegistrationRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateTaxRegistrationRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxRegistration, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateTaxRegistration, {
     method: "POST",

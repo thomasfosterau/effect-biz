@@ -47,10 +47,8 @@ export {
  */
 export const cancel: (
   authentication: string,
-  params?:
-    | Omit<Distilled.CreateThreeDSecureAuthenticationCancelRequest, "authentication">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateThreeDSecureAuthenticationCancelRequest, "authentication">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ThreeDSecureAuthentication, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateThreeDSecureAuthenticationCancel, {
     method: "POST",
@@ -65,7 +63,7 @@ export const cancel: (
  */
 export const create: (
   params: Distilled.CreateThreeDSecureAuthenticationRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ThreeDSecureAuthentication, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateThreeDSecureAuthentication, {
     method: "POST",
@@ -79,8 +77,8 @@ export const create: (
  * `GetThreeDSecureAuthentications`.
  */
 export const list: (
-  params?: Distilled.GetThreeDSecureAuthenticationsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetThreeDSecureAuthenticationsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetThreeDSecureAuthenticationsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetThreeDSecureAuthentications, {
     method: "GET",
@@ -95,8 +93,8 @@ export const list: (
  */
 export const retrieve: (
   authentication: string,
-  params?: Omit<Distilled.GetThreeDSecureAuthenticationRequest, "authentication"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetThreeDSecureAuthenticationRequest, "authentication">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ThreeDSecureAuthentication, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetThreeDSecureAuthentication, {
     method: "GET",
@@ -111,10 +109,8 @@ export const retrieve: (
  */
 export const submit: (
   authentication: string,
-  params?:
-    | Omit<Distilled.CreateThreeDSecureAuthenticationSubmitRequest, "authentication">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateThreeDSecureAuthenticationSubmitRequest, "authentication">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ThreeDSecureAuthentication, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateThreeDSecureAuthenticationSubmit, {
     method: "POST",

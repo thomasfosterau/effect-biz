@@ -50,7 +50,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateBillingMeterRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingMeter, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateBillingMeter,
   { method: "POST", path: "/v1/billing/meters", ids: [], params: true },
@@ -62,8 +62,8 @@ export const create: (
  */
 export const deactivate: (
   id: string,
-  params?: Omit<Distilled.CreateBillingMeterDeactivateRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateBillingMeterDeactivateRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingMeter, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateBillingMeterDeactivate,
   { method: "POST", path: "/v1/billing/meters/{id}/deactivate", ids: ["id"], params: true },
@@ -74,8 +74,8 @@ export const deactivate: (
  * `GetBillingMeters`.
  */
 export const list: (
-  params?: Distilled.GetBillingMetersRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetBillingMetersRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetBillingMetersResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBillingMeters, {
     method: "GET",
@@ -91,7 +91,7 @@ export const list: (
 export const listEventSummaries: (
   id: string,
   params: Omit<Distilled.GetBillingMeterEventSummariesRequest, "id">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetBillingMeterEventSummariesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBillingMeterEventSummaries, {
     method: "GET",
@@ -106,8 +106,8 @@ export const listEventSummaries: (
  */
 export const reactivate: (
   id: string,
-  params?: Omit<Distilled.CreateBillingMeterReactivateRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateBillingMeterReactivateRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingMeter, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateBillingMeterReactivate,
   { method: "POST", path: "/v1/billing/meters/{id}/reactivate", ids: ["id"], params: true },
@@ -119,8 +119,8 @@ export const reactivate: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetBillingMeterRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetBillingMeterRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingMeter, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetBillingMeter,
   { method: "GET", path: "/v1/billing/meters/{id}", ids: ["id"], params: true },
@@ -132,8 +132,8 @@ export const retrieve: (
  */
 export const update: (
   id: string,
-  params?: Omit<Distilled.UpdateBillingMeterRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateBillingMeterRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingMeter, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateBillingMeter,
   { method: "POST", path: "/v1/billing/meters/{id}", ids: ["id"], params: true },

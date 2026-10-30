@@ -42,7 +42,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateTerminalOnboardingLinkRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalOnboardingLink, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTerminalOnboardingLink, {
     method: "POST",

@@ -47,7 +47,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateAppsInstallRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.AppsInstall, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateAppsInstall,
   { method: "POST", path: "/v1/apps/installs", ids: [], params: true },
@@ -58,8 +58,8 @@ export const create: (
  * `GetAppsInstalls`.
  */
 export const list: (
-  params?: Distilled.GetAppsInstallsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetAppsInstallsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetAppsInstallsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetAppsInstalls, {
     method: "GET",
@@ -74,8 +74,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetAppsInstallRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetAppsInstallRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.AppsInstall, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetAppsInstall,
   { method: "GET", path: "/v1/apps/installs/{id}", ids: ["id"], params: true },
@@ -87,8 +87,8 @@ export const retrieve: (
  */
 export const uninstall: (
   id: string,
-  params?: Omit<Distilled.CreateAppsInstallUninstallRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateAppsInstallUninstallRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.AppsInstall, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateAppsInstallUninstall,
   { method: "POST", path: "/v1/apps/installs/{id}/uninstall", ids: ["id"], params: true },
@@ -100,8 +100,8 @@ export const uninstall: (
  */
 export const update: (
   id: string,
-  params?: Omit<Distilled.UpdateAppsInstallRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateAppsInstallRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.AppsInstall, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateAppsInstall,
   { method: "POST", path: "/v1/apps/installs/{id}", ids: ["id"], params: true },

@@ -43,8 +43,8 @@ export {
  */
 export const retrieve: (
   confirmation_token: string,
-  params?: Omit<Distilled.GetConfirmationTokenRequest, "confirmation_token"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetConfirmationTokenRequest, "confirmation_token">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ConfirmationToken, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetConfirmationToken, {
     method: "GET",
@@ -58,8 +58,8 @@ export const retrieve: (
  * `CreateTestHelpersConfirmationToken`.
  */
 export const testHelpersCreate: (
-  params?: Distilled.CreateTestHelpersConfirmationTokenRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateTestHelpersConfirmationTokenRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ConfirmationToken, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersConfirmationToken, {
     method: "POST",

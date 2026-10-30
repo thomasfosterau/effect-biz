@@ -43,8 +43,8 @@ export {
  * `GetCountrySpecs`.
  */
 export const list: (
-  params?: Distilled.GetCountrySpecsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetCountrySpecsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCountrySpecsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCountrySpecs, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   country: string,
-  params?: Omit<Distilled.GetCountrySpecsCountryRequest, "country"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCountrySpecsCountryRequest, "country">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CountrySpec, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetCountrySpecsCountry,
   { method: "GET", path: "/v1/country_specs/{country}", ids: ["country"], params: true },

@@ -39,7 +39,7 @@ export { GetSetupAttemptsRequest, GetSetupAttemptsResponse } from "@distilled.cl
  */
 export const list: (
   params: Distilled.GetSetupAttemptsRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetSetupAttemptsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetSetupAttempts, {
     method: "GET",

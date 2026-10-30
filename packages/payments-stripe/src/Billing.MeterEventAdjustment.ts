@@ -42,7 +42,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateBillingMeterEventAdjustmentRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingMeterEventAdjustment, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateBillingMeterEventAdjustment, {
     method: "POST",

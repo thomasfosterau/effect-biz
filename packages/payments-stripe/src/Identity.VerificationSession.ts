@@ -48,8 +48,8 @@ export {
  */
 export const cancel: (
   session: string,
-  params?: Omit<Distilled.CreateIdentityVerificationSessionCancelRequest, "session"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateIdentityVerificationSessionCancelRequest, "session">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IdentityVerificationSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateIdentityVerificationSessionCancel, {
     method: "POST",
@@ -63,8 +63,8 @@ export const cancel: (
  * `CreateIdentityVerificationSession`.
  */
 export const create: (
-  params?: Distilled.CreateIdentityVerificationSessionRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateIdentityVerificationSessionRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IdentityVerificationSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateIdentityVerificationSession, {
     method: "POST",
@@ -78,8 +78,8 @@ export const create: (
  * `GetIdentityVerificationSessions`.
  */
 export const list: (
-  params?: Distilled.GetIdentityVerificationSessionsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetIdentityVerificationSessionsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetIdentityVerificationSessionsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIdentityVerificationSessions, {
     method: "GET",
@@ -94,8 +94,8 @@ export const list: (
  */
 export const redact: (
   session: string,
-  params?: Omit<Distilled.CreateIdentityVerificationSessionRedactRequest, "session"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateIdentityVerificationSessionRedactRequest, "session">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IdentityVerificationSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateIdentityVerificationSessionRedact, {
     method: "POST",
@@ -110,8 +110,8 @@ export const redact: (
  */
 export const retrieve: (
   session: string,
-  params?: Omit<Distilled.GetIdentityVerificationSessionRequest, "session"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetIdentityVerificationSessionRequest, "session">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IdentityVerificationSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIdentityVerificationSession, {
     method: "GET",
@@ -126,8 +126,8 @@ export const retrieve: (
  */
 export const update: (
   session: string,
-  params?: Omit<Distilled.UpdateIdentityVerificationSessionRequest, "session"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateIdentityVerificationSessionRequest, "session">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IdentityVerificationSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateIdentityVerificationSession, {
     method: "POST",

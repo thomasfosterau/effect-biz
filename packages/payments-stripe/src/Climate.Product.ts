@@ -43,8 +43,8 @@ export {
  * `GetClimateProducts`.
  */
 export const list: (
-  params?: Distilled.GetClimateProductsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetClimateProductsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetClimateProductsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetClimateProducts, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   product: string,
-  params?: Omit<Distilled.GetClimateProductRequest, "product"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetClimateProductRequest, "product">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ClimateProduct, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetClimateProduct,
   { method: "GET", path: "/v1/climate/products/{product}", ids: ["product"], params: true },

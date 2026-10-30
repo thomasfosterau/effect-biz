@@ -47,8 +47,8 @@ export {
  */
 export const cancel: (
   order: string,
-  params?: Omit<Distilled.CreateClimateOrderCancelRequest, "order"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateClimateOrderCancelRequest, "order">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ClimateOrder, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateClimateOrderCancel,
   { method: "POST", path: "/v1/climate/orders/{order}/cancel", ids: ["order"], params: true },
@@ -60,7 +60,7 @@ export const cancel: (
  */
 export const create: (
   params: Distilled.CreateClimateOrderRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ClimateOrder, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateClimateOrder,
   { method: "POST", path: "/v1/climate/orders", ids: [], params: true },
@@ -71,8 +71,8 @@ export const create: (
  * `GetClimateOrders`.
  */
 export const list: (
-  params?: Distilled.GetClimateOrdersRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetClimateOrdersRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetClimateOrdersResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetClimateOrders, {
     method: "GET",
@@ -87,8 +87,8 @@ export const list: (
  */
 export const retrieve: (
   order: string,
-  params?: Omit<Distilled.GetClimateOrderRequest, "order"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetClimateOrderRequest, "order">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ClimateOrder, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetClimateOrder,
   { method: "GET", path: "/v1/climate/orders/{order}", ids: ["order"], params: true },
@@ -100,8 +100,8 @@ export const retrieve: (
  */
 export const update: (
   order: string,
-  params?: Omit<Distilled.UpdateClimateOrderRequest, "order"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateClimateOrderRequest, "order">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ClimateOrder, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateClimateOrder,
   { method: "POST", path: "/v1/climate/orders/{order}", ids: ["order"], params: true },

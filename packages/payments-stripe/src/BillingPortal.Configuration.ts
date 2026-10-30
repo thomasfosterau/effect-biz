@@ -46,7 +46,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateBillingPortalConfigurationRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingPortalConfiguration, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateBillingPortalConfiguration, {
     method: "POST",
@@ -60,8 +60,8 @@ export const create: (
  * `GetBillingPortalConfigurations`.
  */
 export const list: (
-  params?: Distilled.GetBillingPortalConfigurationsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetBillingPortalConfigurationsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetBillingPortalConfigurationsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBillingPortalConfigurations, {
     method: "GET",
@@ -76,8 +76,8 @@ export const list: (
  */
 export const retrieve: (
   configuration: string,
-  params?: Omit<Distilled.GetBillingPortalConfigurationRequest, "configuration"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetBillingPortalConfigurationRequest, "configuration">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingPortalConfiguration, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBillingPortalConfiguration, {
     method: "GET",
@@ -92,8 +92,8 @@ export const retrieve: (
  */
 export const update: (
   configuration: string,
-  params?: Omit<Distilled.UpdateBillingPortalConfigurationRequest, "configuration"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateBillingPortalConfigurationRequest, "configuration">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingPortalConfiguration, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateBillingPortalConfiguration, {
     method: "POST",

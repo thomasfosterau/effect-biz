@@ -47,7 +47,7 @@ export {
  */
 export const create: (
   params: Distilled.CreatePaymentMethodDomainRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentMethodDomain, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreatePaymentMethodDomain, {
     method: "POST",
@@ -61,8 +61,8 @@ export const create: (
  * `GetPaymentMethodDomains`.
  */
 export const list: (
-  params?: Distilled.GetPaymentMethodDomainsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetPaymentMethodDomainsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPaymentMethodDomainsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPaymentMethodDomains, {
     method: "GET",
@@ -77,8 +77,8 @@ export const list: (
  */
 export const retrieve: (
   payment_method_domain: string,
-  params?: Omit<Distilled.GetPaymentMethodDomainRequest, "payment_method_domain"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPaymentMethodDomainRequest, "payment_method_domain">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentMethodDomain, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPaymentMethodDomain, {
     method: "GET",
@@ -93,8 +93,8 @@ export const retrieve: (
  */
 export const update: (
   payment_method_domain: string,
-  params?: Omit<Distilled.UpdatePaymentMethodDomainRequest, "payment_method_domain"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdatePaymentMethodDomainRequest, "payment_method_domain">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentMethodDomain, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdatePaymentMethodDomain, {
     method: "POST",
@@ -109,10 +109,8 @@ export const update: (
  */
 export const validate: (
   payment_method_domain: string,
-  params?:
-    | Omit<Distilled.CreatePaymentMethodDomainValidateRequest, "payment_method_domain">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreatePaymentMethodDomainValidateRequest, "payment_method_domain">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentMethodDomain, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreatePaymentMethodDomainValidate, {
     method: "POST",

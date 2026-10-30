@@ -41,8 +41,8 @@ export {
  * `CreateBillingPortalSession`.
  */
 export const create: (
-  params?: Distilled.CreateBillingPortalSessionRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateBillingPortalSessionRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingPortalSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateBillingPortalSession, {
     method: "POST",

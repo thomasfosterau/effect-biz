@@ -43,8 +43,8 @@ export {
  * `GetReportingReportTypes`.
  */
 export const list: (
-  params?: Distilled.GetReportingReportTypesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetReportingReportTypesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetReportingReportTypesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetReportingReportTypes, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   report_type: string,
-  params?: Omit<Distilled.GetReportingReportTypeRequest, "report_type"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetReportingReportTypeRequest, "report_type">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ReportingReportType, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetReportingReportType, {
     method: "GET",

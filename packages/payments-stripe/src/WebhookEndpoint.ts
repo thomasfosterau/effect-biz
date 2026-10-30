@@ -48,7 +48,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateWebhookEndpointRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.WebhookEndpoint, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateWebhookEndpoint, {
     method: "POST",
@@ -63,7 +63,7 @@ export const create: (
  */
 export const del: (
   webhook_endpoint: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedWebhookEndpoint, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteWebhookEndpoint, {
     method: "DELETE",
@@ -77,8 +77,8 @@ export const del: (
  * `GetWebhookEndpoints`.
  */
 export const list: (
-  params?: Distilled.GetWebhookEndpointsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetWebhookEndpointsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetWebhookEndpointsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetWebhookEndpoints, {
     method: "GET",
@@ -93,8 +93,8 @@ export const list: (
  */
 export const retrieve: (
   webhook_endpoint: string,
-  params?: Omit<Distilled.GetWebhookEndpointRequest, "webhook_endpoint"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetWebhookEndpointRequest, "webhook_endpoint">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.WebhookEndpoint, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetWebhookEndpoint, {
     method: "GET",
@@ -109,8 +109,8 @@ export const retrieve: (
  */
 export const update: (
   webhook_endpoint: string,
-  params?: Omit<Distilled.UpdateWebhookEndpointRequest, "webhook_endpoint"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateWebhookEndpointRequest, "webhook_endpoint">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.WebhookEndpoint, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateWebhookEndpoint, {
     method: "POST",

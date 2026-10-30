@@ -43,8 +43,8 @@ export {
  * `GetExchangeRates`.
  */
 export const list: (
-  params?: Distilled.GetExchangeRatesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetExchangeRatesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetExchangeRatesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetExchangeRates, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   rate_id: string,
-  params?: Omit<Distilled.GetExchangeRateRequest, "rate_id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetExchangeRateRequest, "rate_id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ExchangeRate, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetExchangeRate,
   { method: "GET", path: "/v1/exchange_rates/{rate_id}", ids: ["rate_id"], params: true },

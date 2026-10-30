@@ -75,8 +75,8 @@ const write = (
   request: Omit<AirwallexRequest, "requestId">,
   idempotencyKey: string | undefined,
 ): Effect.Effect<unknown, PaymentsError> =>
-  Effect.flatMap(IdempotencyKeyNS.validate(idempotencyKey), (requestId) =>
-    client.request({ ...request, requestId }),
+  Effect.flatMap(IdempotencyKeyNS.validate(idempotencyKey), (key) =>
+    client.request({ ...request, requestId: key }),
   );
 
 /** Fail with a neutral error for an operation Airwallex does not support. */

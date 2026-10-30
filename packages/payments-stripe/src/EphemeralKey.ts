@@ -42,8 +42,8 @@ export {
  * `CreateEphemeralKey`.
  */
 export const create: (
-  params?: Distilled.CreateEphemeralKeyRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateEphemeralKeyRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.EphemeralKey, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateEphemeralKey,
   { method: "POST", path: "/v1/ephemeral_keys", ids: [], params: true },
@@ -55,8 +55,8 @@ export const create: (
  */
 export const del: (
   key: string,
-  params?: Omit<Distilled.DeleteEphemeralKeyRequest, "key"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.DeleteEphemeralKeyRequest, "key">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.EphemeralKey, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.DeleteEphemeralKey,
   { method: "DELETE", path: "/v1/ephemeral_keys/{key}", ids: ["key"], params: true },

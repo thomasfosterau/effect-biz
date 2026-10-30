@@ -41,12 +41,10 @@ describe("Enumeration", () => {
       [Price.RecurringInterval, "week"],
     ] as const;
     Arr.forEach(cases, ([schema, known]) => {
-      // SAFETY: every case is a lenient enumeration schema, which decodes from
-      // unknown input; widening it only drops the literal type of its output.
-      const decode = Schema.decodeUnknownSync(schema as Schema.Decoder<unknown>);
+      const decode = Schema.decodeUnknownSync(schema);
       expect(decode(known)).toBe(known);
       expect(decode(Enumeration.other("new"))).toEqual({ _tag: "Other", raw: "new" });
-      expect(() => decode("not_modelled")).toThrow();
+      expect(() => decode("not_modelled")).toThrow("Expected");
     });
   });
 });

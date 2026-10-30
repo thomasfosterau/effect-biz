@@ -18,6 +18,7 @@ import * as Arr from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
@@ -38,8 +39,8 @@ const generate = Effect.fn("generateResources")(function* () {
   const root = path.dirname(path.dirname(path.resolve(import.meta.filename)));
   const distilled = installed();
   const operations = readOperations(distilled.declarations, distilled.module);
-  const read = operations.map((operation) => operation.name);
-  const unread = runtimeOperations(distilled.module).filter((name) => !read.includes(name));
+  const read = HashSet.fromIterable(operations.map((operation) => operation.name));
+  const unread = runtimeOperations(distilled.module).filter((name) => !HashSet.has(read, name));
   const planned = plan(operations);
   const problems = [
     ...unread.map((name) => `${name} is exported by Distilled, but its declaration was not read`),
@@ -60,7 +61,7 @@ const generate = Effect.fn("generateResources")(function* () {
     },
   );
   const exposed = R.values(planned.modules).reduce((sum, module) => sum + module.length, 0);
-  yield* Console.log(
+  return yield* Console.log(
     `Wrote ${R.size(files)} resource modules: ${exposed} operations exposed, ${planned.unexposed.length} left unexposed`,
   );
 });

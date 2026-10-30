@@ -65,7 +65,7 @@ const NAME = "Airwallex";
 export interface AirwallexConfig {
   readonly clientId: string;
   /** The API key, kept `Redacted` so it never reaches a log line or an error. */
-  readonly apiKey: Redacted.Redacted<string>;
+  readonly apiKey: Redacted.Redacted;
   /**
    * The environment to talk to, which selects the API base URL: `live`
    * (`https://api.airwallex.com`) or `sandbox`
@@ -108,7 +108,7 @@ export interface AirwallexRequest {
   /** Path beginning with a slash, e.g. `/api/v1/pa/customers`. */
   readonly path: string;
   readonly query?: Record<string, string | number | undefined> | undefined;
-  readonly body?: unknown | undefined;
+  readonly body?: unknown;
   /**
    * The `request_id` of a `POST`, written into the JSON body in place of any
    * `request_id` already there (the capability layers put a fresh one on every

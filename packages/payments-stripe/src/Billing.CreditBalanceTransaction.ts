@@ -43,8 +43,8 @@ export {
  * `GetBillingCreditBalanceTransactions`.
  */
 export const list: (
-  params?: Distilled.GetBillingCreditBalanceTransactionsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetBillingCreditBalanceTransactionsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<
   Distilled.GetBillingCreditBalanceTransactionsResponse,
   PaymentsError,
@@ -62,8 +62,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetBillingCreditBalanceTransactionRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetBillingCreditBalanceTransactionRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingCreditBalanceTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBillingCreditBalanceTransaction, {
     method: "GET",

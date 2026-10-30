@@ -47,8 +47,8 @@ export {
  * `CreateCoupon`.
  */
 export const create: (
-  params?: Distilled.CreateCouponRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateCouponRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Coupon, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateCoupon,
   { method: "POST", path: "/v1/coupons", ids: [], params: true },
@@ -60,7 +60,7 @@ export const create: (
  */
 export const del: (
   coupon: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedCoupon, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.DeleteCoupon,
   { method: "DELETE", path: "/v1/coupons/{coupon}", ids: ["coupon"], params: false },
@@ -71,8 +71,8 @@ export const del: (
  * `GetCoupons`.
  */
 export const list: (
-  params?: Distilled.GetCouponsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetCouponsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCouponsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCoupons, {
     method: "GET",
@@ -87,8 +87,8 @@ export const list: (
  */
 export const retrieve: (
   coupon: string,
-  params?: Omit<Distilled.GetCouponRequest, "coupon"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCouponRequest, "coupon">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Coupon, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetCoupon,
   { method: "GET", path: "/v1/coupons/{coupon}", ids: ["coupon"], params: true },
@@ -100,8 +100,8 @@ export const retrieve: (
  */
 export const update: (
   coupon: string,
-  params?: Omit<Distilled.UpdateCouponRequest, "coupon"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateCouponRequest, "coupon">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Coupon, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateCoupon,
   { method: "POST", path: "/v1/coupons/{coupon}", ids: ["coupon"], params: true },

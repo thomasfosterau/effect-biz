@@ -91,8 +91,8 @@ export {
  * `CreateCustomer`.
  */
 export const create: (
-  params?: Distilled.CreateCustomerRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateCustomerRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Customer, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateCustomer,
   { method: "POST", path: "/v1/customers", ids: [], params: true },
@@ -105,7 +105,7 @@ export const create: (
 export const createBalanceTransaction: (
   customer: string,
   params: Omit<Distilled.CreateCustomerBalanceTransactionRequest, "customer">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CustomerBalanceTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCustomerBalanceTransaction, {
     method: "POST",
@@ -121,7 +121,7 @@ export const createBalanceTransaction: (
 export const createFundingInstructions: (
   customer: string,
   params: Omit<Distilled.CreateCustomerFundingInstructionRequest, "customer">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FundingInstructions, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCustomerFundingInstruction, {
     method: "POST",
@@ -137,7 +137,7 @@ export const createFundingInstructions: (
 export const createSource: (
   customer: string,
   params: Omit<Distilled.CreateCustomerSourceRequest, "customer">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CreateCustomerSourceResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCustomerSource, {
     method: "POST",
@@ -153,7 +153,7 @@ export const createSource: (
 export const createTaxId: (
   customer: string,
   params: Omit<Distilled.CreateCustomerTaxIdsRequest, "customer">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxId, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateCustomerTaxIds,
   { method: "POST", path: "/v1/customers/{customer}/tax_ids", ids: ["customer"], params: true },
@@ -165,7 +165,7 @@ export const createTaxId: (
  */
 export const del: (
   customer: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedCustomer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteCustomer, {
     method: "DELETE",
@@ -180,7 +180,7 @@ export const del: (
  */
 export const delDiscount: (
   customer: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedDiscount, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteCustomerDiscount, {
     method: "DELETE",
@@ -196,8 +196,8 @@ export const delDiscount: (
 export const delSource: (
   customer: string,
   id: string,
-  params?: Omit<Distilled.DeleteCustomerSourceRequest, "customer" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.DeleteCustomerSourceRequest, "customer" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeleteCustomerSourceResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteCustomerSource, {
     method: "DELETE",
@@ -213,7 +213,7 @@ export const delSource: (
 export const delTaxId: (
   customer: string,
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedTaxId, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.DeleteCustomerTaxIds,
   {
@@ -229,8 +229,8 @@ export const delTaxId: (
  * `GetCustomers`.
  */
 export const list: (
-  params?: Distilled.GetCustomersRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetCustomersRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCustomersResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCustomers, {
     method: "GET",
@@ -245,8 +245,8 @@ export const list: (
  */
 export const listBalanceTransactions: (
   customer: string,
-  params?: Omit<Distilled.GetCustomerBalanceTransactionsRequest, "customer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerBalanceTransactionsRequest, "customer">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCustomerBalanceTransactionsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCustomerBalanceTransactions, {
     method: "GET",
@@ -261,8 +261,8 @@ export const listBalanceTransactions: (
  */
 export const listCashBalanceTransactions: (
   customer: string,
-  params?: Omit<Distilled.GetCustomerCashBalanceTransactionsRequest, "customer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerCashBalanceTransactionsRequest, "customer">,
+  options?: RequestOptions,
 ) => Effect.Effect<
   Distilled.GetCustomerCashBalanceTransactionsResponse,
   PaymentsError,
@@ -280,8 +280,8 @@ export const listCashBalanceTransactions: (
  */
 export const listPaymentMethods: (
   customer: string,
-  params?: Omit<Distilled.GetCustomerPaymentMethodsRequest, "customer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerPaymentMethodsRequest, "customer">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCustomerPaymentMethodsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCustomerPaymentMethods, {
     method: "GET",
@@ -296,8 +296,8 @@ export const listPaymentMethods: (
  */
 export const listSources: (
   customer: string,
-  params?: Omit<Distilled.GetCustomerSourcesRequest, "customer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerSourcesRequest, "customer">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCustomerSourcesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCustomerSources, {
     method: "GET",
@@ -312,8 +312,8 @@ export const listSources: (
  */
 export const listTaxIds: (
   customer: string,
-  params?: Omit<Distilled.GetCustomerTaxIdsRequest, "customer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerTaxIdsRequest, "customer">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCustomerTaxIdsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCustomerTaxIds, {
     method: "GET",
@@ -328,8 +328,8 @@ export const listTaxIds: (
  */
 export const retrieve: (
   customer: string,
-  params?: Omit<Distilled.GetCustomerRequest, "customer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerRequest, "customer">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCustomerResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCustomer, {
     method: "GET",
@@ -345,10 +345,8 @@ export const retrieve: (
 export const retrieveBalanceTransaction: (
   customer: string,
   transaction: string,
-  params?:
-    | Omit<Distilled.GetCustomerBalanceTransactionRequest, "customer" | "transaction">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerBalanceTransactionRequest, "customer" | "transaction">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CustomerBalanceTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCustomerBalanceTransaction, {
     method: "GET",
@@ -363,8 +361,8 @@ export const retrieveBalanceTransaction: (
  */
 export const retrieveCashBalance: (
   customer: string,
-  params?: Omit<Distilled.GetCustomerCashBalanceRequest, "customer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerCashBalanceRequest, "customer">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CashBalance, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetCustomerCashBalance,
   { method: "GET", path: "/v1/customers/{customer}/cash_balance", ids: ["customer"], params: true },
@@ -377,10 +375,8 @@ export const retrieveCashBalance: (
 export const retrieveCashBalanceTransaction: (
   customer: string,
   transaction: string,
-  params?:
-    | Omit<Distilled.GetCustomerCashBalanceTransactionRequest, "customer" | "transaction">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerCashBalanceTransactionRequest, "customer" | "transaction">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CustomerCashBalanceTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCustomerCashBalanceTransaction, {
     method: "GET",
@@ -396,10 +392,8 @@ export const retrieveCashBalanceTransaction: (
 export const retrievePaymentMethod: (
   customer: string,
   payment_method: string,
-  params?:
-    | Omit<Distilled.GetCustomerPaymentMethodRequest, "customer" | "payment_method">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerPaymentMethodRequest, "customer" | "payment_method">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentMethod, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetCustomerPaymentMethod,
   {
@@ -417,8 +411,8 @@ export const retrievePaymentMethod: (
 export const retrieveSource: (
   customer: string,
   id: string,
-  params?: Omit<Distilled.GetCustomerSourceRequest, "customer" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerSourceRequest, "customer" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCustomerSourceResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCustomerSource, {
     method: "GET",
@@ -434,8 +428,8 @@ export const retrieveSource: (
 export const retrieveTaxId: (
   customer: string,
   id: string,
-  params?: Omit<Distilled.GetCustomerTaxIdsByIdRequest, "customer" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCustomerTaxIdsByIdRequest, "customer" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxId, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetCustomerTaxIdsById,
   {
@@ -452,7 +446,7 @@ export const retrieveTaxId: (
  */
 export const search: (
   params: Distilled.GetCustomersSearchRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCustomersSearchResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCustomersSearch, {
     method: "GET",
@@ -468,7 +462,7 @@ export const search: (
 export const testHelpersFundCashBalance: (
   customer: string,
   params: Omit<Distilled.CreateTestHelpersCustomerFundCashBalanceRequest, "customer">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CustomerCashBalanceTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersCustomerFundCashBalance, {
     method: "POST",
@@ -483,8 +477,8 @@ export const testHelpersFundCashBalance: (
  */
 export const update: (
   customer: string,
-  params?: Omit<Distilled.UpdateCustomerRequest, "customer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateCustomerRequest, "customer">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Customer, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateCustomer,
   { method: "POST", path: "/v1/customers/{customer}", ids: ["customer"], params: true },
@@ -497,10 +491,8 @@ export const update: (
 export const updateBalanceTransaction: (
   customer: string,
   transaction: string,
-  params?:
-    | Omit<Distilled.UpdateCustomerBalanceTransactionRequest, "customer" | "transaction">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateCustomerBalanceTransactionRequest, "customer" | "transaction">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CustomerBalanceTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateCustomerBalanceTransaction, {
     method: "POST",
@@ -515,8 +507,8 @@ export const updateBalanceTransaction: (
  */
 export const updateCashBalance: (
   customer: string,
-  params?: Omit<Distilled.CreateCustomerCashBalanceRequest, "customer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateCustomerCashBalanceRequest, "customer">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CashBalance, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateCustomerCashBalance,
   {
@@ -534,8 +526,8 @@ export const updateCashBalance: (
 export const updateSource: (
   customer: string,
   id: string,
-  params?: Omit<Distilled.UpdateCustomerSourceRequest, "customer" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateCustomerSourceRequest, "customer" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.UpdateCustomerSourceResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateCustomerSource, {
     method: "POST",
@@ -551,8 +543,8 @@ export const updateSource: (
 export const verifySource: (
   customer: string,
   id: string,
-  params?: Omit<Distilled.CreateCustomerSourceVerifyRequest, "customer" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateCustomerSourceVerifyRequest, "customer" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BankAccount, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateCustomerSourceVerify,
   {

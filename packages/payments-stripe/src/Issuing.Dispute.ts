@@ -46,8 +46,8 @@ export {
  * `CreateIssuingDispute`.
  */
 export const create: (
-  params?: Distilled.CreateIssuingDisputeRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateIssuingDisputeRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingDispute, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateIssuingDispute,
   { method: "POST", path: "/v1/issuing/disputes", ids: [], params: true },
@@ -58,8 +58,8 @@ export const create: (
  * `GetIssuingDisputes`.
  */
 export const list: (
-  params?: Distilled.GetIssuingDisputesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetIssuingDisputesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetIssuingDisputesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingDisputes, {
     method: "GET",
@@ -74,8 +74,8 @@ export const list: (
  */
 export const retrieve: (
   dispute: string,
-  params?: Omit<Distilled.GetIssuingDisputeRequest, "dispute"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetIssuingDisputeRequest, "dispute">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingDispute, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetIssuingDispute,
   { method: "GET", path: "/v1/issuing/disputes/{dispute}", ids: ["dispute"], params: true },
@@ -87,8 +87,8 @@ export const retrieve: (
  */
 export const submit: (
   dispute: string,
-  params?: Omit<Distilled.CreateIssuingDisputeSubmitRequest, "dispute"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateIssuingDisputeSubmitRequest, "dispute">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingDispute, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateIssuingDisputeSubmit,
   { method: "POST", path: "/v1/issuing/disputes/{dispute}/submit", ids: ["dispute"], params: true },
@@ -100,8 +100,8 @@ export const submit: (
  */
 export const update: (
   dispute: string,
-  params?: Omit<Distilled.UpdateIssuingDisputeRequest, "dispute"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateIssuingDisputeRequest, "dispute">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingDispute, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateIssuingDispute,
   { method: "POST", path: "/v1/issuing/disputes/{dispute}", ids: ["dispute"], params: true },

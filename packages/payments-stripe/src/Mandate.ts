@@ -39,8 +39,8 @@ export { GetMandateRequest, Mandate } from "@distilled.cloud/stripe/stripe";
  */
 export const retrieve: (
   mandate: string,
-  params?: Omit<Distilled.GetMandateRequest, "mandate"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetMandateRequest, "mandate">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Mandate, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetMandate,
   { method: "GET", path: "/v1/mandates/{mandate}", ids: ["mandate"], params: true },

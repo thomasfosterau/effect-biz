@@ -42,8 +42,8 @@ export {
  * `GetBalanceSettings`.
  */
 export const retrieve: (
-  params?: Distilled.GetBalanceSettingsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetBalanceSettingsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BalanceSettings, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBalanceSettings, {
     method: "GET",
@@ -57,8 +57,8 @@ export const retrieve: (
  * `CreateBalanceSettings`.
  */
 export const update: (
-  params?: Distilled.CreateBalanceSettingsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateBalanceSettingsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BalanceSettings, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateBalanceSettings, {
     method: "POST",

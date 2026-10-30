@@ -47,7 +47,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateBillingFeedbackOptionRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingFeedbackOption, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateBillingFeedbackOption, {
     method: "POST",
@@ -62,8 +62,8 @@ export const create: (
  */
 export const deactivate: (
   id: string,
-  params?: Omit<Distilled.CreateBillingFeedbackOptionDeactivateRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateBillingFeedbackOptionDeactivateRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingFeedbackOption, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateBillingFeedbackOptionDeactivate, {
     method: "POST",
@@ -77,8 +77,8 @@ export const deactivate: (
  * `GetBillingFeedbackOptions`.
  */
 export const list: (
-  params?: Distilled.GetBillingFeedbackOptionsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetBillingFeedbackOptionsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetBillingFeedbackOptionsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBillingFeedbackOptions, {
     method: "GET",
@@ -93,8 +93,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetBillingFeedbackOptionRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetBillingFeedbackOptionRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingFeedbackOption, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBillingFeedbackOption, {
     method: "GET",
@@ -109,8 +109,8 @@ export const retrieve: (
  */
 export const update: (
   id: string,
-  params?: Omit<Distilled.UpdateBillingFeedbackOptionRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateBillingFeedbackOptionRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingFeedbackOption, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateBillingFeedbackOption, {
     method: "POST",

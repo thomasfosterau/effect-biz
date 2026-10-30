@@ -36,6 +36,7 @@
 
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as Predicate from "effect/Predicate";
 import * as R from "effect/Record";
@@ -339,7 +340,7 @@ export interface Plan {
   readonly problems: ReadonlyArray<string>;
 }
 
-const RESERVED: ReadonlyArray<string> = [
+const RESERVED: HashSet.HashSet<string> = HashSet.make(
   "break",
   "case",
   "catch",
@@ -377,7 +378,7 @@ const RESERVED: ReadonlyArray<string> = [
   "while",
   "with",
   "yield",
-];
+);
 
 const TEST_HELPERS = "/v1/test_helpers";
 
@@ -572,7 +573,7 @@ const nameProblems = (
 ): ReadonlyArray<string> => {
   const clash = module.find((other) => other.exported === exported);
   return [
-    ...(RESERVED.includes(exported)
+    ...(HashSet.has(RESERVED, exported)
       ? [`${operation.name} would be exported as the reserved word ${exported}`]
       : []),
     ...(clash === undefined
@@ -599,10 +600,10 @@ const wireProblems = (operation: DistilledOperation): ReadonlyArray<string> =>
  * operation (whose retyping would silently add a member Distilled dropped).
  */
 const staleEntries = (operations: ReadonlyArray<DistilledOperation>): ReadonlyArray<string> => {
-  const known = operations.map((operation) => operation.name);
+  const known = HashSet.fromIterable(operations.map((operation) => operation.name));
   return [
     ...R.keys(OVERRIDES)
-      .filter((name) => !known.includes(name))
+      .filter((name) => !HashSet.has(known, name))
       .map((name) => `OVERRIDES names ${name}, which Distilled no longer has`),
     ...R.toEntries(PARAM_TYPES).flatMap(([name, members]) => {
       const operation = operations.find((candidate) => candidate.name === name);
@@ -776,8 +777,11 @@ export const readOperations = (
       member: String(prop.name),
       at: http.uri.indexOf(`{${nameOf(prop, labelSymbol)}}`),
     }));
-    const others = props.filter((prop) => !labels.includes(prop));
-    const outputNames = getProps(operation.output.ast).map((prop) => String(prop.name));
+    const labelled = HashSet.fromIterable(labels);
+    const others = props.filter((prop) => !HashSet.has(labelled, prop));
+    const outputNames = HashSet.fromIterable(
+      getProps(operation.output.ast).map((prop) => String(prop.name)),
+    );
     return {
       name,
       input,
@@ -798,8 +802,8 @@ export const readOperations = (
       }),
       // A `/v1` page carries `has_more`; a `/v2` page, `next_page_url`.
       list:
-        outputNames.includes("data") &&
-        (outputNames.includes("has_more") || outputNames.includes("next_page_url")),
+        HashSet.has(outputNames, "data") &&
+        (HashSet.has(outputNames, "has_more") || HashSet.has(outputNames, "next_page_url")),
       upload: http.contentType === "multipart",
       summary: summaryOf(doc),
     };
@@ -817,9 +821,9 @@ const docText = (text: string): string => text.replaceAll("*/", "*\\/");
  * keyword (`unknown`: rc.15 declares `CreateTransfer` / `GetTransfer` /
  * `UpdateTransfer` so).
  */
-const KEYWORDS: ReadonlyArray<string> = ["unknown"];
+const KEYWORDS: HashSet.HashSet<string> = HashSet.make("unknown");
 
-const typeOf = (name: string): string => (KEYWORDS.includes(name) ? name : `Distilled.${name}`);
+const typeOf = (name: string): string => (HashSet.has(KEYWORDS, name) ? name : `Distilled.${name}`);
 
 /** A string as a TypeScript (and JSON) string literal: `"customer"`. */
 const quoted: (value: string) => string = Schema.encodeSync(Schema.fromJsonString(Schema.String));
@@ -843,8 +847,11 @@ const signatureOf = (operation: Planned): string => {
       ? []
       : operation.params === "required"
         ? [`params: ${rest}`]
-        : [`params?: ${rest} | undefined`];
-  return `(${[...ids, ...params, "options?: RequestOptions | undefined"].join(", ")}) => Effect.Effect<${typeOf(operation.output)}, PaymentsError, StripeHttp>`;
+        : [`params?: ${rest}`];
+  // An optional PARAMETER accepts `undefined` even under
+  // `exactOptionalPropertyTypes`, so no `| undefined` (the type-aware
+  // `typescript/no-duplicate-type-constituents` rule flags it).
+  return `(${[...ids, ...params, "options?: RequestOptions"].join(", ")}) => Effect.Effect<${typeOf(operation.output)}, PaymentsError, StripeHttp>`;
 };
 
 const renderOperation = (operation: Planned): string => {
@@ -887,7 +894,7 @@ const renderModule = (
 ): string => {
   const types = Arr.sort(
     Arr.dedupe(operations.flatMap((operation) => [operation.input, operation.output])).filter(
-      (name) => !KEYWORDS.includes(name),
+      (name) => !HashSet.has(KEYWORDS, name),
     ),
     Order.String,
   );

@@ -54,8 +54,8 @@ export {
  */
 export const cancel: (
   subscription_exposed_id: string,
-  params?: Omit<Distilled.DeleteSubscriptionRequest, "subscription_exposed_id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.DeleteSubscriptionRequest, "subscription_exposed_id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Subscription, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.DeleteSubscription,
   {
@@ -71,8 +71,8 @@ export const cancel: (
  * `CreateSubscription`.
  */
 export const create: (
-  params?: Distilled.CreateSubscriptionRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateSubscriptionRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Subscription, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateSubscription,
   { method: "POST", path: "/v1/subscriptions", ids: [], params: true },
@@ -84,7 +84,7 @@ export const create: (
  */
 export const delDiscount: (
   subscription_exposed_id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedDiscount, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteSubscriptionDiscount, {
     method: "DELETE",
@@ -98,8 +98,8 @@ export const delDiscount: (
  * `GetSubscriptions`.
  */
 export const list: (
-  params?: Distilled.GetSubscriptionsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetSubscriptionsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetSubscriptionsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetSubscriptions, {
     method: "GET",
@@ -115,7 +115,7 @@ export const list: (
 export const migrate: (
   subscription: string,
   params: Omit<Distilled.CreateSubscriptionMigrateRequest, "subscription">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Subscription, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateSubscriptionMigrate,
   {
@@ -132,8 +132,8 @@ export const migrate: (
  */
 export const pause: (
   subscription: string,
-  params?: Omit<Distilled.CreateSubscriptionPauseRequest, "subscription"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateSubscriptionPauseRequest, "subscription">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Subscription, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateSubscriptionPause,
   {
@@ -150,8 +150,8 @@ export const pause: (
  */
 export const resume: (
   subscription: string,
-  params?: Omit<Distilled.CreateSubscriptionResumeRequest, "subscription"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateSubscriptionResumeRequest, "subscription">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Subscription, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateSubscriptionResume,
   {
@@ -168,8 +168,8 @@ export const resume: (
  */
 export const retrieve: (
   subscription_exposed_id: string,
-  params?: Omit<Distilled.GetSubscriptionRequest, "subscription_exposed_id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetSubscriptionRequest, "subscription_exposed_id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Subscription, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetSubscription,
   {
@@ -186,7 +186,7 @@ export const retrieve: (
  */
 export const search: (
   params: Distilled.GetSubscriptionsSearchRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetSubscriptionsSearchResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetSubscriptionsSearch, {
     method: "GET",
@@ -201,8 +201,8 @@ export const search: (
  */
 export const update: (
   subscription_exposed_id: string,
-  params?: Omit<Distilled.UpdateSubscriptionRequest, "subscription_exposed_id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateSubscriptionRequest, "subscription_exposed_id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Subscription, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateSubscription,
   {

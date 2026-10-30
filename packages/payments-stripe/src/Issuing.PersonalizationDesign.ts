@@ -49,7 +49,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateIssuingPersonalizationDesignRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingPersonalizationDesign, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateIssuingPersonalizationDesign, {
     method: "POST",
@@ -63,8 +63,8 @@ export const create: (
  * `GetIssuingPersonalizationDesigns`.
  */
 export const list: (
-  params?: Distilled.GetIssuingPersonalizationDesignsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetIssuingPersonalizationDesignsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetIssuingPersonalizationDesignsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingPersonalizationDesigns, {
     method: "GET",
@@ -79,10 +79,8 @@ export const list: (
  */
 export const retrieve: (
   personalization_design: string,
-  params?:
-    | Omit<Distilled.GetIssuingPersonalizationDesignRequest, "personalization_design">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetIssuingPersonalizationDesignRequest, "personalization_design">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingPersonalizationDesign, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingPersonalizationDesign, {
     method: "GET",
@@ -97,13 +95,11 @@ export const retrieve: (
  */
 export const testHelpersActivate: (
   personalization_design: string,
-  params?:
-    | Omit<
-        Distilled.CreateTestHelpersIssuingPersonalizationDesignActivateRequest,
-        "personalization_design"
-      >
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<
+    Distilled.CreateTestHelpersIssuingPersonalizationDesignActivateRequest,
+    "personalization_design"
+  >,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingPersonalizationDesign, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingPersonalizationDesignActivate, {
     method: "POST",
@@ -118,13 +114,11 @@ export const testHelpersActivate: (
  */
 export const testHelpersDeactivate: (
   personalization_design: string,
-  params?:
-    | Omit<
-        Distilled.CreateTestHelpersIssuingPersonalizationDesignDeactivateRequest,
-        "personalization_design"
-      >
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<
+    Distilled.CreateTestHelpersIssuingPersonalizationDesignDeactivateRequest,
+    "personalization_design"
+  >,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingPersonalizationDesign, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingPersonalizationDesignDeactivate, {
     method: "POST",
@@ -143,7 +137,7 @@ export const testHelpersReject: (
     Distilled.CreateTestHelpersIssuingPersonalizationDesignRejectRequest,
     "personalization_design"
   >,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingPersonalizationDesign, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingPersonalizationDesignReject, {
     method: "POST",
@@ -158,10 +152,8 @@ export const testHelpersReject: (
  */
 export const update: (
   personalization_design: string,
-  params?:
-    | Omit<Distilled.UpdateIssuingPersonalizationDesignRequest, "personalization_design">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateIssuingPersonalizationDesignRequest, "personalization_design">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingPersonalizationDesign, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateIssuingPersonalizationDesign, {
     method: "POST",

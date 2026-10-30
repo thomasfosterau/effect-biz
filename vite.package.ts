@@ -10,7 +10,7 @@
  * are derived from the package's own `exports` map — the manifest stays the
  * single list of public entry points.
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
@@ -80,17 +80,28 @@ type Manifest = typeof Manifest.Type;
 /** Parse a `package.json`'s text as a {@link Manifest}, throwing when it is not one. */
 const decodeManifest = Schema.decodeUnknownSync(Schema.fromJsonString(Manifest));
 
+/**
+ * The tsconfig the `check` task type-checks. A package with a workspace
+ * sibling carries a `tsconfig.check.json` that resolves the sibling through
+ * `dist/` (its tsconfig.json maps it to `src/` for type-aware lint, which
+ * runs before any build); one without uses tsconfig.json directly.
+ */
+const checkProjectOf = (url: string): string =>
+  existsSync(new URL("./tsconfig.check.json", url)) ? "tsconfig.check.json" : "tsconfig.json";
+
 export const packageConfig = ({ url, rootReadme = false }: PackageConfigOptions) => {
   const manifest = decodeManifest(readFileSync(new URL("./package.json", url), "utf8"));
   const srcDir = new URL("./src/", url).pathname;
   const maxWorkers = process.env.VITEST_MAX_WORKERS;
   const readmes = rootReadme ? "README.md ../../README.md" : "README.md";
+  const checkProject = checkProjectOf(url);
   return defineConfig({
     run: {
       tasks: {
-        // `src` and `tests` under the native, Effect-patched `tsc`.
+        // `src` and `tests` under the native, Effect-patched `tsc`
+        // (`tsconfig.check.json` where the package has a sibling, see above).
         check: {
-          command: "tsc -p tsconfig.json",
+          command: `tsc -p ${checkProject}`,
           dependsOn: [siblingBuild],
           cache: {
             input: cacheInputs,

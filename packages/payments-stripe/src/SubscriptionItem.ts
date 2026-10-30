@@ -48,7 +48,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateSubscriptionItemRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SubscriptionItem, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateSubscriptionItem, {
     method: "POST",
@@ -63,8 +63,8 @@ export const create: (
  */
 export const del: (
   item: string,
-  params?: Omit<Distilled.DeleteSubscriptionItemRequest, "item"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.DeleteSubscriptionItemRequest, "item">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedSubscriptionItem, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteSubscriptionItem, {
     method: "DELETE",
@@ -79,7 +79,7 @@ export const del: (
  */
 export const list: (
   params: Distilled.GetSubscriptionItemsRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetSubscriptionItemsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetSubscriptionItems, {
     method: "GET",
@@ -94,8 +94,8 @@ export const list: (
  */
 export const retrieve: (
   item: string,
-  params?: Omit<Distilled.GetSubscriptionItemRequest, "item"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetSubscriptionItemRequest, "item">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SubscriptionItem, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetSubscriptionItem, {
     method: "GET",
@@ -110,8 +110,8 @@ export const retrieve: (
  */
 export const update: (
   item: string,
-  params?: Omit<Distilled.UpdateSubscriptionItemRequest, "item"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateSubscriptionItemRequest, "item">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SubscriptionItem, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateSubscriptionItem, {
     method: "POST",

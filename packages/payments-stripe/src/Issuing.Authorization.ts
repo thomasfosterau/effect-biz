@@ -51,8 +51,8 @@ export {
  * `GetIssuingAuthorizations`.
  */
 export const list: (
-  params?: Distilled.GetIssuingAuthorizationsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetIssuingAuthorizationsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetIssuingAuthorizationsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingAuthorizations, {
     method: "GET",
@@ -67,8 +67,8 @@ export const list: (
  */
 export const retrieve: (
   authorization: string,
-  params?: Omit<Distilled.GetIssuingAuthorizationRequest, "authorization"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetIssuingAuthorizationRequest, "authorization">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingAuthorization, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingAuthorization, {
     method: "GET",
@@ -83,10 +83,8 @@ export const retrieve: (
  */
 export const testHelpersCapture: (
   authorization: string,
-  params?:
-    | Omit<Distilled.CreateTestHelpersIssuingAuthorizationCaptureRequest, "authorization">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTestHelpersIssuingAuthorizationCaptureRequest, "authorization">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingAuthorization, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingAuthorizationCapture, {
     method: "POST",
@@ -101,7 +99,7 @@ export const testHelpersCapture: (
  */
 export const testHelpersCreate: (
   params: Distilled.CreateTestHelpersIssuingAuthorizationRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingAuthorization, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingAuthorization, {
     method: "POST",
@@ -116,10 +114,8 @@ export const testHelpersCreate: (
  */
 export const testHelpersExpire: (
   authorization: string,
-  params?:
-    | Omit<Distilled.CreateTestHelpersIssuingAuthorizationExpireRequest, "authorization">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTestHelpersIssuingAuthorizationExpireRequest, "authorization">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingAuthorization, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingAuthorizationExpire, {
     method: "POST",
@@ -138,7 +134,7 @@ export const testHelpersFinalizeAmount: (
     Distilled.CreateTestHelpersIssuingAuthorizationFinalizeAmountRequest,
     "authorization"
   >,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingAuthorization, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingAuthorizationFinalizeAmount, {
     method: "POST",
@@ -157,7 +153,7 @@ export const testHelpersFraudChallengesRespond: (
     Distilled.CreateTestHelpersIssuingAuthorizationFraudChallengesRespondRequest,
     "authorization"
   >,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingAuthorization, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingAuthorizationFraudChallengesRespond, {
     method: "POST",
@@ -173,7 +169,7 @@ export const testHelpersFraudChallengesRespond: (
 export const testHelpersIncrement: (
   authorization: string,
   params: Omit<Distilled.CreateTestHelpersIssuingAuthorizationIncrementRequest, "authorization">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingAuthorization, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingAuthorizationIncrement, {
     method: "POST",
@@ -188,10 +184,8 @@ export const testHelpersIncrement: (
  */
 export const testHelpersReverse: (
   authorization: string,
-  params?:
-    | Omit<Distilled.CreateTestHelpersIssuingAuthorizationReverseRequest, "authorization">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTestHelpersIssuingAuthorizationReverseRequest, "authorization">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingAuthorization, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingAuthorizationReverse, {
     method: "POST",
@@ -206,8 +200,8 @@ export const testHelpersReverse: (
  */
 export const update: (
   authorization: string,
-  params?: Omit<Distilled.UpdateIssuingAuthorizationRequest, "authorization"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateIssuingAuthorizationRequest, "authorization">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingAuthorization, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateIssuingAuthorization, {
     method: "POST",

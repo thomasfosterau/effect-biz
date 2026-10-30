@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { FetchHttpClient } from "effect/http";
 import * as Customer from "@thomasfosterau/effect-biz/Payments.Customer";
+import * as Enumeration from "@thomasfosterau/effect-biz/Payments.Enumeration";
 import * as Product from "@thomasfosterau/effect-biz/Payments.Product";
 import * as Price from "@thomasfosterau/effect-biz/Payments.Price";
 import * as Subscription from "@thomasfosterau/effect-biz/Payments.Subscription";
@@ -51,7 +52,8 @@ const createSubscription = Effect.fn("createSubscription")(function* () {
     items: [{ price: price.id }],
   });
   yield* Console.log(`Subscription created: ${subscription.id}`);
-  yield* Console.log(`Status: ${subscription.status}`);
+  const status = subscription.status;
+  yield* Console.log(`Status: ${Enumeration.isOther(status) ? status.raw : status}`);
 
   return { customer, product, price, subscription };
 });
@@ -72,6 +74,7 @@ if (import.meta.main) {
       console.log("Product:", result.product.id);
       console.log("Price:", result.price.id);
       console.log("Subscription:", result.subscription.id);
+      return result;
     })
     .catch((error) => {
       console.error("\nFailed:", error);

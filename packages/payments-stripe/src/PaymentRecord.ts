@@ -50,8 +50,8 @@ export {
  * `GetPaymentRecords`.
  */
 export const list: (
-  params?: Distilled.GetPaymentRecordsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetPaymentRecordsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPaymentRecordsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPaymentRecords, {
     method: "GET",
@@ -66,7 +66,7 @@ export const list: (
  */
 export const reportPayment: (
   params: Distilled.CreatePaymentRecordsReportPaymentRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentRecord, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentRecordsReportPayment,
   { method: "POST", path: "/v1/payment_records/report_payment", ids: [], params: true },
@@ -79,7 +79,7 @@ export const reportPayment: (
 export const reportPaymentAttempt: (
   id: string,
   params: Omit<Distilled.CreatePaymentRecordReportPaymentAttemptRequest, "id">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentRecord, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentRecordReportPaymentAttempt,
   {
@@ -97,7 +97,7 @@ export const reportPaymentAttempt: (
 export const reportPaymentAttemptCanceled: (
   id: string,
   params: Omit<Distilled.CreatePaymentRecordReportPaymentAttemptCanceledRequest, "id">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentRecord, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentRecordReportPaymentAttemptCanceled,
   {
@@ -115,7 +115,7 @@ export const reportPaymentAttemptCanceled: (
 export const reportPaymentAttemptFailed: (
   id: string,
   params: Omit<Distilled.CreatePaymentRecordReportPaymentAttemptFailedRequest, "id">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentRecord, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentRecordReportPaymentAttemptFailed,
   {
@@ -133,7 +133,7 @@ export const reportPaymentAttemptFailed: (
 export const reportPaymentAttemptGuaranteed: (
   id: string,
   params: Omit<Distilled.CreatePaymentRecordReportPaymentAttemptGuaranteedRequest, "id">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentRecord, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentRecordReportPaymentAttemptGuaranteed,
   {
@@ -150,10 +150,8 @@ export const reportPaymentAttemptGuaranteed: (
  */
 export const reportPaymentAttemptInformational: (
   id: string,
-  params?:
-    | Omit<Distilled.CreatePaymentRecordReportPaymentAttemptInformationalRequest, "id">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreatePaymentRecordReportPaymentAttemptInformationalRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentRecord, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentRecordReportPaymentAttemptInformational,
   {
@@ -171,7 +169,7 @@ export const reportPaymentAttemptInformational: (
 export const reportRefund: (
   id: string,
   params: Omit<Distilled.CreatePaymentRecordReportRefundRequest, "id">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentRecord, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentRecordReportRefund,
   { method: "POST", path: "/v1/payment_records/{id}/report_refund", ids: ["id"], params: true },
@@ -183,8 +181,8 @@ export const reportRefund: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetPaymentRecordRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPaymentRecordRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentRecord, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetPaymentRecord,
   { method: "GET", path: "/v1/payment_records/{id}", ids: ["id"], params: true },

@@ -48,7 +48,7 @@ export {
  */
 export const create: (
   params: Distilled.CreatePlanRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Plan, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePlan,
   { method: "POST", path: "/v1/plans", ids: [], params: true },
@@ -60,7 +60,7 @@ export const create: (
  */
 export const del: (
   plan: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedPlan, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.DeletePlan,
   { method: "DELETE", path: "/v1/plans/{plan}", ids: ["plan"], params: false },
@@ -71,8 +71,8 @@ export const del: (
  * `GetPlans`.
  */
 export const list: (
-  params?: Distilled.GetPlansRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetPlansRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPlansResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPlans, {
     method: "GET",
@@ -87,8 +87,8 @@ export const list: (
  */
 export const retrieve: (
   plan: string,
-  params?: Omit<Distilled.GetPlanRequest, "plan"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPlanRequest, "plan">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Plan, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetPlan,
   { method: "GET", path: "/v1/plans/{plan}", ids: ["plan"], params: true },
@@ -100,8 +100,8 @@ export const retrieve: (
  */
 export const update: (
   plan: string,
-  params?: Omit<Distilled.UpdatePlanRequest, "plan"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdatePlanRequest, "plan">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Plan, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdatePlan,
   { method: "POST", path: "/v1/plans/{plan}", ids: ["plan"], params: true },

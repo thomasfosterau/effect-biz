@@ -47,7 +47,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateTaxIdsRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxId, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTaxIds,
   { method: "POST", path: "/v1/tax_ids", ids: [], params: true },
@@ -59,7 +59,7 @@ export const create: (
  */
 export const del: (
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedTaxId, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.DeleteTaxIds,
   { method: "DELETE", path: "/v1/tax_ids/{id}", ids: ["id"], params: false },
@@ -70,8 +70,8 @@ export const del: (
  * `GetTaxIds`.
  */
 export const list: (
-  params?: Distilled.GetTaxIdsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTaxIdsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTaxIdsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTaxIds, {
     method: "GET",
@@ -86,8 +86,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetTaxIdsByIdRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTaxIdsByIdRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxId, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetTaxIdsById,
   { method: "GET", path: "/v1/tax_ids/{id}", ids: ["id"], params: true },

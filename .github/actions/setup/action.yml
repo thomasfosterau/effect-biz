@@ -2,8 +2,9 @@
 # Sets up Node.js + pnpm, restores the pnpm store cache (keyed on
 # pnpm-lock.yaml by setup-node), and installs dependencies with a frozen
 # lockfile (retried — see the Install step's own comment for why).
-# `vp` and the dev bins land in node_modules/.bin, which this adds to PATH so
-# later steps invoke `vp …` directly. Copied from effect-finance (itself from the effect-email library,
+# `vp` and the dev bins land in node_modules/.bin; later steps call them as
+# `pnpm exec vp …` (writing GITHUB_PATH from an action is a zizmor finding).
+# Copied from effect-finance (itself from the effect-email library,
 # the effect-drizzle-ext library and the gardeneria application).
 #
 # Callers must run `actions/checkout` BEFORE this (a local composite action
@@ -21,9 +22,14 @@ runs:
     # CI tests on one Node version, the latest stable release.
     # The published `engines.node` floor is deliberately not tested.
     - name: Setup Node.js
-      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
-        node-version: latest
+        # Never `latest`: setup-node resolves it to the first entry of the
+        # nodejs.org index, pre-releases included (v27.0.0-alpha since
+        # 2026-10-29). `"*"` with `check-latest` takes the newest stable
+        # release from setup-node's manifest.
+        node-version: "*"
+        check-latest: true
         cache: pnpm
 
     # The install is RETRIED, deliberately — do not collapse this back to a bare
@@ -53,4 +59,3 @@ runs:
           echo "::warning::pnpm install failed (attempt ${attempt}/3); retrying in ${delay}s"
           sleep "$delay"
         done
-        echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"

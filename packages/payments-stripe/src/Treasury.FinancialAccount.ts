@@ -50,10 +50,8 @@ export {
  */
 export const close: (
   financial_account: string,
-  params?:
-    | Omit<Distilled.CreateTreasuryFinancialAccountCloseRequest, "financial_account">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTreasuryFinancialAccountCloseRequest, "financial_account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryFinancialAccount, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTreasuryFinancialAccountClose, {
     method: "POST",
@@ -68,7 +66,7 @@ export const close: (
  */
 export const create: (
   params: Distilled.CreateTreasuryFinancialAccountRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryFinancialAccount, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTreasuryFinancialAccount, {
     method: "POST",
@@ -82,8 +80,8 @@ export const create: (
  * `GetTreasuryFinancialAccounts`.
  */
 export const list: (
-  params?: Distilled.GetTreasuryFinancialAccountsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTreasuryFinancialAccountsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTreasuryFinancialAccountsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryFinancialAccounts, {
     method: "GET",
@@ -98,8 +96,8 @@ export const list: (
  */
 export const retrieve: (
   financial_account: string,
-  params?: Omit<Distilled.GetTreasuryFinancialAccountRequest, "financial_account"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTreasuryFinancialAccountRequest, "financial_account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryFinancialAccount, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryFinancialAccount, {
     method: "GET",
@@ -114,10 +112,8 @@ export const retrieve: (
  */
 export const retrieveFeatures: (
   financial_account: string,
-  params?:
-    | Omit<Distilled.GetTreasuryFinancialAccountFeaturesRequest, "financial_account">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTreasuryFinancialAccountFeaturesRequest, "financial_account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryFinancialAccountFeatures, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryFinancialAccountFeatures, {
     method: "GET",
@@ -132,8 +128,8 @@ export const retrieveFeatures: (
  */
 export const update: (
   financial_account: string,
-  params?: Omit<Distilled.UpdateTreasuryFinancialAccountRequest, "financial_account"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateTreasuryFinancialAccountRequest, "financial_account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryFinancialAccount, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateTreasuryFinancialAccount, {
     method: "POST",
@@ -148,10 +144,8 @@ export const update: (
  */
 export const updateFeatures: (
   financial_account: string,
-  params?:
-    | Omit<Distilled.CreateTreasuryFinancialAccountFeatureRequest, "financial_account">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTreasuryFinancialAccountFeatureRequest, "financial_account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryFinancialAccountFeatures, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTreasuryFinancialAccountFeature, {
     method: "POST",

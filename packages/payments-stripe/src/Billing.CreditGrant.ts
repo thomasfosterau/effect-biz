@@ -48,7 +48,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateBillingCreditGrantRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingCreditGrant, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateBillingCreditGrant, {
     method: "POST",
@@ -63,8 +63,8 @@ export const create: (
  */
 export const expire: (
   id: string,
-  params?: Omit<Distilled.CreateBillingCreditGrantExpireRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateBillingCreditGrantExpireRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingCreditGrant, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateBillingCreditGrantExpire, {
     method: "POST",
@@ -78,8 +78,8 @@ export const expire: (
  * `GetBillingCreditGrants`.
  */
 export const list: (
-  params?: Distilled.GetBillingCreditGrantsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetBillingCreditGrantsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetBillingCreditGrantsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBillingCreditGrants, {
     method: "GET",
@@ -94,8 +94,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetBillingCreditGrantRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetBillingCreditGrantRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingCreditGrant, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBillingCreditGrant, {
     method: "GET",
@@ -110,8 +110,8 @@ export const retrieve: (
  */
 export const update: (
   id: string,
-  params?: Omit<Distilled.UpdateBillingCreditGrantRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateBillingCreditGrantRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingCreditGrant, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateBillingCreditGrant, {
     method: "POST",
@@ -126,8 +126,8 @@ export const update: (
  */
 export const voidGrant: (
   id: string,
-  params?: Omit<Distilled.CreateBillingCreditGrantVoidRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateBillingCreditGrantVoidRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingCreditGrant, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateBillingCreditGrantVoid, {
     method: "POST",

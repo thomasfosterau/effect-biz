@@ -46,7 +46,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateEntitlementsFeatureRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.EntitlementsFeature, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateEntitlementsFeature, {
     method: "POST",
@@ -60,8 +60,8 @@ export const create: (
  * `GetEntitlementsFeatures`.
  */
 export const list: (
-  params?: Distilled.GetEntitlementsFeaturesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetEntitlementsFeaturesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetEntitlementsFeaturesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetEntitlementsFeatures, {
     method: "GET",
@@ -76,8 +76,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetEntitlementsFeatureRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetEntitlementsFeatureRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.EntitlementsFeature, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetEntitlementsFeature, {
     method: "GET",
@@ -92,8 +92,8 @@ export const retrieve: (
  */
 export const update: (
   id: string,
-  params?: Omit<Distilled.UpdateEntitlementsFeatureRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateEntitlementsFeatureRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.EntitlementsFeature, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateEntitlementsFeature, {
     method: "POST",

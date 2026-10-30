@@ -48,8 +48,8 @@ export {
  * `CreateCheckoutSession`.
  */
 export const create: (
-  params?: Distilled.CreateCheckoutSessionRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateCheckoutSessionRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CheckoutSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCheckoutSession, {
     method: "POST",
@@ -64,8 +64,8 @@ export const create: (
  */
 export const expire: (
   session: string,
-  params?: Omit<Distilled.CreateCheckoutSessionExpireRequest, "session"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateCheckoutSessionExpireRequest, "session">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CheckoutSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCheckoutSessionExpire, {
     method: "POST",
@@ -79,8 +79,8 @@ export const expire: (
  * `GetCheckoutSessions`.
  */
 export const list: (
-  params?: Distilled.GetCheckoutSessionsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetCheckoutSessionsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCheckoutSessionsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCheckoutSessions, {
     method: "GET",
@@ -95,8 +95,8 @@ export const list: (
  */
 export const listLineItems: (
   session: string,
-  params?: Omit<Distilled.GetCheckoutSessionLineItemsRequest, "session"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCheckoutSessionLineItemsRequest, "session">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCheckoutSessionLineItemsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCheckoutSessionLineItems, {
     method: "GET",
@@ -111,8 +111,8 @@ export const listLineItems: (
  */
 export const retrieve: (
   session: string,
-  params?: Omit<Distilled.GetCheckoutSessionRequest, "session"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCheckoutSessionRequest, "session">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CheckoutSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCheckoutSession, {
     method: "GET",
@@ -127,8 +127,8 @@ export const retrieve: (
  */
 export const update: (
   session: string,
-  params?: Omit<Distilled.UpdateCheckoutSessionRequest, "session"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateCheckoutSessionRequest, "session">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CheckoutSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateCheckoutSession, {
     method: "POST",

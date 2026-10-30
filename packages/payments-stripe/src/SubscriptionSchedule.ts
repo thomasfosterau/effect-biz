@@ -48,8 +48,8 @@ export {
  */
 export const cancel: (
   schedule: string,
-  params?: Omit<Distilled.CreateSubscriptionScheduleCancelRequest, "schedule"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateSubscriptionScheduleCancelRequest, "schedule">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SubscriptionSchedule, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateSubscriptionScheduleCancel, {
     method: "POST",
@@ -63,8 +63,8 @@ export const cancel: (
  * `CreateSubscriptionSchedule`.
  */
 export const create: (
-  params?: Distilled.CreateSubscriptionScheduleRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateSubscriptionScheduleRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SubscriptionSchedule, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateSubscriptionSchedule, {
     method: "POST",
@@ -78,8 +78,8 @@ export const create: (
  * `GetSubscriptionSchedules`.
  */
 export const list: (
-  params?: Distilled.GetSubscriptionSchedulesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetSubscriptionSchedulesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetSubscriptionSchedulesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetSubscriptionSchedules, {
     method: "GET",
@@ -94,8 +94,8 @@ export const list: (
  */
 export const release: (
   schedule: string,
-  params?: Omit<Distilled.CreateSubscriptionScheduleReleaseRequest, "schedule"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateSubscriptionScheduleReleaseRequest, "schedule">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SubscriptionSchedule, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateSubscriptionScheduleRelease, {
     method: "POST",
@@ -110,8 +110,8 @@ export const release: (
  */
 export const retrieve: (
   schedule: string,
-  params?: Omit<Distilled.GetSubscriptionScheduleRequest, "schedule"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetSubscriptionScheduleRequest, "schedule">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SubscriptionSchedule, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetSubscriptionSchedule, {
     method: "GET",
@@ -126,8 +126,8 @@ export const retrieve: (
  */
 export const update: (
   schedule: string,
-  params?: Omit<Distilled.UpdateSubscriptionScheduleRequest, "schedule"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateSubscriptionScheduleRequest, "schedule">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SubscriptionSchedule, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateSubscriptionSchedule, {
     method: "POST",

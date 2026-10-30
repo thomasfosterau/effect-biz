@@ -45,8 +45,8 @@ export {
  */
 export const approve: (
   review: string,
-  params?: Omit<Distilled.CreateReviewApproveRequest, "review"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateReviewApproveRequest, "review">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Review, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateReviewApprove,
   { method: "POST", path: "/v1/reviews/{review}/approve", ids: ["review"], params: true },
@@ -57,8 +57,8 @@ export const approve: (
  * `GetReviews`.
  */
 export const list: (
-  params?: Distilled.GetReviewsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetReviewsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetReviewsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetReviews, {
     method: "GET",
@@ -73,8 +73,8 @@ export const list: (
  */
 export const retrieve: (
   review: string,
-  params?: Omit<Distilled.GetReviewRequest, "review"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetReviewRequest, "review">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Review, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetReview,
   { method: "GET", path: "/v1/reviews/{review}", ids: ["review"], params: true },
