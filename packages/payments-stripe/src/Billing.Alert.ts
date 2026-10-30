@@ -48,8 +48,8 @@ export {
  */
 export const activate: (
   id: string,
-  params?: Omit<Distilled.CreateBillingAlertActivateRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateBillingAlertActivateRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingAlert, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateBillingAlertActivate,
   { method: "POST", path: "/v1/billing/alerts/{id}/activate", ids: ["id"], params: true },
@@ -61,8 +61,8 @@ export const activate: (
  */
 export const archive: (
   id: string,
-  params?: Omit<Distilled.CreateBillingAlertArchiveRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateBillingAlertArchiveRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingAlert, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateBillingAlertArchive,
   { method: "POST", path: "/v1/billing/alerts/{id}/archive", ids: ["id"], params: true },
@@ -74,7 +74,7 @@ export const archive: (
  */
 export const create: (
   params: Distilled.CreateBillingAlertRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingAlert, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateBillingAlert,
   { method: "POST", path: "/v1/billing/alerts", ids: [], params: true },
@@ -86,8 +86,8 @@ export const create: (
  */
 export const deactivate: (
   id: string,
-  params?: Omit<Distilled.CreateBillingAlertDeactivateRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateBillingAlertDeactivateRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingAlert, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateBillingAlertDeactivate,
   { method: "POST", path: "/v1/billing/alerts/{id}/deactivate", ids: ["id"], params: true },
@@ -98,8 +98,8 @@ export const deactivate: (
  * `GetBillingAlerts`.
  */
 export const list: (
-  params?: Distilled.GetBillingAlertsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetBillingAlertsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetBillingAlertsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBillingAlerts, {
     method: "GET",
@@ -114,8 +114,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetBillingAlertRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetBillingAlertRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingAlert, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetBillingAlert,
   { method: "GET", path: "/v1/billing/alerts/{id}", ids: ["id"], params: true },

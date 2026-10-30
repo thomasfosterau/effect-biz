@@ -45,7 +45,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateTaxCalculationRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxCalculation, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTaxCalculation,
   { method: "POST", path: "/v1/tax/calculations", ids: [], params: true },
@@ -57,8 +57,8 @@ export const create: (
  */
 export const listLineItems: (
   calculation: string,
-  params?: Omit<Distilled.GetTaxCalculationLineItemsRequest, "calculation"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTaxCalculationLineItemsRequest, "calculation">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTaxCalculationLineItemsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTaxCalculationLineItems, {
     method: "GET",
@@ -73,8 +73,8 @@ export const listLineItems: (
  */
 export const retrieve: (
   calculation: string,
-  params?: Omit<Distilled.GetTaxCalculationRequest, "calculation"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTaxCalculationRequest, "calculation">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxCalculation, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetTaxCalculation,
   { method: "GET", path: "/v1/tax/calculations/{calculation}", ids: ["calculation"], params: true },

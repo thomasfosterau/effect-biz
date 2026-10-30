@@ -44,7 +44,7 @@ export {
  */
 export const list: (
   params: Distilled.GetPaymentAttemptRecordsRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPaymentAttemptRecordsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPaymentAttemptRecords, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetPaymentAttemptRecordRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPaymentAttemptRecordRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentAttemptRecord, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPaymentAttemptRecord, {
     method: "GET",

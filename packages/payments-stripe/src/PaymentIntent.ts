@@ -56,8 +56,8 @@ export {
  */
 export const applyCustomerBalance: (
   intent: string,
-  params?: Omit<Distilled.CreatePaymentIntentApplyCustomerBalanceRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreatePaymentIntentApplyCustomerBalanceRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentIntentApplyCustomerBalance,
   {
@@ -74,8 +74,8 @@ export const applyCustomerBalance: (
  */
 export const cancel: (
   intent: string,
-  params?: Omit<Distilled.CreatePaymentIntentCancelRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreatePaymentIntentCancelRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentIntentCancel,
   { method: "POST", path: "/v1/payment_intents/{intent}/cancel", ids: ["intent"], params: true },
@@ -87,8 +87,8 @@ export const cancel: (
  */
 export const capture: (
   intent: string,
-  params?: Omit<Distilled.CreatePaymentIntentCaptureRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreatePaymentIntentCaptureRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentIntentCapture,
   { method: "POST", path: "/v1/payment_intents/{intent}/capture", ids: ["intent"], params: true },
@@ -100,8 +100,8 @@ export const capture: (
  */
 export const confirm: (
   intent: string,
-  params?: Omit<Distilled.CreatePaymentIntentConfirmRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreatePaymentIntentConfirmRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentIntentConfirm,
   { method: "POST", path: "/v1/payment_intents/{intent}/confirm", ids: ["intent"], params: true },
@@ -113,7 +113,7 @@ export const confirm: (
  */
 export const create: (
   params: Distilled.CreatePaymentIntentRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentIntent,
   { method: "POST", path: "/v1/payment_intents", ids: [], params: true },
@@ -126,7 +126,7 @@ export const create: (
 export const incrementAuthorization: (
   intent: string,
   params: Omit<Distilled.CreatePaymentIntentIncrementAuthorizationRequest, "intent">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentIntentIncrementAuthorization,
   {
@@ -142,8 +142,8 @@ export const incrementAuthorization: (
  * `GetPaymentIntents`.
  */
 export const list: (
-  params?: Distilled.GetPaymentIntentsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetPaymentIntentsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPaymentIntentsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPaymentIntents, {
     method: "GET",
@@ -158,8 +158,8 @@ export const list: (
  */
 export const listAmountDetailsLineItems: (
   intent: string,
-  params?: Omit<Distilled.GetPaymentIntentAmountDetailsLineItemsRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPaymentIntentAmountDetailsLineItemsRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<
   Distilled.GetPaymentIntentAmountDetailsLineItemsResponse,
   PaymentsError,
@@ -177,8 +177,8 @@ export const listAmountDetailsLineItems: (
  */
 export const retrieve: (
   intent: string,
-  params?: Omit<Distilled.GetPaymentIntentRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPaymentIntentRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetPaymentIntent,
   { method: "GET", path: "/v1/payment_intents/{intent}", ids: ["intent"], params: true },
@@ -190,7 +190,7 @@ export const retrieve: (
  */
 export const search: (
   params: Distilled.GetPaymentIntentsSearchRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPaymentIntentsSearchResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPaymentIntentsSearch, {
     method: "GET",
@@ -205,8 +205,8 @@ export const search: (
  */
 export const update: (
   intent: string,
-  params?: Omit<Distilled.UpdatePaymentIntentRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdatePaymentIntentRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdatePaymentIntent,
   { method: "POST", path: "/v1/payment_intents/{intent}", ids: ["intent"], params: true },
@@ -218,8 +218,8 @@ export const update: (
  */
 export const verifyMicrodeposits: (
   intent: string,
-  params?: Omit<Distilled.CreatePaymentIntentVerifyMicrodepositRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreatePaymentIntentVerifyMicrodepositRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentIntentVerifyMicrodeposit,
   {

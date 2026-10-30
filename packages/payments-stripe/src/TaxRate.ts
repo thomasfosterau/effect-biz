@@ -46,7 +46,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateTaxRateRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxRate, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTaxRate,
   { method: "POST", path: "/v1/tax_rates", ids: [], params: true },
@@ -57,8 +57,8 @@ export const create: (
  * `GetTaxRates`.
  */
 export const list: (
-  params?: Distilled.GetTaxRatesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTaxRatesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTaxRatesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTaxRates, {
     method: "GET",
@@ -73,8 +73,8 @@ export const list: (
  */
 export const retrieve: (
   tax_rate: string,
-  params?: Omit<Distilled.GetTaxRateRequest, "tax_rate"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTaxRateRequest, "tax_rate">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxRate, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetTaxRate,
   { method: "GET", path: "/v1/tax_rates/{tax_rate}", ids: ["tax_rate"], params: true },
@@ -86,8 +86,8 @@ export const retrieve: (
  */
 export const update: (
   tax_rate: string,
-  params?: Omit<Distilled.UpdateTaxRateRequest, "tax_rate"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateTaxRateRequest, "tax_rate">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxRate, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateTaxRate,
   { method: "POST", path: "/v1/tax_rates/{tax_rate}", ids: ["tax_rate"], params: true },

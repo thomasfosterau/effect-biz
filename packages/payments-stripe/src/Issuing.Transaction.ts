@@ -47,8 +47,8 @@ export {
  * `GetIssuingTransactions`.
  */
 export const list: (
-  params?: Distilled.GetIssuingTransactionsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetIssuingTransactionsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetIssuingTransactionsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingTransactions, {
     method: "GET",
@@ -63,8 +63,8 @@ export const list: (
  */
 export const retrieve: (
   transaction: string,
-  params?: Omit<Distilled.GetIssuingTransactionRequest, "transaction"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetIssuingTransactionRequest, "transaction">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingTransaction, {
     method: "GET",
@@ -79,7 +79,7 @@ export const retrieve: (
  */
 export const testHelpersCreateForceCapture: (
   params: Distilled.CreateTestHelpersIssuingTransactionsCreateForceCaptureRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingTransactionsCreateForceCapture, {
     method: "POST",
@@ -94,7 +94,7 @@ export const testHelpersCreateForceCapture: (
  */
 export const testHelpersCreateUnlinkedRefund: (
   params: Distilled.CreateTestHelpersIssuingTransactionsCreateUnlinkedRefundRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingTransactionsCreateUnlinkedRefund, {
     method: "POST",
@@ -109,10 +109,8 @@ export const testHelpersCreateUnlinkedRefund: (
  */
 export const testHelpersRefund: (
   transaction: string,
-  params?:
-    | Omit<Distilled.CreateTestHelpersIssuingTransactionRefundRequest, "transaction">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTestHelpersIssuingTransactionRefundRequest, "transaction">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersIssuingTransactionRefund, {
     method: "POST",
@@ -127,8 +125,8 @@ export const testHelpersRefund: (
  */
 export const update: (
   transaction: string,
-  params?: Omit<Distilled.UpdateIssuingTransactionRequest, "transaction"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateIssuingTransactionRequest, "transaction">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateIssuingTransaction, {
     method: "POST",

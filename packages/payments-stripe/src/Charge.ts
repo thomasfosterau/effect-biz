@@ -53,8 +53,8 @@ export {
  */
 export const capture: (
   charge: string,
-  params?: Omit<Distilled.CreateChargeCaptureRequest, "charge"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateChargeCaptureRequest, "charge">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Charge, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateChargeCapture,
   { method: "POST", path: "/v1/charges/{charge}/capture", ids: ["charge"], params: true },
@@ -65,8 +65,8 @@ export const capture: (
  * `CreateCharge`.
  */
 export const create: (
-  params?: Distilled.CreateChargeRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateChargeRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Charge, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateCharge,
   { method: "POST", path: "/v1/charges", ids: [], params: true },
@@ -77,8 +77,8 @@ export const create: (
  * `GetCharges`.
  */
 export const list: (
-  params?: Distilled.GetChargesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetChargesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetChargesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCharges, {
     method: "GET",
@@ -93,8 +93,8 @@ export const list: (
  */
 export const listRefunds: (
   charge: string,
-  params?: Omit<Distilled.GetChargeRefundsRequest, "charge"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetChargeRefundsRequest, "charge">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetChargeRefundsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetChargeRefunds, {
     method: "GET",
@@ -109,8 +109,8 @@ export const listRefunds: (
  */
 export const retrieve: (
   charge: string,
-  params?: Omit<Distilled.GetChargeRequest, "charge"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetChargeRequest, "charge">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Charge, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetCharge,
   { method: "GET", path: "/v1/charges/{charge}", ids: ["charge"], params: true },
@@ -123,8 +123,8 @@ export const retrieve: (
 export const retrieveRefund: (
   charge: string,
   refund: string,
-  params?: Omit<Distilled.GetChargeRefundRequest, "charge" | "refund"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetChargeRefundRequest, "charge" | "refund">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Refund, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetChargeRefund,
   {
@@ -141,7 +141,7 @@ export const retrieveRefund: (
  */
 export const search: (
   params: Distilled.GetChargesSearchRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetChargesSearchResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetChargesSearch, {
     method: "GET",
@@ -156,8 +156,8 @@ export const search: (
  */
 export const update: (
   charge: string,
-  params?: Omit<Distilled.UpdateChargeRequest, "charge"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateChargeRequest, "charge">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Charge, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateCharge,
   { method: "POST", path: "/v1/charges/{charge}", ids: ["charge"], params: true },

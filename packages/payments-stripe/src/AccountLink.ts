@@ -39,7 +39,7 @@ export { AccountLink, CreateAccountLinkRequest } from "@distilled.cloud/stripe/s
  */
 export const create: (
   params: Distilled.CreateAccountLinkRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.AccountLink, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateAccountLink,
   { method: "POST", path: "/v1/account_links", ids: [], params: true },

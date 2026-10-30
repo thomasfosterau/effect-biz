@@ -57,7 +57,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateProductRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Product, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateProduct,
   { method: "POST", path: "/v1/products", ids: [], params: true },
@@ -70,7 +70,7 @@ export const create: (
 export const createFeature: (
   product: string,
   params: Omit<Distilled.CreateProductFeatureRequest, "product">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ProductFeature, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateProductFeature,
   { method: "POST", path: "/v1/products/{product}/features", ids: ["product"], params: true },
@@ -82,7 +82,7 @@ export const createFeature: (
  */
 export const del: (
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedProduct, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.DeleteProduct,
   { method: "DELETE", path: "/v1/products/{id}", ids: ["id"], params: false },
@@ -95,7 +95,7 @@ export const del: (
 export const delFeature: (
   product: string,
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedProductFeature, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteProductFeature, {
     method: "DELETE",
@@ -109,8 +109,8 @@ export const delFeature: (
  * `GetProducts`.
  */
 export const list: (
-  params?: Distilled.GetProductsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetProductsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetProductsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetProducts, {
     method: "GET",
@@ -125,8 +125,8 @@ export const list: (
  */
 export const listFeatures: (
   product: string,
-  params?: Omit<Distilled.GetProductFeaturesRequest, "product"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetProductFeaturesRequest, "product">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetProductFeaturesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetProductFeatures, {
     method: "GET",
@@ -141,8 +141,8 @@ export const listFeatures: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetProductRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetProductRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Product, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetProduct,
   { method: "GET", path: "/v1/products/{id}", ids: ["id"], params: true },
@@ -155,8 +155,8 @@ export const retrieve: (
 export const retrieveFeature: (
   product: string,
   id: string,
-  params?: Omit<Distilled.GetProductFeatureRequest, "product" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetProductFeatureRequest, "product" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ProductFeature, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetProductFeature,
   {
@@ -173,7 +173,7 @@ export const retrieveFeature: (
  */
 export const search: (
   params: Distilled.GetProductsSearchRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetProductsSearchResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetProductsSearch, {
     method: "GET",
@@ -188,8 +188,8 @@ export const search: (
  */
 export const update: (
   id: string,
-  params?: Omit<Distilled.UpdateProductRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateProductRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Product, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateProduct,
   { method: "POST", path: "/v1/products/{id}", ids: ["id"], params: true },

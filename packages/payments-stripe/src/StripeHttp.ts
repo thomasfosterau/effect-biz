@@ -99,7 +99,7 @@ const MAX_RETRY_AFTER_S = 60;
 /** Configuration for the client. */
 export interface StripeHttpConfig {
   /** The secret (or restricted) API key, `sk_…` / `rk_…`. */
-  readonly apiKey: Redacted.Redacted<string>;
+  readonly apiKey: Redacted.Redacted;
   /** The `Stripe-Version` to pin. Defaults to {@link DISTILLED_API_VERSION}. */
   readonly apiVersion?: string | undefined;
   /** Retries after a retryable failure. Defaults to 2, as in the SDK. */
@@ -183,7 +183,7 @@ export class StripeHttp extends Context.Service<
       method: Method,
       operation: Operation<I, O, E>,
       input: I,
-      options?: CallOptions | undefined,
+      options?: CallOptions,
     ) => Effect.Effect<unknown, PaymentsError>;
   }
 >()("@effect-biz/payments-stripe/StripeHttp") {}
@@ -430,7 +430,7 @@ export const layerFromContext: Layer.Layer<StripeHttp, never, Credentials | Http
 
 /** The credentials a configuration names. */
 const credentialsOf = (
-  apiKey: Redacted.Redacted<string>,
+  apiKey: Redacted.Redacted,
   baseUrl: string | undefined,
 ): StripeCredentials => ({ apiKey, apiBaseUrl: baseUrl ?? DEFAULT_BASE_URL });
 
@@ -500,7 +500,7 @@ export interface LayerConfigOptions extends Omit<StripeHttpConfig, "apiKey"> {
 const readKey = (
   envVar: string,
   provider: ConfigProvider.ConfigProvider,
-): Effect.Effect<Option.Option<Redacted.Redacted<string>>> =>
+): Effect.Effect<Option.Option<Redacted.Redacted>> =>
   Config.Redacted(envVar)
     .pipe(Config.option)
     .parse(provider)

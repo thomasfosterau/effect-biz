@@ -46,7 +46,7 @@ export {
  */
 export const createFromCalculation: (
   params: Distilled.CreateTaxTransactionsCreateFromCalculationRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxTransaction, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTaxTransactionsCreateFromCalculation,
   { method: "POST", path: "/v1/tax/transactions/create_from_calculation", ids: [], params: true },
@@ -58,7 +58,7 @@ export const createFromCalculation: (
  */
 export const createReversal: (
   params: Distilled.CreateTaxTransactionsCreateReversalRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxTransaction, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTaxTransactionsCreateReversal,
   { method: "POST", path: "/v1/tax/transactions/create_reversal", ids: [], params: true },
@@ -70,8 +70,8 @@ export const createReversal: (
  */
 export const listLineItems: (
   transaction: string,
-  params?: Omit<Distilled.GetTaxTransactionLineItemsRequest, "transaction"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTaxTransactionLineItemsRequest, "transaction">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTaxTransactionLineItemsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTaxTransactionLineItems, {
     method: "GET",
@@ -86,8 +86,8 @@ export const listLineItems: (
  */
 export const retrieve: (
   transaction: string,
-  params?: Omit<Distilled.GetTaxTransactionRequest, "transaction"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTaxTransactionRequest, "transaction">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxTransaction, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetTaxTransaction,
   { method: "GET", path: "/v1/tax/transactions/{transaction}", ids: ["transaction"], params: true },

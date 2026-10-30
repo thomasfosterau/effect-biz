@@ -43,8 +43,8 @@ export {
  * `GetEvents`.
  */
 export const list: (
-  params?: Distilled.GetEventsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetEventsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetEventsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetEvents, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetEventRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetEventRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Event, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetEvent,
   { method: "GET", path: "/v1/events/{id}", ids: ["id"], params: true },

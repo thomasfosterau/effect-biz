@@ -42,8 +42,8 @@ export {
  * `GetTaxSettings`.
  */
 export const retrieve: (
-  params?: Distilled.GetTaxSettingsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTaxSettingsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxSettings, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetTaxSettings,
   { method: "GET", path: "/v1/tax/settings", ids: [], params: true },
@@ -54,8 +54,8 @@ export const retrieve: (
  * `CreateTaxSettings`.
  */
 export const update: (
-  params?: Distilled.CreateTaxSettingsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateTaxSettingsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxSettings, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTaxSettings,
   { method: "POST", path: "/v1/tax/settings", ids: [], params: true },

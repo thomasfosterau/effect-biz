@@ -47,8 +47,8 @@ export {
  */
 export const cancel: (
   topup: string,
-  params?: Omit<Distilled.CreateTopupCancelRequest, "topup"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTopupCancelRequest, "topup">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Topup, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTopupCancel,
   { method: "POST", path: "/v1/topups/{topup}/cancel", ids: ["topup"], params: true },
@@ -60,7 +60,7 @@ export const cancel: (
  */
 export const create: (
   params: Distilled.CreateTopupRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Topup, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTopup,
   { method: "POST", path: "/v1/topups", ids: [], params: true },
@@ -71,8 +71,8 @@ export const create: (
  * `GetTopups`.
  */
 export const list: (
-  params?: Distilled.GetTopupsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTopupsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTopupsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTopups, {
     method: "GET",
@@ -87,8 +87,8 @@ export const list: (
  */
 export const retrieve: (
   topup: string,
-  params?: Omit<Distilled.GetTopupRequest, "topup"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTopupRequest, "topup">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Topup, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetTopup,
   { method: "GET", path: "/v1/topups/{topup}", ids: ["topup"], params: true },
@@ -100,8 +100,8 @@ export const retrieve: (
  */
 export const update: (
   topup: string,
-  params?: Omit<Distilled.UpdateTopupRequest, "topup"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateTopupRequest, "topup">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Topup, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateTopup,
   { method: "POST", path: "/v1/topups/{topup}", ids: ["topup"], params: true },

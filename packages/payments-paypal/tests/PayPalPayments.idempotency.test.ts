@@ -170,7 +170,7 @@ describe("a retried write after a lost response is one logical write (effect-fin
     let writes = 0;
     let attempts = 0;
     const fetchImpl: typeof globalThis.fetch = async (input, init) => {
-      const url = String(input);
+      const url = input instanceof Request ? input.url : String(input);
       if (url.endsWith(LOGIN_PATH)) {
         return Response.json({ access_token: "at_1", expires_in: 3600 });
       }

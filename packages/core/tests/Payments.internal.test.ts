@@ -504,7 +504,7 @@ describe("omitUndefined", () => {
 
 describe("checkId", () => {
   it("passes a non-empty string id", async () => {
-    await Effect.runPromise(checkId("customer", "cus_1"));
+    await expect(Effect.runPromise(checkId("customer", "cus_1"))).resolves.toBeUndefined();
   });
 
   it("refuses an empty or non-string id before anything is sent", async () => {

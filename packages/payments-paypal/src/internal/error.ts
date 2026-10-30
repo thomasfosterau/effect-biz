@@ -42,7 +42,7 @@ export const errorBodyOf = (json: unknown): PayPalErrorBody | undefined =>
 export const handlePayPalError = (
   status: number,
   body: PayPalErrorBody | undefined,
-  retryAfter?: string | undefined,
+  retryAfter?: string,
 ): PaymentsError =>
   errorFromStatus(status, {
     provider: PROVIDER,

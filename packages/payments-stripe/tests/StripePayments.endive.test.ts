@@ -70,7 +70,7 @@ const onDefaultLayer = <A, E>(
 const strictly = (
   schema: Schema.Schema<unknown>,
   body: unknown,
-  options?: SchemaAST.ParseOptions | undefined,
+  options?: SchemaAST.ParseOptions,
 ): unknown =>
   // SAFETY: Distilled's generated schemas are plain structs, unions and
   // suspensions over `effect/Schema` built-ins, which need no services.
@@ -126,7 +126,7 @@ describe("endive fixtures", () => {
   });
 
   it("the basil subscription is not: the check would catch a stale fixture", () => {
-    expect(() => strictly(Distilled.Subscription, basilSubscription)).toThrow();
+    expect(() => strictly(Distilled.Subscription, basilSubscription)).toThrow("Missing key");
   });
 
   it("the basil product is not: it lacks endive's `tax_details`", () => {

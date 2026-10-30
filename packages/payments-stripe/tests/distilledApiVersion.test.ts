@@ -9,7 +9,7 @@ import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import type { CreateWebhookEndpointRequestApiVersion } from "@distilled.cloud/stripe/stripe";
-import Stripe from "stripe";
+import { Stripe } from "stripe";
 import { DISTILLED_API_VERSION } from "../src/StripePayments.ts";
 
 /**
@@ -43,16 +43,14 @@ describe("DISTILLED_API_VERSION", () => {
 
   it("is the API version the installed Distilled release is generated from", () => {
     const followed = Option.getOrUndefined(HashMap.get(FOLLOWED, installed));
-    if (followed === undefined) {
-      expect.fail(
-        `@distilled.cloud/stripe ${installed} is installed, but the API version it is generated ` +
-          `from is not recorded. Look it up (the com.stripe.api#Stripe service's version in ` +
-          `packages/stripe/.generated-specs/stripe.json at its release commit), then update ` +
-          `DISTILLED_API_VERSION in src/internal/apiVersion.ts and the FOLLOWED table in this ` +
-          `file together, and check that the fields src/internal/mapping.ts reads still exist.`,
-      );
-    }
-    expect(DISTILLED_API_VERSION).toBe(followed);
+    expect(
+      DISTILLED_API_VERSION,
+      `@distilled.cloud/stripe ${installed} is installed, but the API version it is generated ` +
+        `from is not recorded. Look it up (the com.stripe.api#Stripe service's version in ` +
+        `packages/stripe/.generated-specs/stripe.json at its release commit), then update ` +
+        `DISTILLED_API_VERSION in src/internal/apiVersion.ts and the FOLLOWED table in this ` +
+        `file together, and check that the fields src/internal/mapping.ts reads still exist.`,
+    ).toBe(followed);
   });
 
   it("is a version Distilled's own types know", () => {

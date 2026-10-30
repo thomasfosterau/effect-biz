@@ -46,7 +46,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateShippingRateRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ShippingRate, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateShippingRate,
   { method: "POST", path: "/v1/shipping_rates", ids: [], params: true },
@@ -57,8 +57,8 @@ export const create: (
  * `GetShippingRates`.
  */
 export const list: (
-  params?: Distilled.GetShippingRatesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetShippingRatesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetShippingRatesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetShippingRates, {
     method: "GET",
@@ -73,8 +73,8 @@ export const list: (
  */
 export const retrieve: (
   shipping_rate_token: string,
-  params?: Omit<Distilled.GetShippingRateRequest, "shipping_rate_token"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetShippingRateRequest, "shipping_rate_token">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ShippingRate, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetShippingRate,
   {
@@ -91,8 +91,8 @@ export const retrieve: (
  */
 export const update: (
   shipping_rate_token: string,
-  params?: Omit<Distilled.UpdateShippingRateRequest, "shipping_rate_token"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateShippingRateRequest, "shipping_rate_token">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ShippingRate, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateShippingRate,
   {

@@ -56,7 +56,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateCoreEventDestinationRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreEventDestination, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCoreEventDestination, {
     method: "POST",
@@ -71,7 +71,7 @@ export const create: (
  */
 export const del: (
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2DeletedObject, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteCoreEventDestination, {
     method: "DELETE",
@@ -86,7 +86,7 @@ export const del: (
  */
 export const disable: (
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreEventDestination, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCoreEventDestinationDisable, {
     method: "POST",
@@ -101,7 +101,7 @@ export const disable: (
  */
 export const enable: (
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreEventDestination, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCoreEventDestinationEnable, {
     method: "POST",
@@ -115,8 +115,8 @@ export const enable: (
  * `GetCoreEventDestinations`.
  */
 export const list: (
-  params?: Distilled.GetCoreEventDestinationsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetCoreEventDestinationsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCoreEventDestinationsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCoreEventDestinations, {
     method: "GET",
@@ -131,7 +131,7 @@ export const list: (
  */
 export const ping: (
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreEvent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateCoreEventDestinationPing,
   { method: "POST", path: "/v2/core/event_destinations/{id}/ping", ids: ["id"], params: false },
@@ -143,8 +143,8 @@ export const ping: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetCoreEventDestinationRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCoreEventDestinationRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreEventDestination, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCoreEventDestination, {
     method: "GET",
@@ -159,8 +159,8 @@ export const retrieve: (
  */
 export const update: (
   id: string,
-  params?: Omit<Distilled.UpdateCoreEventDestinationRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateCoreEventDestinationRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreEventDestination, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateCoreEventDestination, {
     method: "POST",

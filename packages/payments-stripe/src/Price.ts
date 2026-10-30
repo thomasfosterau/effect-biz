@@ -48,7 +48,7 @@ export {
  */
 export const create: (
   params: Distilled.CreatePriceRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Price, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePrice,
   { method: "POST", path: "/v1/prices", ids: [], params: true },
@@ -59,8 +59,8 @@ export const create: (
  * `GetPrices`.
  */
 export const list: (
-  params?: Distilled.GetPricesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetPricesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPricesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPrices, {
     method: "GET",
@@ -75,8 +75,8 @@ export const list: (
  */
 export const retrieve: (
   price: string,
-  params?: Omit<Distilled.GetPriceRequest, "price"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPriceRequest, "price">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Price, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetPrice,
   { method: "GET", path: "/v1/prices/{price}", ids: ["price"], params: true },
@@ -88,7 +88,7 @@ export const retrieve: (
  */
 export const search: (
   params: Distilled.GetPricesSearchRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPricesSearchResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPricesSearch, {
     method: "GET",
@@ -103,8 +103,8 @@ export const search: (
  */
 export const update: (
   price: string,
-  params?: Omit<Distilled.UpdatePriceRequest, "price"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdatePriceRequest, "price">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Price, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdatePrice,
   { method: "POST", path: "/v1/prices/{price}", ids: ["price"], params: true },

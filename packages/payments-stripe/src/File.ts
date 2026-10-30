@@ -45,7 +45,7 @@ export {
  */
 export const create: (
   params: Omit<Distilled.CreateFileRequest, "file"> & { readonly file: string | Blob },
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.File, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateFile,
   { method: "POST", path: "/v1/files", ids: [], params: true, upload: true },
@@ -56,8 +56,8 @@ export const create: (
  * `GetFiles`.
  */
 export const list: (
-  params?: Distilled.GetFilesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetFilesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetFilesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetFiles, {
     method: "GET",
@@ -72,8 +72,8 @@ export const list: (
  */
 export const retrieve: (
   file: string,
-  params?: Omit<Distilled.GetFileRequest, "file"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetFileRequest, "file">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.File, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetFile,
   { method: "GET", path: "/v1/files/{file}", ids: ["file"], params: true },

@@ -46,7 +46,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateFileLinkRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FileLink, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateFileLink,
   { method: "POST", path: "/v1/file_links", ids: [], params: true },
@@ -57,8 +57,8 @@ export const create: (
  * `GetFileLinks`.
  */
 export const list: (
-  params?: Distilled.GetFileLinksRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetFileLinksRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetFileLinksResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetFileLinks, {
     method: "GET",
@@ -73,8 +73,8 @@ export const list: (
  */
 export const retrieve: (
   link: string,
-  params?: Omit<Distilled.GetFileLinkRequest, "link"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetFileLinkRequest, "link">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FileLink, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetFileLink,
   { method: "GET", path: "/v1/file_links/{link}", ids: ["link"], params: true },
@@ -86,8 +86,8 @@ export const retrieve: (
  */
 export const update: (
   link: string,
-  params?: Omit<Distilled.UpdateFileLinkRequest, "link"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateFileLinkRequest, "link">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FileLink, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateFileLink,
   { method: "POST", path: "/v1/file_links/{link}", ids: ["link"], params: true },

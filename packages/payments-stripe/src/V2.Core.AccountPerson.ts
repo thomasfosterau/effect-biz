@@ -52,8 +52,8 @@ export {
  */
 export const create: (
   account_id: string,
-  params?: Omit<Distilled.CreateCoreAccountPersonRequest, "account_id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateCoreAccountPersonRequest, "account_id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreAccountPerson, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCoreAccountPerson, {
     method: "POST",
@@ -69,7 +69,7 @@ export const create: (
 export const del: (
   account_id: string,
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2DeletedObject, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteCoreAccountPerson, {
     method: "DELETE",
@@ -84,8 +84,8 @@ export const del: (
  */
 export const list: (
   account_id: string,
-  params?: Omit<Distilled.GetCoreAccountPersonsRequest, "account_id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetCoreAccountPersonsRequest, "account_id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetCoreAccountPersonsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCoreAccountPersons, {
     method: "GET",
@@ -101,7 +101,7 @@ export const list: (
 export const retrieve: (
   account_id: string,
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreAccountPerson, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCoreAccountPerson, {
     method: "GET",
@@ -117,8 +117,8 @@ export const retrieve: (
 export const update: (
   account_id: string,
   id: string,
-  params?: Omit<Distilled.UpdateCoreAccountPersonRequest, "account_id" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateCoreAccountPersonRequest, "account_id" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreAccountPerson, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateCoreAccountPerson, {
     method: "POST",

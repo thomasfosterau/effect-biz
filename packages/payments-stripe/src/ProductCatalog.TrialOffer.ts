@@ -46,7 +46,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateProductCatalogTrialOfferRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ProductCatalogTrialOffer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateProductCatalogTrialOffer, {
     method: "POST",
@@ -60,8 +60,8 @@ export const create: (
  * `GetProductCatalogTrialOffers`.
  */
 export const list: (
-  params?: Distilled.GetProductCatalogTrialOffersRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetProductCatalogTrialOffersRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetProductCatalogTrialOffersResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetProductCatalogTrialOffers, {
     method: "GET",
@@ -76,8 +76,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetProductCatalogTrialOfferRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetProductCatalogTrialOfferRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ProductCatalogTrialOffer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetProductCatalogTrialOffer, {
     method: "GET",
@@ -92,8 +92,8 @@ export const retrieve: (
  */
 export const update: (
   id: string,
-  params?: Omit<Distilled.UpdateProductCatalogTrialOfferRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateProductCatalogTrialOfferRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ProductCatalogTrialOffer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateProductCatalogTrialOffer, {
     method: "POST",

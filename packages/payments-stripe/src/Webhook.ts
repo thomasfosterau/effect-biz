@@ -60,7 +60,7 @@ export interface VerifyOptions {
   // oxlint-disable-next-line effect/prefer-option-over-null -- mirrors `Headers.get`, which answers a literal `null`
   readonly header: string | null | undefined;
   /** The webhook endpoint's signing secret (`whsec_…`). */
-  readonly secret: Redacted.Redacted<string>;
+  readonly secret: Redacted.Redacted;
   /**
    * How far the signing time may be from now, either side, in seconds
    * (default {@link DEFAULT_TOLERANCE}). A future-dated timestamp is refused
@@ -123,9 +123,9 @@ export const verifySignature = (
       toBytes(options.payload),
       () => refuse(SIGNATURE_UNAVAILABLE_MESSAGE, header),
     );
-    if (!anyMatches(expected, candidates)) {
-      return yield* refuse(SIGNATURE_MISMATCH_MESSAGE, header);
-    }
+    return yield* anyMatches(expected, candidates)
+      ? Effect.void
+      : refuse(SIGNATURE_MISMATCH_MESSAGE, header);
   });
 
 /**
@@ -249,7 +249,7 @@ export const verify = (
  */
 export const signatureHeader = (options: {
   readonly payload: string | Uint8Array;
-  readonly secret: Redacted.Redacted<string>;
+  readonly secret: Redacted.Redacted;
   /** The signing time in UNIX seconds (default: now). */
   readonly timestamp?: number | undefined;
 }): Effect.Effect<string, SignatureVerificationError> =>
@@ -574,7 +574,7 @@ export const constructEvent = (
   payload: string | Buffer,
   signature: string,
   secret: string,
-  tolerance?: number | undefined,
+  tolerance?: number,
 ): Effect.Effect<Stripe.Event, SignatureVerificationError, StripeService> =>
   Effect.gen(function* () {
     const stripe = yield* StripeService;
@@ -629,7 +629,7 @@ export const constructEventAsync = (
   payload: string | Buffer,
   signature: string,
   secret: string,
-  tolerance?: number | undefined,
+  tolerance?: number,
   cryptoProvider?: Stripe.CryptoProvider,
 ): Effect.Effect<Stripe.Event, SignatureVerificationError, StripeService> =>
   Effect.gen(function* () {

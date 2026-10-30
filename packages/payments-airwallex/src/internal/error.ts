@@ -29,7 +29,7 @@ export type AirwallexErrorBody = typeof AirwallexErrorBody.Type;
 export const handleAirwallexError = (
   status: number,
   body: AirwallexErrorBody | undefined,
-  retryAfter?: string | undefined,
+  retryAfter?: string,
 ): PaymentsError =>
   errorFromStatus(status, {
     provider: PROVIDER,

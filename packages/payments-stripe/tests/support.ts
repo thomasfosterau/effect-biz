@@ -48,7 +48,9 @@ const fieldsOf = (key: string, value: unknown): ReadonlyArray<readonly [string, 
       ? value.flatMap((item, index) => fieldsOf(`${key}[${index}]`, item))
       : Predicate.isObject(value)
         ? Arr.flatMap(Rec.toEntries(value), ([name, item]) => fieldsOf(`${key}[${name}]`, item))
-        : [[key, String(value)]];
+        : Predicate.isString(value) || Predicate.isNumber(value) || Predicate.isBoolean(value)
+          ? [[key, String(value)]]
+          : [];
 
 /**
  * `params` flattened the way Stripe reads a form body, for comparison with a

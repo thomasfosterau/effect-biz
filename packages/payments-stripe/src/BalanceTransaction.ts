@@ -43,8 +43,8 @@ export {
  * `GetBalanceTransactions`.
  */
 export const list: (
-  params?: Distilled.GetBalanceTransactionsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetBalanceTransactionsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetBalanceTransactionsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBalanceTransactions, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetBalanceTransactionRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetBalanceTransactionRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BalanceTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBalanceTransaction, {
     method: "GET",

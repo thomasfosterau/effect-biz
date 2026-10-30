@@ -35,7 +35,7 @@ A new package adds a row here, a `CLAUDE.md` of its own, a `docgen.json`, its na
 
 ## Common pitfalls
 
-- **Never edit a version in a `package.json`.** Every external version lives in [`pnpm-workspace.yaml`](pnpm-workspace.yaml) under `catalog:` (peer ranges under `catalogs.peers`), and `catalogMode: strict` rejects anything else at install. After editing the catalog, run `pnpm install` and commit the regenerated `pnpm-lock.yaml`. `@effect/tsgo`, `@typescript/native` and `vite-plus` move together (the tsgo patch hard-errors at install on an unsupported `tsc` or `oxlint`); read the comments on those entries before bumping any of the three.
+- **Never edit a version in a `package.json`.** Every external version lives in [`pnpm-workspace.yaml`](pnpm-workspace.yaml) under `catalog:` (peer ranges under `catalogs.peers`), and `catalogMode: strict` rejects anything else at install. After editing the catalog, run `pnpm install` and commit the regenerated `pnpm-lock.yaml`. `@effect/tsgo`, `@typescript/native` and `vite-plus` move together (the tsgo patch hard-errors at install on an unsupported `tsc` or `oxlint`); read the comments on those entries before bumping any of the three. Dependabot (`.github/dependabot.yml`) groups every lockstep set (`toolchain`, with `@enfect/oxlint` and `fallow`; `distilled`; `effect`; `docgen`; `changesets`; `github-actions`). By hand, because Dependabot cannot: the npm-alias entries (`vite`, which must equal `vite-plus`; `typescript` and `@typescript/native`, a pairing `@effect/tsgo` supports), the `overrides` literals, and regenerating the Stripe resource modules after a `distilled` bump. pnpm's `minimumReleaseAge` is 480 minutes (8 hours); Dependabot's `cooldown` is 1 day, its smallest unit.
 - **Effect 4, pinned.** The `effect` pin in `pnpm-workspace.yaml` moves in lockstep with the consuming applications; the published peer range is `^4.0.0` (also Distilled's own peer range, which the Stripe and PayPal providers depend on).
 - **`effect` is a peer, never a dependency.** Two copies break `Context` / `Layer` / `Schema` identity; the consuming app owns the singleton. The same goes for `@effect/sql*`: a peer (optional where only one subpath needs it).
 - **`dist/` is the product.** Each package is a `vp pack` (tsdown) library with one ESM bundle + `.d.ts` per subpath; `exports` points at `dist/` and is also the list `vite.package.ts` derives the pack entries from. A package consumes a sibling through its `dist/`, so every task carries a `{ task: "build", from: "dependencies" }` edge.
@@ -62,13 +62,14 @@ Package-local terms, invariants and import boundaries live in each package's `CL
 
 ## Commands
 
-- `pnpm install` — dependencies plus the Vite+ git hooks (pre-commit runs `vp staged`: format + lint on staged files) and the `prepare` step that patches the native `tsc` / `oxlint` with `@effect/tsgo`.
-- `vp check` — format + lint (Oxfmt + Oxlint). `vp run check` — the type gate: every package's `src` + `tests` (plus payments-stripe's `examples` and `scripts`) under the Effect-patched native `tsc`, plus the dist-consumer check (which builds `dist/` and asserts the emitted types). They are different commands.
+- `pnpm install` — dependencies plus the Vite+ git hooks (pre-commit runs `vp staged`: format with fixes, then lint without them, on staged files) and the `prepare` step that patches the native `tsc` / `oxlint` / `oxlint-tsgolint` with `@effect/tsgo`.
+- `vp check` — format + lint (Oxfmt + Oxlint with `@effect/tsgo`'s preset and `@enfect/oxlint`'s `recommended` Effect rules, over oxlint's `correctness`, `suspicious` and `perf` categories and the `typescript`, `unicorn`, `oxc`, `import`, `promise`, `vitest` and `jsdoc` plugins). Lint is type-aware through oxlint-tsgolint (`typeAware` + `typeCheck`), which reads each package's `tsconfig.json` (siblings mapped to `src/`, so it needs no build). Fix a finding in code; a rule is relaxed only in `vite.config.ts`, with its reason (and a site count for an allowance). `vp run check` — the type gate: every package's `src` + `tests` (plus payments-stripe's `examples` and `scripts`) under the Effect-patched native `tsc` (`tsconfig.check.json` where a package has a sibling, which it then reads through `dist/`), plus the dist-consumer check (which builds `dist/` and asserts the emitted types). They are different commands.
 - `vp run -r test:unit` — unit tests.
 - `vp run -r build` — `vp pack` → every package's `dist/`.
 - `vp run --filter ./packages/payments-stripe generate:resources` (offline) — regenerate the Stripe resource modules from the installed `@distilled.cloud/stripe` and `scripts/resources.ts`; run it after a Distilled bump or a change to `scripts/`.
 - `vp run docgen` — every package's `@effect/docgen`: type-checks and runs each JSDoc example and README block against `dist/` (it builds first), and writes the git-ignored API reference to `packages/*/docs/`.
-- `vp run test:coverage` — every package's unit suite under one Istanbul map at `coverage/coverage-final.json`.
+- `vp run test:coverage` — every package's unit suite under one Istanbul map at `coverage/coverage-final.json`, which `fallow audit` reads for exact per-function CRAP scores.
+- `fallow dead-code` / `fallow audit --base origin/main` — dead code, duplication, complexity and the package boundaries (`.fallowrc.json`: core imports no provider, a provider imports only core), and the change-set gate.
 - `pnpm changeset` — add a changeset.
 
 Invoke everything through `vp` (`vp exec` instead of `npx`; `vp run <task>` instead of bare `pnpm`). The sanctioned non-`vp` invocations: `pnpm install` (`--frozen-lockfile` in CI), `pnpm changeset` / `pnpm publish` on the release path.
@@ -82,8 +83,10 @@ Before you report work as done, run the gates below in order and quote each comm
 3. `vp run -r test:unit`
 4. `vp run -r build`
 5. `vp run docgen`
+6. `pnpm audit --audit-level high` (network)
+7. `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent --base origin/main` (the fallow gate below; not a CI step).
 
-CI runs all five plus `pnpm audit --audit-level high`. For CI parity, start from a clean tree: `rm -rf node_modules packages/*/node_modules packages/*/dist && pnpm install --frozen-lockfile`.
+Steps 1–6 are CI's one job, in its order ([ci.yml](.github/workflows/ci.yml)). Every workflow defaults to `permissions: {}`, pins each action to a commit SHA, checks out without persisted credentials (except the Release job, whose Changesets step pushes), sets up Node as `"*"` with `check-latest` (never `latest`, which resolves to pre-releases), and never runs the Release job for Dependabot; CI needs no secret, so Dependabot PRs run it safely. `uvx zizmor --offline .github` audits the workflows (config in `.github/zizmor.yml`). For CI parity, start from a clean tree: `rm -rf node_modules packages/*/node_modules packages/*/dist && pnpm install --frozen-lockfile`.
 
 ## Branches and pull requests
 
@@ -104,8 +107,24 @@ Read the installed package before writing Effect code: `node_modules/effect/dist
 
 ## Agent sessions
 
-The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `node_modules/.bin` on PATH. It hydrates no secrets. `.claude/settings.json` also formats every file an Edit / Write touches (`vp fmt --write`).
+The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `node_modules/.bin` (`vp`, `fallow`, `tsx`) on PATH. It hydrates no secrets. `.claude/settings.json` also formats every file an Edit / Write touches (`vp fmt --write`), runs the fallow gate before every `git commit` / `git push` (`.claude/hooks/fallow-gate.sh`, which blocks on a `fail` verdict from `fallow audit --base origin/main` and reads the coverage map on disk, so run `vp run test:coverage` first), and enables the `@enfect/claude` plugin (Effect guidance, skills and post-write pattern checks), pinned by `ref` to a reviewed `mpsuesser/enfect` commit; moving it is a reviewed edit of that SHA.
 
 ## Documentation surfaces
 
 The root `README.md` is the landing page; each package `README.md` is the API reference consumers read on npm; each package `CLAUDE.md` carries its boundary, invariants and terms; `CONTRIBUTING.md` carries human setup and procedures; `PUBLISHING.md` and `SECURITY.md` the release pipeline and its one-time setup. No `docs/` tree is committed (`packages/*/docs/` is git-ignored docgen output); decisions go in issue comments.
+
+---
+
+## Fallow local gate
+
+Before any `git commit` or `git push`, run `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent --base origin/main` (the default branch here is `main`). If the verdict is `fail`, fix the reported findings before retrying. Treat JSON runtime errors like `{ "error": true, ... }` as non-blocking. Audit defaults to `gate=new-only`: only findings introduced by the current changeset affect the verdict. The config is `.fallowrc.json`: a new package adds a boundary zone and rule.
+
+## Fallow task map
+
+| When the agent is about to... | Run |
+| --- | --- |
+| delete an "unused" export or file | `fallow dead-code --trace <file>:<export>` |
+| delete an "unused" dependency | `fallow dead-code --trace-dependency <name>` |
+| commit or open a PR | `fallow audit --base origin/main` |
+| check which architecture rules apply to a file before changing it | `fallow guard <files>` |
+| understand a finding | `fallow explain <issue-type>` |

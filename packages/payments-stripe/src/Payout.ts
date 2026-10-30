@@ -48,8 +48,8 @@ export {
  */
 export const cancel: (
   payout: string,
-  params?: Omit<Distilled.CreatePayoutCancelRequest, "payout"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreatePayoutCancelRequest, "payout">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Payout, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePayoutCancel,
   { method: "POST", path: "/v1/payouts/{payout}/cancel", ids: ["payout"], params: true },
@@ -61,7 +61,7 @@ export const cancel: (
  */
 export const create: (
   params: Distilled.CreatePayoutRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Payout, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePayout,
   { method: "POST", path: "/v1/payouts", ids: [], params: true },
@@ -72,8 +72,8 @@ export const create: (
  * `GetPayouts`.
  */
 export const list: (
-  params?: Distilled.GetPayoutsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetPayoutsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPayoutsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPayouts, {
     method: "GET",
@@ -88,8 +88,8 @@ export const list: (
  */
 export const retrieve: (
   payout: string,
-  params?: Omit<Distilled.GetPayoutRequest, "payout"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPayoutRequest, "payout">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Payout, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetPayout,
   { method: "GET", path: "/v1/payouts/{payout}", ids: ["payout"], params: true },
@@ -101,8 +101,8 @@ export const retrieve: (
  */
 export const reverse: (
   payout: string,
-  params?: Omit<Distilled.CreatePayoutReverseRequest, "payout"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreatePayoutReverseRequest, "payout">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Payout, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePayoutReverse,
   { method: "POST", path: "/v1/payouts/{payout}/reverse", ids: ["payout"], params: true },
@@ -114,8 +114,8 @@ export const reverse: (
  */
 export const update: (
   payout: string,
-  params?: Omit<Distilled.UpdatePayoutRequest, "payout"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdatePayoutRequest, "payout">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Payout, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdatePayout,
   { method: "POST", path: "/v1/payouts/{payout}", ids: ["payout"], params: true },

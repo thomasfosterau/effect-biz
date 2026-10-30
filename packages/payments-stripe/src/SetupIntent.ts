@@ -49,8 +49,8 @@ export {
  */
 export const cancel: (
   intent: string,
-  params?: Omit<Distilled.CreateSetupIntentCancelRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateSetupIntentCancelRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SetupIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateSetupIntentCancel,
   { method: "POST", path: "/v1/setup_intents/{intent}/cancel", ids: ["intent"], params: true },
@@ -62,8 +62,8 @@ export const cancel: (
  */
 export const confirm: (
   intent: string,
-  params?: Omit<Distilled.CreateSetupIntentConfirmRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateSetupIntentConfirmRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SetupIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateSetupIntentConfirm,
   { method: "POST", path: "/v1/setup_intents/{intent}/confirm", ids: ["intent"], params: true },
@@ -74,8 +74,8 @@ export const confirm: (
  * `CreateSetupIntent`.
  */
 export const create: (
-  params?: Distilled.CreateSetupIntentRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateSetupIntentRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SetupIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateSetupIntent,
   { method: "POST", path: "/v1/setup_intents", ids: [], params: true },
@@ -86,8 +86,8 @@ export const create: (
  * `GetSetupIntents`.
  */
 export const list: (
-  params?: Distilled.GetSetupIntentsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetSetupIntentsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetSetupIntentsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetSetupIntents, {
     method: "GET",
@@ -102,8 +102,8 @@ export const list: (
  */
 export const retrieve: (
   intent: string,
-  params?: Omit<Distilled.GetSetupIntentRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetSetupIntentRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SetupIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetSetupIntent,
   { method: "GET", path: "/v1/setup_intents/{intent}", ids: ["intent"], params: true },
@@ -115,8 +115,8 @@ export const retrieve: (
  */
 export const update: (
   intent: string,
-  params?: Omit<Distilled.UpdateSetupIntentRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateSetupIntentRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SetupIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateSetupIntent,
   { method: "POST", path: "/v1/setup_intents/{intent}", ids: ["intent"], params: true },
@@ -128,8 +128,8 @@ export const update: (
  */
 export const verifyMicrodeposits: (
   intent: string,
-  params?: Omit<Distilled.CreateSetupIntentVerifyMicrodepositRequest, "intent"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateSetupIntentVerifyMicrodepositRequest, "intent">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.SetupIntent, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateSetupIntentVerifyMicrodeposit,
   {

@@ -43,8 +43,8 @@ export {
  * `GetIssuingPhysicalBundles`.
  */
 export const list: (
-  params?: Distilled.GetIssuingPhysicalBundlesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetIssuingPhysicalBundlesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetIssuingPhysicalBundlesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingPhysicalBundles, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   physical_bundle: string,
-  params?: Omit<Distilled.GetIssuingPhysicalBundleRequest, "physical_bundle"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetIssuingPhysicalBundleRequest, "physical_bundle">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingPhysicalBundle, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingPhysicalBundle, {
     method: "GET",

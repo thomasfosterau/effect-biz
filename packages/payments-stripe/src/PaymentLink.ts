@@ -48,7 +48,7 @@ export {
  */
 export const create: (
   params: Distilled.CreatePaymentLinkRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentLink, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreatePaymentLink,
   { method: "POST", path: "/v1/payment_links", ids: [], params: true },
@@ -59,8 +59,8 @@ export const create: (
  * `GetPaymentLinks`.
  */
 export const list: (
-  params?: Distilled.GetPaymentLinksRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetPaymentLinksRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPaymentLinksResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPaymentLinks, {
     method: "GET",
@@ -75,8 +75,8 @@ export const list: (
  */
 export const listLineItems: (
   payment_link: string,
-  params?: Omit<Distilled.GetPaymentLinkLineItemsRequest, "payment_link"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPaymentLinkLineItemsRequest, "payment_link">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetPaymentLinkLineItemsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetPaymentLinkLineItems, {
     method: "GET",
@@ -91,8 +91,8 @@ export const listLineItems: (
  */
 export const retrieve: (
   payment_link: string,
-  params?: Omit<Distilled.GetPaymentLinkRequest, "payment_link"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetPaymentLinkRequest, "payment_link">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentLink, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetPaymentLink,
   { method: "GET", path: "/v1/payment_links/{payment_link}", ids: ["payment_link"], params: true },
@@ -104,8 +104,8 @@ export const retrieve: (
  */
 export const update: (
   payment_link: string,
-  params?: Omit<Distilled.UpdatePaymentLinkRequest, "payment_link"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdatePaymentLinkRequest, "payment_link">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.PaymentLink, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdatePaymentLink,
   { method: "POST", path: "/v1/payment_links/{payment_link}", ids: ["payment_link"], params: true },

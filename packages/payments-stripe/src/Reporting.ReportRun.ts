@@ -45,7 +45,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateReportingReportRunRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ReportingReportRun, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateReportingReportRun, {
     method: "POST",
@@ -59,8 +59,8 @@ export const create: (
  * `GetReportingReportRuns`.
  */
 export const list: (
-  params?: Distilled.GetReportingReportRunsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetReportingReportRunsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetReportingReportRunsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetReportingReportRuns, {
     method: "GET",
@@ -75,8 +75,8 @@ export const list: (
  */
 export const retrieve: (
   report_run: string,
-  params?: Omit<Distilled.GetReportingReportRunRequest, "report_run"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetReportingReportRunRequest, "report_run">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ReportingReportRun, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetReportingReportRun, {
     method: "GET",

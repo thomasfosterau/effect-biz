@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # SessionStart hook: install dependencies against the lockfile and put the
-# workspace's bins (`vp`, `tsx`, `changeset`) on PATH for the session's
+# workspace's bins (`vp`, `fallow`, `tsx`, `changeset`) on PATH for the session's
 # non-interactive shells.
 #
 # Idempotent and never fatal: a failure logs and continues, because a

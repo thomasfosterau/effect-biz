@@ -45,7 +45,7 @@ export {
  */
 export const list: (
   params: Distilled.GetIssuingTokensRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetIssuingTokensResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingTokens, {
     method: "GET",
@@ -60,8 +60,8 @@ export const list: (
  */
 export const retrieve: (
   token: string,
-  params?: Omit<Distilled.GetIssuingTokenRequest, "token"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetIssuingTokenRequest, "token">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingToken, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetIssuingToken,
   { method: "GET", path: "/v1/issuing/tokens/{token}", ids: ["token"], params: true },
@@ -74,7 +74,7 @@ export const retrieve: (
 export const update: (
   token: string,
   params: Omit<Distilled.UpdateIssuingTokenRequest, "token">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingToken, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateIssuingToken,
   { method: "POST", path: "/v1/issuing/tokens/{token}", ids: ["token"], params: true },

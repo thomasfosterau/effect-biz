@@ -39,7 +39,7 @@ export { GetTaxAssociationsFindRequest, TaxAssociation } from "@distilled.cloud/
  */
 export const find: (
   params: Distilled.GetTaxAssociationsFindRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxAssociation, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetTaxAssociationsFind,
   { method: "GET", path: "/v1/tax/associations/find", ids: [], params: true },

@@ -350,9 +350,9 @@ describe("PayPalPayments requests", () => {
   const KEY = IdempotencyKey.IdempotencyKey.make("write-0001");
 
   /** Every request `effect` made through `layer(config())`, answered from `answers` by path. */
-  const requestsOf = <A, E, Body>(
+  const requestsOf = <A, E>(
     effect: Effect.Effect<A, E, Capabilities>,
-    answer?: ((path: string) => Body) | undefined,
+    answer?: (path: string) => unknown,
   ) =>
     Effect.suspend(() => {
       const api = paypal((request) =>
@@ -364,9 +364,9 @@ describe("PayPalPayments requests", () => {
     });
 
   /** {@link requestsOf}, run. */
-  const sent = <A, E, Body>(
+  const sent = <A, E>(
     effect: Effect.Effect<A, E, Capabilities>,
-    answer?: ((path: string) => Body) | undefined,
+    answer?: (path: string) => unknown,
   ) => Effect.runPromise(requestsOf(effect, answer));
 
   it("sends the key as PayPal-Request-Id on each write, and none without one", async () => {
@@ -609,10 +609,10 @@ describe("PayPalPayments errors", () => {
     );
 
   /** A neutral error's class and fields, for comparison. */
-  const fieldsOf = (error: PaymentsError | PaymentConfigError) => ({
-    constructor: error.constructor,
-    ...error,
-  });
+  // `Object.assign`, not a spread: a tagged error is iterable (yieldable),
+  // and only its own enumerable fields are wanted here.
+  const fieldsOf = (error: PaymentsError | PaymentConfigError) =>
+    Object.assign({ constructor: error.constructor }, error);
 
   const body = (name: string, message: string, details?: unknown) =>
     details === undefined

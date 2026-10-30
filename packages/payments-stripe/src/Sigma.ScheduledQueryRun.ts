@@ -43,8 +43,8 @@ export {
  * `GetSigmaScheduledQueryRuns`.
  */
 export const list: (
-  params?: Distilled.GetSigmaScheduledQueryRunsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetSigmaScheduledQueryRunsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetSigmaScheduledQueryRunsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetSigmaScheduledQueryRuns, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   scheduled_query_run: string,
-  params?: Omit<Distilled.GetSigmaScheduledQueryRunRequest, "scheduled_query_run"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetSigmaScheduledQueryRunRequest, "scheduled_query_run">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.ScheduledQueryRun, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetSigmaScheduledQueryRun, {
     method: "GET",

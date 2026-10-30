@@ -6,10 +6,14 @@
 # that matches it, so the groups run specific → general and every broad
 # pattern carries `exclude-patterns` for the sets above it.
 #
-# - `toolchain`: vite-plus pins the `oxlint`, `oxfmt` and `vitest` it carries,
-#   and `effect-tsgo patch` matches the native `tsc` (@typescript/native) and
-#   vite-plus's `oxlint` by gitHead / version, failing `pnpm install` on any
-#   pairing it has no artifact for. One PR moves them all.
+# - `toolchain`: vite-plus pins the `oxlint`, `oxfmt`, `oxlint-tsgolint` and
+#   `vitest` it carries, and `effect-tsgo patch` matches the native `tsc`
+#   (@typescript/native) and vite-plus's `oxlint` / `oxlint-tsgolint` by
+#   gitHead / version, failing `pnpm install` on any pairing it has no
+#   artifact for. The Effect lint rules (@enfect/oxlint) load into that oxlint,
+#   and fallow is the change-set audit. One PR moves them all; when it fails at
+#   install, pick the @effect/tsgo release whose `components` table covers the
+#   new oxlint / tsgolint by hand on that branch.
 # - `distilled`: the three @distilled.cloud packages pin each other exactly.
 #   A Distilled bump also regenerates the Stripe resource modules, which
 #   Dependabot cannot do: finish the PR by hand (AGENTS.md, Common pitfalls).
@@ -22,8 +26,21 @@
 # - `changesets`: release tooling.
 # - `minor-and-patch`: everything else that is not a major, in one PR.
 #
-# `cooldown` mirrors pnpm-workspace.yaml's `minimumReleaseAge` (1 day), with
-# @thomasfosterau/* exempt as `minimumReleaseAgeExclude` exempts it.
+# By hand, because Dependabot cannot move them (AGENTS.md lists them too):
+# - the npm-alias catalog entries: `vite`
+#   (`npm:@voidzero-dev/vite-plus-core@<v>`, must equal vite-plus; `pnpm exec
+#   vp migrate` re-pins it, then drop the `minimumReleaseAgeExclude` entries
+#   it adds), `typescript` (`npm:@typescript/typescript6@<v>`) and
+#   `@typescript/native` (`npm:typescript@<v>`, a pairing @effect/tsgo
+#   supports);
+# - the `overrides` literals in pnpm-workspace.yaml (the `undici` security
+#   floor; the `vite@*` / `vitest@*` / `effect` entries follow the catalog);
+# - the Stripe resource modules after a `distilled` bump (regenerate them).
+#
+# `cooldown`: pnpm holds a new version for 8 hours (`minimumReleaseAge: 480`
+# in pnpm-workspace.yaml). Dependabot's cooldown takes whole days only, so it
+# is 1 day, longer than pnpm's wait: a Dependabot PR never proposes a version
+# pnpm would still refuse. @thomasfosterau/* is exempt from both.
 version: 2
 updates:
   - package-ecosystem: "npm"
@@ -56,7 +73,8 @@ updates:
           - "@typescript/native"
           - "typescript"
           - "@typescript/typescript6"
-          - "@mpsuesser/oxlint-plugin-effect"
+          - "@enfect/oxlint"
+          - "fallow"
       distilled:
         applies-to: version-updates
         patterns:
@@ -94,7 +112,8 @@ updates:
           - "@effect/*"
           - "@typescript/*"
           - "typescript"
-          - "@mpsuesser/oxlint-plugin-effect"
+          - "@enfect/oxlint"
+          - "fallow"
           - "effect"
           - "tsx"
           - "@changesets/*"

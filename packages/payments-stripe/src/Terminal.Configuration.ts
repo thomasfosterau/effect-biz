@@ -49,8 +49,8 @@ export {
  * `CreateTerminalConfiguration`.
  */
 export const create: (
-  params?: Distilled.CreateTerminalConfigurationRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateTerminalConfigurationRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalConfiguration, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTerminalConfiguration, {
     method: "POST",
@@ -65,7 +65,7 @@ export const create: (
  */
 export const del: (
   configuration: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedTerminalConfiguration, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteTerminalConfiguration, {
     method: "DELETE",
@@ -79,8 +79,8 @@ export const del: (
  * `GetTerminalConfigurations`.
  */
 export const list: (
-  params?: Distilled.GetTerminalConfigurationsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTerminalConfigurationsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTerminalConfigurationsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTerminalConfigurations, {
     method: "GET",
@@ -95,8 +95,8 @@ export const list: (
  */
 export const retrieve: (
   configuration: string,
-  params?: Omit<Distilled.GetTerminalConfigurationRequest, "configuration"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTerminalConfigurationRequest, "configuration">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTerminalConfigurationResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTerminalConfiguration, {
     method: "GET",
@@ -111,8 +111,8 @@ export const retrieve: (
  */
 export const update: (
   configuration: string,
-  params?: Omit<Distilled.UpdateTerminalConfigurationRequest, "configuration"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateTerminalConfigurationRequest, "configuration">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.UpdateTerminalConfigurationResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateTerminalConfiguration, {
     method: "POST",

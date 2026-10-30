@@ -164,24 +164,26 @@ const over = <I, S>(
 // Customers
 // ---------------------------------------------------------------------------
 
+/** The writable customer fields, as Stripe's form parameters. */
+const customerFields = (params: CustomerNS.UpdateParams) =>
+  omitUndefined({
+    email: params.email,
+    name: params.name,
+    phone: params.phone,
+    description: params.description,
+    metadata: params.metadata,
+  });
+
 const customers = /* @__PURE__ */ over(CustomerNS.Customers, (request) => {
-  const fields = (params: CustomerNS.UpdateParams) =>
-    omitUndefined({
-      email: params.email,
-      name: params.name,
-      phone: params.phone,
-      description: params.description,
-      metadata: params.metadata,
-    });
   return {
     create: (params) =>
-      request("POST", CreateCustomer, fields(params), decodeCustomer, {
+      request("POST", CreateCustomer, customerFields(params), decodeCustomer, {
         idempotencyKey: params.idempotencyKey,
       }),
     retrieve: (id) =>
       request("GET", GetCustomer, { customer: id }, decodeCustomer, { id: ["customer", id] }),
     update: (id, params) =>
-      request("POST", UpdateCustomer, { customer: id, ...fields(params) }, decodeCustomer, {
+      request("POST", UpdateCustomer, { customer: id, ...customerFields(params) }, decodeCustomer, {
         id: ["customer", id],
       }),
     del: (id) =>
@@ -208,22 +210,30 @@ export const customersLayer: Layer.Layer<CustomerNS.Customers, never, Requiremen
 // Products
 // ---------------------------------------------------------------------------
 
+/** The writable product fields, as Stripe's form parameters. */
+const productFields = (params: ProductNS.UpdateParams) =>
+  omitUndefined({
+    name: params.name,
+    description: params.description,
+    active: params.active,
+    metadata: params.metadata,
+  });
+
 const products = /* @__PURE__ */ over(ProductNS.Products, (request) => {
-  const fields = (params: ProductNS.UpdateParams) =>
-    omitUndefined({
-      name: params.name,
-      description: params.description,
-      active: params.active,
-      metadata: params.metadata,
-    });
   return {
     create: (params) =>
-      request("POST", CreateProduct, { ...fields(params), name: params.name }, decodeProduct, {
-        idempotencyKey: params.idempotencyKey,
-      }),
+      request(
+        "POST",
+        CreateProduct,
+        { ...productFields(params), name: params.name },
+        decodeProduct,
+        {
+          idempotencyKey: params.idempotencyKey,
+        },
+      ),
     retrieve: (id) => request("GET", GetProduct, { id }, decodeProduct, { id: ["product", id] }),
     update: (id, params) =>
-      request("POST", UpdateProduct, { id, ...fields(params) }, decodeProduct, {
+      request("POST", UpdateProduct, { id, ...productFields(params) }, decodeProduct, {
         id: ["product", id],
       }),
     del: (id) => request("DELETE", DeleteProduct, { id }, decodeDeleted, { id: ["product", id] }),

@@ -731,6 +731,10 @@ export const errorFromStatus = (
 /** A page cursor: the vendor page number, and the explicit `limit` it was made for. */
 const PAGE_CURSOR = /^page=(\d+)(?:&size=(\d+))?$/;
 
+/** Refuse a `startingAfter` that is not a cursor this listing can resume. */
+const refuseCursor = (message: string) =>
+  Effect.fail(new PaymentInvalidRequestError({ message, param: "startingAfter" }));
+
 /**
  * The vendor page number `startingAfter` (a `nextCursor` from
  * {@link pageNumberedList}) names, or `firstPage` without one.
@@ -744,12 +748,10 @@ const readPageCursor = (
   },
 ): Effect.Effect<number, PaymentInvalidRequestError> => {
   if (startingAfter === undefined) return Effect.succeed(options.firstPage);
-  const refuse = (message: string) =>
-    Effect.fail(new PaymentInvalidRequestError({ message, param: "startingAfter" }));
   const match = PAGE_CURSOR.exec(startingAfter);
   const page = match === null ? Number.NaN : Number(match[1]);
   if (match === null || !Number.isSafeInteger(page) || page < options.firstPage) {
-    return refuse(
+    return refuseCursor(
       `${options.provider} startingAfter must be the nextCursor of a previous page, not an item id`,
     );
   }
@@ -757,7 +759,7 @@ const readPageCursor = (
   const limit = options.limit === undefined ? undefined : String(options.limit);
   return size === limit
     ? Effect.succeed(page)
-    : refuse(
+    : refuseCursor(
         `${options.provider} startingAfter is a cursor for ${
           size === undefined ? "no limit" : `limit ${size}`
         }: list the next page with the same limit`,

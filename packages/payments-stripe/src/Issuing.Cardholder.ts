@@ -46,7 +46,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateIssuingCardholderRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingCardholder, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateIssuingCardholder, {
     method: "POST",
@@ -60,8 +60,8 @@ export const create: (
  * `GetIssuingCardholders`.
  */
 export const list: (
-  params?: Distilled.GetIssuingCardholdersRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetIssuingCardholdersRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetIssuingCardholdersResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingCardholders, {
     method: "GET",
@@ -76,8 +76,8 @@ export const list: (
  */
 export const retrieve: (
   cardholder: string,
-  params?: Omit<Distilled.GetIssuingCardholderRequest, "cardholder"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetIssuingCardholderRequest, "cardholder">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingCardholder, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetIssuingCardholder, {
     method: "GET",
@@ -92,8 +92,8 @@ export const retrieve: (
  */
 export const update: (
   cardholder: string,
-  params?: Omit<Distilled.UpdateIssuingCardholderRequest, "cardholder"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateIssuingCardholderRequest, "cardholder">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.IssuingCardholder, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateIssuingCardholder, {
     method: "POST",

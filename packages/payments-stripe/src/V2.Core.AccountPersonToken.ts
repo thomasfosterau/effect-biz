@@ -47,8 +47,8 @@ export {
  */
 export const create: (
   account_id: string,
-  params?: Omit<Distilled.CreateCoreAccountPersonTokenRequest, "account_id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateCoreAccountPersonTokenRequest, "account_id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreAccountPersonToken, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCoreAccountPersonToken, {
     method: "POST",
@@ -64,7 +64,7 @@ export const create: (
 export const retrieve: (
   account_id: string,
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreAccountPersonToken, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetCoreAccountPersonToken, {
     method: "GET",

@@ -48,8 +48,8 @@ export {
  */
 export const cancel: (
   refund: string,
-  params?: Omit<Distilled.CreateRefundCancelRequest, "refund"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateRefundCancelRequest, "refund">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Refund, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateRefundCancel,
   { method: "POST", path: "/v1/refunds/{refund}/cancel", ids: ["refund"], params: true },
@@ -60,8 +60,8 @@ export const cancel: (
  * `CreateRefund`.
  */
 export const create: (
-  params?: Distilled.CreateRefundRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateRefundRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Refund, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateRefund,
   { method: "POST", path: "/v1/refunds", ids: [], params: true },
@@ -72,8 +72,8 @@ export const create: (
  * `GetRefunds`.
  */
 export const list: (
-  params?: Distilled.GetRefundsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetRefundsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetRefundsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetRefunds, {
     method: "GET",
@@ -88,8 +88,8 @@ export const list: (
  */
 export const retrieve: (
   refund: string,
-  params?: Omit<Distilled.GetRefundRequest, "refund"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetRefundRequest, "refund">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Refund, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetRefund,
   { method: "GET", path: "/v1/refunds/{refund}", ids: ["refund"], params: true },
@@ -101,8 +101,8 @@ export const retrieve: (
  */
 export const testHelpersExpire: (
   refund: string,
-  params?: Omit<Distilled.CreateTestHelpersRefundExpireRequest, "refund"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTestHelpersRefundExpireRequest, "refund">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Refund, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateTestHelpersRefundExpire,
   {
@@ -119,8 +119,8 @@ export const testHelpersExpire: (
  */
 export const update: (
   refund: string,
-  params?: Omit<Distilled.UpdateRefundRequest, "refund"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateRefundRequest, "refund">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Refund, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateRefund,
   { method: "POST", path: "/v1/refunds/{refund}", ids: ["refund"], params: true },

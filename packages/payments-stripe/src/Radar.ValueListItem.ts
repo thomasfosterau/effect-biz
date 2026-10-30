@@ -47,7 +47,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateRadarValueListItemRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.RadarValueListItem, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateRadarValueListItem, {
     method: "POST",
@@ -62,7 +62,7 @@ export const create: (
  */
 export const del: (
   item: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedRadarValueListItem, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteRadarValueListItem, {
     method: "DELETE",
@@ -77,7 +77,7 @@ export const del: (
  */
 export const list: (
   params: Distilled.GetRadarValueListItemsRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetRadarValueListItemsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetRadarValueListItems, {
     method: "GET",
@@ -92,8 +92,8 @@ export const list: (
  */
 export const retrieve: (
   item: string,
-  params?: Omit<Distilled.GetRadarValueListItemRequest, "item"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetRadarValueListItemRequest, "item">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.RadarValueListItem, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetRadarValueListItem, {
     method: "GET",

@@ -43,7 +43,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateFinancialConnectionsSessionRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FinancialConnectionsSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateFinancialConnectionsSession, {
     method: "POST",
@@ -58,8 +58,8 @@ export const create: (
  */
 export const retrieve: (
   session: string,
-  params?: Omit<Distilled.GetFinancialConnectionsSessionRequest, "session"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetFinancialConnectionsSessionRequest, "session">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FinancialConnectionsSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetFinancialConnectionsSession, {
     method: "GET",

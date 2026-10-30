@@ -48,8 +48,8 @@ export {
  */
 export const create: (
   account: string,
-  params?: Omit<Distilled.CreateAccountPersonRequest, "account"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateAccountPersonRequest, "account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Person, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateAccountPerson,
   { method: "POST", path: "/v1/accounts/{account}/persons", ids: ["account"], params: true },
@@ -62,7 +62,7 @@ export const create: (
 export const del: (
   account: string,
   person: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedPerson, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.DeleteAccountPerson,
   {
@@ -79,8 +79,8 @@ export const del: (
  */
 export const list: (
   account: string,
-  params?: Omit<Distilled.GetAccountPersonsRequest, "account"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetAccountPersonsRequest, "account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetAccountPersonsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetAccountPersons, {
     method: "GET",
@@ -96,8 +96,8 @@ export const list: (
 export const retrieve: (
   account: string,
   person: string,
-  params?: Omit<Distilled.GetAccountPersonRequest, "account" | "person"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetAccountPersonRequest, "account" | "person">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Person, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetAccountPerson,
   {
@@ -115,8 +115,8 @@ export const retrieve: (
 export const update: (
   account: string,
   person: string,
-  params?: Omit<Distilled.UpdateAccountPersonRequest, "account" | "person"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateAccountPersonRequest, "account" | "person">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Person, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateAccountPerson,
   {

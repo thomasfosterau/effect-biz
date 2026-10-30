@@ -567,7 +567,9 @@ describe("Airwallex client secrets", () => {
 
   it("keeps the apiKey out of the config's string and JSON forms", () => {
     const { apiKey } = config({});
-    expect(String(apiKey)).not.toContain(SECRET);
+    // Through `unknown`: the stringification a consumer's logger applies.
+    const asText = (value: unknown): string => String(value);
+    expect(asText(apiKey)).not.toContain(SECRET);
     expect(toJsonText(config({}))).not.toContain(SECRET);
   });
 
@@ -866,12 +868,14 @@ describe("Airwallex make validates baseUrl", () => {
   });
 
   it("accepts an absolute https URL and an http one (a local mock)", async () => {
-    await Effect.runPromise(
-      Effect.forEach(
-        ["https://sandbox.example.test", "http://localhost:8080"],
-        (ok) => attempt(ok).program,
-        { concurrency: 1, discard: true },
+    await expect(
+      Effect.runPromise(
+        Effect.forEach(
+          ["https://sandbox.example.test", "http://localhost:8080"],
+          (ok) => attempt(ok).program,
+          { concurrency: 1, discard: true },
+        ),
       ),
-    );
+    ).resolves.toBeUndefined();
   });
 });

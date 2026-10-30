@@ -38,8 +38,8 @@ export { CreateTokenRequest, GetTokenRequest, Token } from "@distilled.cloud/str
  * `CreateToken`.
  */
 export const create: (
-  params?: Distilled.CreateTokenRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateTokenRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Token, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateToken,
   { method: "POST", path: "/v1/tokens", ids: [], params: true },
@@ -51,8 +51,8 @@ export const create: (
  */
 export const retrieve: (
   token: string,
-  params?: Omit<Distilled.GetTokenRequest, "token"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTokenRequest, "token">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Token, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetToken,
   { method: "GET", path: "/v1/tokens/{token}", ids: ["token"], params: true },

@@ -45,7 +45,7 @@ export {
  * `CreateBillingMeterEventSession`.
  */
 export const create: (
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2BillingMeterEventSession, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateBillingMeterEventSession, {
     method: "POST",

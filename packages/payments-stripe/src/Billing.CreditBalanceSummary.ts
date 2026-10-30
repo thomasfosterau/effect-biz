@@ -42,7 +42,7 @@ export {
  */
 export const retrieve: (
   params: Distilled.GetBillingCreditBalanceSummaryRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.BillingCreditBalanceSummary, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetBillingCreditBalanceSummary, {
     method: "GET",

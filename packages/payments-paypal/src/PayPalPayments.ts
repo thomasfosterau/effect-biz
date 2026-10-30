@@ -112,7 +112,7 @@ export interface PayPalConfig {
   /** The REST app's client id. */
   readonly clientId: string;
   /** The client secret, kept `Redacted` so it never reaches a log line or an error. */
-  readonly clientSecret: Redacted.Redacted<string>;
+  readonly clientSecret: Redacted.Redacted;
   /**
    * The environment to talk to, which selects the API base URL: `live`
    * (`https://api-m.paypal.com`) or `sandbox`
@@ -213,7 +213,7 @@ const call =
     operation: Operation<I, O, E>,
     input: I,
     decode: (body: unknown) => Effect.Effect<A, PaymentsError>,
-    id?: readonly [resource: string, id: string] | undefined,
+    id?: readonly [resource: string, id: string],
   ): Effect.Effect<A, PaymentsError> =>
     (id === undefined ? Effect.void : checkId(...id)).pipe(
       Effect.andThen(client.call(operation, input)),

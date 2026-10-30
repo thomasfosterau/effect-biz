@@ -43,7 +43,7 @@ export { CreateCoreAccountLinkRequest, V2CoreAccountLink } from "@distilled.clou
  */
 export const create: (
   params: Distilled.CreateCoreAccountLinkRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.V2CoreAccountLink, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateCoreAccountLink, {
     method: "POST",

@@ -57,8 +57,8 @@ export {
  * `CreateAccount`.
  */
 export const create: (
-  params?: Distilled.CreateAccountRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateAccountRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Account, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateAccount,
   { method: "POST", path: "/v1/accounts", ids: [], params: true },
@@ -70,8 +70,8 @@ export const create: (
  */
 export const createLoginLink: (
   account: string,
-  params?: Omit<Distilled.CreateAccountLoginLinkRequest, "account"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateAccountLoginLinkRequest, "account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.LoginLink, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateAccountLoginLink,
   { method: "POST", path: "/v1/accounts/{account}/login_links", ids: ["account"], params: true },
@@ -83,7 +83,7 @@ export const createLoginLink: (
  */
 export const del: (
   account: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeletedAccount, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.DeleteAccount,
   { method: "DELETE", path: "/v1/accounts/{account}", ids: ["account"], params: false },
@@ -94,8 +94,8 @@ export const del: (
  * `GetAccounts`.
  */
 export const list: (
-  params?: Distilled.GetAccountsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetAccountsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetAccountsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetAccounts, {
     method: "GET",
@@ -110,8 +110,8 @@ export const list: (
  */
 export const listCapabilities: (
   account: string,
-  params?: Omit<Distilled.GetAccountCapabilitiesRequest, "account"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetAccountCapabilitiesRequest, "account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetAccountCapabilitiesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetAccountCapabilities, {
     method: "GET",
@@ -127,7 +127,7 @@ export const listCapabilities: (
 export const reject: (
   account: string,
   params: Omit<Distilled.CreateAccountRejectRequest, "account">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Account, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateAccountReject,
   { method: "POST", path: "/v1/accounts/{account}/reject", ids: ["account"], params: true },
@@ -139,8 +139,8 @@ export const reject: (
  */
 export const retrieve: (
   account: string,
-  params?: Omit<Distilled.GetAccountByAccountRequest, "account"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetAccountByAccountRequest, "account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Account, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetAccountByAccount,
   { method: "GET", path: "/v1/accounts/{account}", ids: ["account"], params: true },
@@ -153,8 +153,8 @@ export const retrieve: (
 export const retrieveCapability: (
   account: string,
   capability: string,
-  params?: Omit<Distilled.GetAccountCapabilityRequest, "account" | "capability"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetAccountCapabilityRequest, "account" | "capability">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Capability, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetAccountCapability,
   {
@@ -170,8 +170,8 @@ export const retrieveCapability: (
  * `GetAccount`.
  */
 export const retrieveCurrent: (
-  params?: Distilled.GetAccountRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetAccountRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Account, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetAccount,
   { method: "GET", path: "/v1/account", ids: [], params: true },
@@ -183,8 +183,8 @@ export const retrieveCurrent: (
  */
 export const unreject: (
   account: string,
-  params?: Omit<Distilled.CreateAccountUnrejectRequest, "account"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateAccountUnrejectRequest, "account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Account, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateAccountUnreject,
   { method: "POST", path: "/v1/accounts/{account}/unreject", ids: ["account"], params: true },
@@ -196,8 +196,8 @@ export const unreject: (
  */
 export const update: (
   account: string,
-  params?: Omit<Distilled.UpdateAccountRequest, "account"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateAccountRequest, "account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Account, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateAccount,
   { method: "POST", path: "/v1/accounts/{account}", ids: ["account"], params: true },
@@ -210,8 +210,8 @@ export const update: (
 export const updateCapability: (
   account: string,
   capability: string,
-  params?: Omit<Distilled.UpdateAccountCapabilityRequest, "account" | "capability"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateAccountCapabilityRequest, "account" | "capability">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Capability, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateAccountCapability,
   {

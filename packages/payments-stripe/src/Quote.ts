@@ -53,8 +53,8 @@ export {
  */
 export const accept: (
   quote: string,
-  params?: Omit<Distilled.CreateQuoteAcceptRequest, "quote"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateQuoteAcceptRequest, "quote">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Quote, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateQuoteAccept,
   { method: "POST", path: "/v1/quotes/{quote}/accept", ids: ["quote"], params: true },
@@ -66,8 +66,8 @@ export const accept: (
  */
 export const cancel: (
   quote: string,
-  params?: Omit<Distilled.CreateQuoteCancelRequest, "quote"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateQuoteCancelRequest, "quote">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Quote, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateQuoteCancel,
   { method: "POST", path: "/v1/quotes/{quote}/cancel", ids: ["quote"], params: true },
@@ -78,8 +78,8 @@ export const cancel: (
  * `CreateQuote`.
  */
 export const create: (
-  params?: Distilled.CreateQuoteRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateQuoteRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Quote, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateQuote,
   { method: "POST", path: "/v1/quotes", ids: [], params: true },
@@ -91,8 +91,8 @@ export const create: (
  */
 export const finalize: (
   quote: string,
-  params?: Omit<Distilled.CreateQuoteFinalizeRequest, "quote"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateQuoteFinalizeRequest, "quote">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Quote, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateQuoteFinalize,
   { method: "POST", path: "/v1/quotes/{quote}/finalize", ids: ["quote"], params: true },
@@ -103,8 +103,8 @@ export const finalize: (
  * `GetQuotes`.
  */
 export const list: (
-  params?: Distilled.GetQuotesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetQuotesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetQuotesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetQuotes, {
     method: "GET",
@@ -119,8 +119,8 @@ export const list: (
  */
 export const listComputedUpfrontLineItems: (
   quote: string,
-  params?: Omit<Distilled.GetQuoteComputedUpfrontLineItemsRequest, "quote"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetQuoteComputedUpfrontLineItemsRequest, "quote">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetQuoteComputedUpfrontLineItemsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetQuoteComputedUpfrontLineItems, {
     method: "GET",
@@ -135,8 +135,8 @@ export const listComputedUpfrontLineItems: (
  */
 export const listLineItems: (
   quote: string,
-  params?: Omit<Distilled.GetQuoteLineItemsRequest, "quote"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetQuoteLineItemsRequest, "quote">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetQuoteLineItemsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetQuoteLineItems, {
     method: "GET",
@@ -151,8 +151,8 @@ export const listLineItems: (
  */
 export const retrieve: (
   quote: string,
-  params?: Omit<Distilled.GetQuoteRequest, "quote"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetQuoteRequest, "quote">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Quote, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetQuote,
   { method: "GET", path: "/v1/quotes/{quote}", ids: ["quote"], params: true },
@@ -164,8 +164,8 @@ export const retrieve: (
  */
 export const update: (
   quote: string,
-  params?: Omit<Distilled.UpdateQuoteRequest, "quote"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateQuoteRequest, "quote">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.Quote, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.UpdateQuote,
   { method: "POST", path: "/v1/quotes/{quote}", ids: ["quote"], params: true },

@@ -41,8 +41,8 @@ export {
  * `CreateTerminalConnectionToken`.
  */
 export const create: (
-  params?: Distilled.CreateTerminalConnectionTokenRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.CreateTerminalConnectionTokenRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TerminalConnectionToken, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTerminalConnectionToken, {
     method: "POST",

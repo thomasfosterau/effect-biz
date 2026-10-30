@@ -3,6 +3,7 @@ import { assert, describe, it, expect } from "vite-plus/test";
 import { readdirSync, readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
@@ -191,8 +192,8 @@ describe("the resource plan", () => {
       const exported = (planned.modules[subpath] ?? []).map((operation) => operation.exported);
       expect(exported, subpath).toEqual(expect.arrayContaining([...names]));
     });
-    const subpaths = RESOURCES.map((resource) => resource.subpath);
-    expect(R.keys(KEPT).filter((subpath) => !subpaths.includes(subpath))).toEqual([]);
+    const subpaths = HashSet.fromIterable(RESOURCES.map((resource) => resource.subpath));
+    expect(R.keys(KEPT).filter((subpath) => !HashSet.has(subpaths, subpath))).toEqual([]);
   });
 
   it("exposes the Invoice and Subscription actions (effect-finance#142)", () => {
@@ -251,7 +252,7 @@ describe("the resource plan", () => {
   });
 
   it("reports a /v2 DELETE that takes params, which would go out as a JSON body", () => {
-    const withParams = operations.map((operation) =>
+    const withParams = Arr.map(operations, (operation) =>
       operation.name === "DeleteCoreEventDestination"
         ? { ...operation, members: ["reason"], params: "optional" as const }
         : operation,
@@ -289,9 +290,13 @@ describe("the resource plan", () => {
         }),
       );
     const root = reexported(read("index.ts"));
-    const reached = [...root, ...reexported(read("Treasury.ts"))].map(({ module }) => module);
+    const reached = HashSet.fromIterable(
+      [...root, ...reexported(read("Treasury.ts"))].map(({ module }) => module),
+    );
     expect(
-      RESOURCES.map((resource) => resource.subpath).filter((subpath) => !reached.includes(subpath)),
+      RESOURCES.map((resource) => resource.subpath).filter(
+        (subpath) => !HashSet.has(reached, subpath),
+      ),
     ).toEqual([]);
     expect(root.filter(({ name, module }) => name !== module.replaceAll(".", ""))).toEqual([]);
   });

@@ -43,8 +43,8 @@ export {
  * `GetTaxCodes`.
  */
 export const list: (
-  params?: Distilled.GetTaxCodesRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetTaxCodesRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTaxCodesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTaxCodes, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetTaxCodeRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTaxCodeRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TaxCode, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetTaxCode,
   { method: "GET", path: "/v1/tax_codes/{id}", ids: ["id"], params: true },

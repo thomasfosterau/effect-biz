@@ -13,6 +13,17 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/fallow-gate.sh"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit",
@@ -25,5 +36,17 @@
         ]
       }
     ]
+  },
+  "extraKnownMarketplaces": {
+    "enfect": {
+      "source": {
+        "source": "github",
+        "repo": "mpsuesser/enfect",
+        "ref": "47b9e241915be41b60bec0bcc543b1c3ac6d4b47"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "enfect@enfect": true
   }
 }

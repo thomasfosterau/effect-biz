@@ -44,7 +44,7 @@ export {
  */
 export const list: (
   params: Distilled.GetEntitlementsActiveEntitlementsRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetEntitlementsActiveEntitlementsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetEntitlementsActiveEntitlements, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetEntitlementsActiveEntitlementRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetEntitlementsActiveEntitlementRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.EntitlementsActiveEntitlement, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetEntitlementsActiveEntitlement, {
     method: "GET",

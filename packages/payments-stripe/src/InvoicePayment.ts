@@ -43,8 +43,8 @@ export {
  * `GetInvoicePayments`.
  */
 export const list: (
-  params?: Distilled.GetInvoicePaymentsRequest | undefined,
-  options?: RequestOptions | undefined,
+  params?: Distilled.GetInvoicePaymentsRequest,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetInvoicePaymentsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetInvoicePayments, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   invoice_payment: string,
-  params?: Omit<Distilled.GetInvoicePaymentRequest, "invoice_payment"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetInvoicePaymentRequest, "invoice_payment">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.InvoicePayment, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetInvoicePayment,
   {

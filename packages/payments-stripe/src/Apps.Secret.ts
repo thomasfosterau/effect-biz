@@ -46,7 +46,7 @@ export {
  */
 export const create: (
   params: Distilled.CreateAppsSecretRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.AppsSecret, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateAppsSecret,
   { method: "POST", path: "/v1/apps/secrets", ids: [], params: true },
@@ -58,7 +58,7 @@ export const create: (
  */
 export const delWhere: (
   params: Distilled.CreateAppsSecretsDeleteRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.AppsSecret, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.CreateAppsSecretsDelete,
   { method: "POST", path: "/v1/apps/secrets/delete", ids: [], params: true },
@@ -70,7 +70,7 @@ export const delWhere: (
  */
 export const find: (
   params: Distilled.GetAppsSecretsFindRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.AppsSecret, PaymentsError, StripeHttp> = /* @__PURE__ */ operation(
   Distilled.GetAppsSecretsFind,
   { method: "GET", path: "/v1/apps/secrets/find", ids: [], params: true },
@@ -82,7 +82,7 @@ export const find: (
  */
 export const list: (
   params: Distilled.GetAppsSecretsRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetAppsSecretsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetAppsSecrets, {
     method: "GET",

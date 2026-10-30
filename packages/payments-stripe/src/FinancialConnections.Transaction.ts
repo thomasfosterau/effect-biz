@@ -44,7 +44,7 @@ export {
  */
 export const list: (
   params: Distilled.GetFinancialConnectionsTransactionsRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<
   Distilled.GetFinancialConnectionsTransactionsResponse,
   PaymentsError,
@@ -62,8 +62,8 @@ export const list: (
  */
 export const retrieve: (
   transaction: string,
-  params?: Omit<Distilled.GetFinancialConnectionsTransactionRequest, "transaction"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetFinancialConnectionsTransactionRequest, "transaction">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.FinancialConnectionsTransaction, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetFinancialConnectionsTransaction, {
     method: "GET",

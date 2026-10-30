@@ -51,7 +51,7 @@ export {
 export const create: (
   account: string,
   params: Omit<Distilled.CreateAccountExternalAccountRequest, "account">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.CreateAccountExternalAccountResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateAccountExternalAccount, {
     method: "POST",
@@ -67,7 +67,7 @@ export const create: (
 export const del: (
   account: string,
   id: string,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.DeleteAccountExternalAccountResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.DeleteAccountExternalAccount, {
     method: "DELETE",
@@ -82,8 +82,8 @@ export const del: (
  */
 export const list: (
   account: string,
-  params?: Omit<Distilled.GetAccountExternalAccountsRequest, "account"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetAccountExternalAccountsRequest, "account">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetAccountExternalAccountsResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetAccountExternalAccounts, {
     method: "GET",
@@ -99,8 +99,8 @@ export const list: (
 export const retrieve: (
   account: string,
   id: string,
-  params?: Omit<Distilled.GetAccountExternalAccountRequest, "account" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetAccountExternalAccountRequest, "account" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetAccountExternalAccountResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetAccountExternalAccount, {
     method: "GET",
@@ -116,8 +116,8 @@ export const retrieve: (
 export const update: (
   account: string,
   id: string,
-  params?: Omit<Distilled.UpdateAccountExternalAccountRequest, "account" | "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.UpdateAccountExternalAccountRequest, "account" | "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.UpdateAccountExternalAccountResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateAccountExternalAccount, {
     method: "POST",

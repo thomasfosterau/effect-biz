@@ -66,7 +66,7 @@ export const stubFetch = (
   const calls: Array<CapturedRequest> = [];
   const fetchImpl: typeof globalThis.fetch = async (input, init) => {
     const captured: CapturedRequest = {
-      url: new URL(String(input)),
+      url: new URL(input instanceof Request ? input.url : input),
       method: init?.method ?? "GET",
       headers: new Headers(init?.headers),
       init,
@@ -158,7 +158,7 @@ export const reachableFrom = (root: unknown) => {
   const strings: Array<string> = [];
   const objects: Array<object> = [];
   // Identity, not structural equality: each distinct object is visited once.
-  const seen = new WeakSet<object>();
+  const seen = new WeakSet();
   /** Visit one breadth-first level of values, then the level below it. */
   const visit = (level: ReadonlyArray<unknown>): void =>
     Arr.match(level, {

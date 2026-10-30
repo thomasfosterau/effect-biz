@@ -592,7 +592,8 @@
     "@types/node": "catalog:",
     "@vitest/coverage-istanbul": "catalog:",
     "effect": "catalog:",
-    "stripe": "catalog:"
+    "stripe": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:peers",

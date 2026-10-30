@@ -44,7 +44,7 @@ export {
  */
 export const list: (
   params: Distilled.GetTreasuryTransactionEntriesRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTreasuryTransactionEntriesResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryTransactionEntries, {
     method: "GET",
@@ -59,8 +59,8 @@ export const list: (
  */
 export const retrieve: (
   id: string,
-  params?: Omit<Distilled.GetTreasuryTransactionEntryRequest, "id"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTreasuryTransactionEntryRequest, "id">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryTransactionEntry, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryTransactionEntry, {
     method: "GET",

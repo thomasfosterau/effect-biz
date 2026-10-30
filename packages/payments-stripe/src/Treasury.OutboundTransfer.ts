@@ -50,10 +50,8 @@ export {
  */
 export const cancel: (
   outbound_transfer: string,
-  params?:
-    | Omit<Distilled.CreateTreasuryOutboundTransferCancelRequest, "outbound_transfer">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.CreateTreasuryOutboundTransferCancelRequest, "outbound_transfer">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryOutboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTreasuryOutboundTransferCancel, {
     method: "POST",
@@ -68,7 +66,7 @@ export const cancel: (
  */
 export const create: (
   params: Distilled.CreateTreasuryOutboundTransferRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryOutboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTreasuryOutboundTransfer, {
     method: "POST",
@@ -83,7 +81,7 @@ export const create: (
  */
 export const list: (
   params: Distilled.GetTreasuryOutboundTransfersRequest,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.GetTreasuryOutboundTransfersResponse, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryOutboundTransfers, {
     method: "GET",
@@ -98,8 +96,8 @@ export const list: (
  */
 export const retrieve: (
   outbound_transfer: string,
-  params?: Omit<Distilled.GetTreasuryOutboundTransferRequest, "outbound_transfer"> | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<Distilled.GetTreasuryOutboundTransferRequest, "outbound_transfer">,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryOutboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.GetTreasuryOutboundTransfer, {
     method: "GET",
@@ -114,10 +112,11 @@ export const retrieve: (
  */
 export const testHelpersFail: (
   outbound_transfer: string,
-  params?:
-    | Omit<Distilled.CreateTestHelpersTreasuryOutboundTransferFailRequest, "outbound_transfer">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<
+    Distilled.CreateTestHelpersTreasuryOutboundTransferFailRequest,
+    "outbound_transfer"
+  >,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryOutboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersTreasuryOutboundTransferFail, {
     method: "POST",
@@ -132,10 +131,11 @@ export const testHelpersFail: (
  */
 export const testHelpersPost: (
   outbound_transfer: string,
-  params?:
-    | Omit<Distilled.CreateTestHelpersTreasuryOutboundTransferPostRequest, "outbound_transfer">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<
+    Distilled.CreateTestHelpersTreasuryOutboundTransferPostRequest,
+    "outbound_transfer"
+  >,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryOutboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersTreasuryOutboundTransferPost, {
     method: "POST",
@@ -150,10 +150,11 @@ export const testHelpersPost: (
  */
 export const testHelpersReturn: (
   outbound_transfer: string,
-  params?:
-    | Omit<Distilled.CreateTestHelpersTreasuryOutboundTransferReturnRequest, "outbound_transfer">
-    | undefined,
-  options?: RequestOptions | undefined,
+  params?: Omit<
+    Distilled.CreateTestHelpersTreasuryOutboundTransferReturnRequest,
+    "outbound_transfer"
+  >,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryOutboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.CreateTestHelpersTreasuryOutboundTransferReturn, {
     method: "POST",
@@ -169,7 +170,7 @@ export const testHelpersReturn: (
 export const testHelpersUpdate: (
   outbound_transfer: string,
   params: Omit<Distilled.UpdateTestHelpersTreasuryOutboundTransferRequest, "outbound_transfer">,
-  options?: RequestOptions | undefined,
+  options?: RequestOptions,
 ) => Effect.Effect<Distilled.TreasuryOutboundTransfer, PaymentsError, StripeHttp> =
   /* @__PURE__ */ operation(Distilled.UpdateTestHelpersTreasuryOutboundTransfer, {
     method: "POST",
