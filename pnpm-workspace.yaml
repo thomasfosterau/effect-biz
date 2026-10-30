@@ -61,7 +61,7 @@ catalog:
   # which the `effect` singleton override below would contradict. Needs `tsx`
   # and a TypeScript JS API (peer `typescript <7`) — the TS6 alias below
   # satisfies it; the examples themselves type-check under the native `tsc`.
-  "@effect/docgen": 4.0.6
+  "@effect/docgen": 4.1.0
   "@effect/language-service": ^0.87.5
   "@effect/platform-node": 4.0.6
   # Effect Language Service as a native (TypeScript-Go) binary — the TS7 side
