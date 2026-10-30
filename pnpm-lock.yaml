@@ -13,14 +13,14 @@ catalogs:
       specifier: ^3.0.3
       version: 3.0.3
     '@distilled.cloud/core':
-      specifier: 1.0.0-rc.15
-      version: 1.0.0-rc.15
+      specifier: 1.0.0-rc.17
+      version: 1.0.0-rc.17
     '@distilled.cloud/paypal':
-      specifier: 1.0.0-rc.15
-      version: 1.0.0-rc.15
+      specifier: 1.0.0-rc.17
+      version: 1.0.0-rc.17
     '@distilled.cloud/stripe':
-      specifier: 1.0.0-rc.15
-      version: 1.0.0-rc.15
+      specifier: 1.0.0-rc.17
+      version: 1.0.0-rc.17
     '@effect/docgen':
       specifier: 4.0.6
       version: 4.0.6
@@ -49,8 +49,8 @@ catalogs:
       specifier: 3.37.0
       version: 3.37.0
     stripe:
-      specifier: 23.0.0
-      version: 23.0.0
+      specifier: 23.0.1
+      version: 23.0.1
     tsx:
       specifier: ^4.23.15
       version: 4.23.15
@@ -182,10 +182,10 @@ importers:
     dependencies:
       '@distilled.cloud/core':
         specifier: 'catalog:'
-        version: 1.0.0-rc.15(effect@4.0.6)
+        version: 1.0.0-rc.17(effect@4.0.6)
       '@distilled.cloud/paypal':
         specifier: 'catalog:'
-        version: 1.0.0-rc.15(effect@4.0.6)
+        version: 1.0.0-rc.17(effect@4.0.6)
       '@thomasfosterau/effect-biz':
         specifier: workspace:^
         version: link:../core
@@ -210,10 +210,10 @@ importers:
     dependencies:
       '@distilled.cloud/core':
         specifier: 'catalog:'
-        version: 1.0.0-rc.15(effect@4.0.6)
+        version: 1.0.0-rc.17(effect@4.0.6)
       '@distilled.cloud/stripe':
         specifier: 'catalog:'
-        version: 1.0.0-rc.15(effect@4.0.6)
+        version: 1.0.0-rc.17(effect@4.0.6)
       '@thomasfosterau/effect-biz':
         specifier: workspace:^
         version: link:../core
@@ -235,7 +235,7 @@ importers:
         version: 4.0.6
       stripe:
         specifier: 'catalog:'
-        version: 23.0.0(@types/node@26.6.5)
+        version: 23.0.1(@types/node@26.6.5)
       vitest:
         specifier: 'catalog:'
         version: 5.0.5(@types/node@26.6.5)(@vitest/browser-preview@5.0.5)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
@@ -244,16 +244,16 @@ importers:
     dependencies:
       '@distilled.cloud/paypal':
         specifier: 'catalog:'
-        version: 1.0.0-rc.15(effect@4.0.6)
+        version: 1.0.0-rc.17(effect@4.0.6)
       '@distilled.cloud/stripe':
         specifier: 'catalog:'
-        version: 1.0.0-rc.15(effect@4.0.6)
+        version: 1.0.0-rc.17(effect@4.0.6)
       effect:
         specifier: 4.0.6
         version: 4.0.6
       stripe:
         specifier: 'catalog:'
-        version: 23.0.0(@types/node@26.6.5)
+        version: 23.0.1(@types/node@26.6.5)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -423,18 +423,18 @@ packages:
     resolution: {integrity: sha512-dlT1m5e/0yUL0kRNcQn7yGLVThkgbB0Ga/1AmfDDC/8ik6AIiSf2QLQO2zPYvefsHP0aFgxO93cVLCCfDp7kzQ==}
     engines: {node: '>= 20.12.0'}
 
-  '@distilled.cloud/core@1.0.0-rc.15':
-    resolution: {integrity: sha512-TPXxuwcxQ85Pvm0g7ZQSLTQkPc1Wmcb6p6KOk+Be2fP14Xpj5a+7HOSUyPNwbqOP+vPK5Sj0ZLN7M6spKnO2LA==}
+  '@distilled.cloud/core@1.0.0-rc.17':
+    resolution: {integrity: sha512-BHcVEtqIbyyqU3S3o8DjUtqoAJ4FLnsb4BX3nTK2+mcDARS2Puc+Qak6sn+b+W5CRKOOWyrhltbc+kaYDUwxeQ==}
     peerDependencies:
       effect: 4.0.6
 
-  '@distilled.cloud/paypal@1.0.0-rc.15':
-    resolution: {integrity: sha512-b08Z5bSggS8EsfLo05TY1laumOl3k85cEUZA0KdRwEcrZR1Fx9rzJ/6eWlnFMlbMhv78COF+P4mDFqPzZqS6Ww==}
+  '@distilled.cloud/paypal@1.0.0-rc.17':
+    resolution: {integrity: sha512-GNtOFjC9CSNoJCHM/ZPEeocKTh3z3SZ7ULpWTeYVUjSsq53Ik26Qx6yyQ8/4PaK9aLGfx6elpz688rss4yIcvw==}
     peerDependencies:
       effect: 4.0.6
 
-  '@distilled.cloud/stripe@1.0.0-rc.15':
-    resolution: {integrity: sha512-sYIPEg1MKZrj6aSy4o08anO5dVpyFJHzgEk0WfiMm5BT0oEFtldUuPe/FjEOoY+mFvZ+o+26lJ5voEnWLJSCUA==}
+  '@distilled.cloud/stripe@1.0.0-rc.17':
+    resolution: {integrity: sha512-701/SkB8JOI1I9JmsbuMPVmSC5V+ZwcCP+IX6ippE5NfUmrMFl2pOafYkunSXQX/pzBdo7Y56YrKMpG4jbFQjA==}
     peerDependencies:
       effect: 4.0.6
 
@@ -2080,8 +2080,8 @@ packages:
     resolution: {integrity: sha512-p9LsUieSjWNNAxVCXLeilaDlmuUOrDS5/dF9znM1nZc7EGX5+zEFC0bEevsNIaldjlks+2jns5Siz6F9iK6jwA==}
     engines: {node: '>=0.10.0'}
 
-  stripe@23.0.0:
-    resolution: {integrity: sha512-MDE2A5ZVVluYURORaZEVghSmnLJc3w6aHAlZSxDQMsOjOb3V0O6ro/CiaeFlJS4N7uIVmsg98ocRsPmUK6YfyA==}
+  stripe@23.0.1:
+    resolution: {integrity: sha512-VFLs9IAzSZ8GIm6/vqhjqOL0fbYrSNYCpgZ3LS3YkSi/i5RnyMpu/Hf9YxPTOCYwc3mZKU3IJvuvKffQH2NLMg==}
     engines: {node: '>=20'}
     peerDependencies:
       '@types/node': '>=20'
@@ -2494,18 +2494,18 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
-  '@distilled.cloud/core@1.0.0-rc.15(effect@4.0.6)':
+  '@distilled.cloud/core@1.0.0-rc.17(effect@4.0.6)':
     dependencies:
       effect: 4.0.6
 
-  '@distilled.cloud/paypal@1.0.0-rc.15(effect@4.0.6)':
+  '@distilled.cloud/paypal@1.0.0-rc.17(effect@4.0.6)':
     dependencies:
-      '@distilled.cloud/core': 1.0.0-rc.15(effect@4.0.6)
+      '@distilled.cloud/core': 1.0.0-rc.17(effect@4.0.6)
       effect: 4.0.6
 
-  '@distilled.cloud/stripe@1.0.0-rc.15(effect@4.0.6)':
+  '@distilled.cloud/stripe@1.0.0-rc.17(effect@4.0.6)':
     dependencies:
-      '@distilled.cloud/core': 1.0.0-rc.15(effect@4.0.6)
+      '@distilled.cloud/core': 1.0.0-rc.17(effect@4.0.6)
       effect: 4.0.6
 
   '@effect/docgen@4.0.6(@typescript/typescript6@6.0.2)(redis@6.3.0)(tsx@4.23.15)':
@@ -3745,7 +3745,7 @@ snapshots:
 
   strip-color@0.1.0: {}
 
-  stripe@23.0.0(@types/node@26.6.5):
+  stripe@23.0.1(@types/node@26.6.5):
     optionalDependencies:
       '@types/node': 26.6.5
 
