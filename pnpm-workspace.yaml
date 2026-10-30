@@ -43,19 +43,19 @@ catalog:
   # resource modules (`generate:resources`) and updates the followed version
   # (`tests/distilledApiVersion.test.ts` and `tests/resources.test.ts` fail
   # until both are done).
-  "@distilled.cloud/stripe": 1.0.0-rc.15
+  "@distilled.cloud/stripe": 1.0.0-rc.17
   # Distilled's PayPal client (same repository and licence): the operations
   # and wire encoding `PayPalPayments` runs on (effect-finance#146). A runtime dependency
   # of @thomasfosterau/effect-biz-payments-paypal, pinned EXACTLY for the same
   # reason, and moved together with the Stripe client and core. Its access
   # token comes from the wrapper's own OAuth login, never from Distilled's
   # `CredentialsFromEnv` (which reads `process.env`).
-  "@distilled.cloud/paypal": 1.0.0-rc.15
+  "@distilled.cloud/paypal": 1.0.0-rc.17
   # Distilled's shared runtime, a direct dependency too: each wrapper pins its
   # `ResponseValidation` reference to lenient. MUST equal the version
   # @distilled.cloud/stripe and @distilled.cloud/paypal depend on (each pins
   # core exactly), or two copies of core install.
-  "@distilled.cloud/core": 1.0.0-rc.15
+  "@distilled.cloud/core": 1.0.0-rc.17
   # Compiles AND RUNS every JSDoc `@example` (the `docgen` task). Exact, like
   # the Effect pin: 4.0.1 and 4.0.2 depend on `effect ^4.0.1` / `^4.0.2`,
   # which the `effect` singleton override below would contradict. Needs `tsx`
@@ -103,7 +103,7 @@ catalog:
   # DISTILLED_API_VERSION on a Distilled bump, never on its own:
   # `tests/distilledApiVersion.test.ts` fails when the SDK's API_VERSION
   # differs.
-  stripe: 23.0.0
+  stripe: 23.0.1
   # TypeScript 6/7 side-by-side: TS7 (the native Go compiler) ships no JS API
   # until 7.1, so JS-API consumers (@effect/language-service, tsdown's
   # declaration bundler, @effect/docgen's peer) stay on TS6 while native `tsc`
