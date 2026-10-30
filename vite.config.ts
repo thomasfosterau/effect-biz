@@ -69,6 +69,8 @@ export default defineConfig({
     // `@effect/tsgo`'s preset (the `effecttsgo/*` rules the patched oxlint
     // carries) and `@enfect/oxlint`'s `recommended` (every `effect/*` rule,
     // anti-slop included, at `error`; registered as a JS plugin).
+    // The `effect/*` rules still below `error` (globally or in an override)
+    // are tracked in #161.
     extends: [recommended, effect.configs.recommended],
     // oxlint's default plugins plus `import`, `promise`, `vitest` and `jsdoc`,
     // each contributing its rules to the categories below.
@@ -93,8 +95,8 @@ export default defineConfig({
       // value; any other leading underscore is still a finding.
       "eslint/no-underscore-dangle": ["error", { allow: ["_tag"] }],
       // Allowance adopted with type-aware linting (count as of adoption; a
-      // new site is a defect, not headroom; paying it down is tracked in the
-      // follow-up issue linked from the PR that enabled it). Every assertion
+      // new site is a defect, not headroom; paying it down is #162). Every
+      // assertion
       // already carries a `// SAFETY:` comment
       // (effect/require-safety-comment-for-type-assertion): a structural read
       // of a value the type system cannot narrow (a decoded wire body, a
@@ -234,8 +236,7 @@ export default defineConfig({
           // self-contained; `src/` still hoists them.
           "unicorn/consistent-function-scoping": "off",
           // Allowances adopted with type-aware linting (counts as of adoption;
-          // a new site is a defect; tracked in the follow-up issue linked
-          // from the PR that enabled them).
+          // a new site is a defect; paying them down is #162).
           // The capability tables erase each operation to
           // `Effect<unknown, unknown, …>` so one `it.each` runs them all.
           "effecttsgo/any-unknown-in-error-context": "warn", // 55 sites
