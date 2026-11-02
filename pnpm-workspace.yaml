@@ -88,7 +88,7 @@ catalog:
   effect: 4.0.6
   # Dead code, duplication, complexity and the change-set audit (`fallow
   # audit`, the agent commit gate in .claude/hooks/fallow-gate.sh). Dev-only.
-  fallow: 3.37.0
+  fallow: 3.38.1
   # Runs docgen's compiled examples (a peer of @effect/docgen).
   tsx: ^4.23.15
   # The official Stripe SDK: a dev dependency of
