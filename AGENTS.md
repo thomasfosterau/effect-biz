@@ -107,7 +107,7 @@ Read the installed package before writing Effect code: `node_modules/effect/dist
 
 ## Agent sessions
 
-The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `node_modules/.bin` (`vp`, `fallow`, `tsx`) on PATH. It hydrates no secrets. `.claude/settings.json` also formats every file an Edit / Write touches (`vp fmt --write`), runs the fallow gate before every `git commit` / `git push` (`.claude/hooks/fallow-gate.sh`, which blocks on a `fail` verdict from `fallow audit --base origin/main` and reads the coverage map on disk, so run `vp run test:coverage` first), and enables the `@enfect/claude` plugin (Effect guidance, skills and post-write pattern checks), pinned by `ref` to a reviewed `mpsuesser/enfect` commit; moving it is a reviewed edit of that SHA.
+The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `node_modules/.bin` (`vp`, `fallow`, `tsx`) on PATH. It hydrates no secrets. `.claude/settings.json` also formats every file an Edit / Write touches (`vp fmt --write`) and runs the fallow gate before every `git commit` / `git push` (`.claude/hooks/fallow-gate.sh`, which blocks on a `fail` verdict from `fallow audit --base origin/main` and reads the coverage map on disk, so run `vp run test:coverage` first).
 
 ## Documentation surfaces
 
