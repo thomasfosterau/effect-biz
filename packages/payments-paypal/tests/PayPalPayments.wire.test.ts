@@ -191,7 +191,9 @@ describe("PayPalPayments authentication", () => {
         : jsonResponse(200, PRODUCT),
     );
     const [first, second] = await run(
-      Effect.all([Effect.flip(Product.retrieve("PROD-1")), Product.retrieve("PROD-1")]),
+      Effect.all([Effect.flip(Product.retrieve("PROD-1")), Product.retrieve("PROD-1")], {
+        concurrency: 1,
+      }),
       api.http,
     );
     expect(first).toBeInstanceOf(PaymentAuthenticationError);
@@ -206,10 +208,10 @@ describe("PayPalPayments authentication", () => {
   it("keeps a token that a 403 refused: only a 401 means the token is bad", async () => {
     const api = paypal(() => jsonResponse(403, { name: "NOT_AUTHORIZED", message: "No scope" }));
     await run(
-      Effect.all([
-        Effect.flip(Product.retrieve("PROD-1")),
-        Effect.flip(Product.retrieve("PROD-1")),
-      ]),
+      Effect.all(
+        [Effect.flip(Product.retrieve("PROD-1")), Effect.flip(Product.retrieve("PROD-1"))],
+        { concurrency: 1 },
+      ),
       api.http,
     );
     expect(api.loginRequests()).toHaveLength(1);
@@ -375,7 +377,7 @@ describe("PayPalPayments requests", () => {
         string,
         (
           key: IdempotencyKey.IdempotencyKey | undefined,
-        ) => Effect.Effect<unknown, unknown, Capabilities>,
+        ) => Effect.Effect<unknown, PaymentsError, Capabilities>,
       ]
     > = [
       ["/v1/catalogs/products", (idempotencyKey) => Product.create({ name: "P", idempotencyKey })],
@@ -512,21 +514,19 @@ describe("PayPalPayments requests", () => {
   });
 
   it("refuses an empty id before sending anything", async () => {
+    const operations: ReadonlyArray<Effect.Effect<unknown, PaymentsError, Capabilities>> = [
+      Product.retrieve(""),
+      Price.update("", { active: true }),
+      PaymentIntent.confirm(""),
+      Subscription.cancel(""),
+      Refund.retrieve(""),
+    ];
     await Effect.runPromise(
       Effect.forEach(
-        [
-          Product.retrieve(""),
-          Price.update("", { active: true }),
-          PaymentIntent.confirm(""),
-          Subscription.cancel(""),
-          Refund.retrieve(""),
-        ],
+        operations,
         (operation) => {
           const api = paypal(() => jsonResponse(200, {}));
-          return provided(
-            Effect.flip(operation as Effect.Effect<unknown, PaymentsError, Capabilities>),
-            api.http,
-          ).pipe(
+          return provided(Effect.flip(Effect.asVoid(operation)), api.http).pipe(
             Effect.map((error) => {
               expect(error).toBeInstanceOf(PaymentInvalidRequestError);
               expect(error).toMatchObject({ param: "id" });

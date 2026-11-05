@@ -17,6 +17,7 @@ import * as IdempotencyKey from "@thomasfosterau/effect-biz/Payments.Idempotency
 import {
   PaymentInvalidRequestError,
   PaymentNetworkError,
+  type PaymentsError,
 } from "@thomasfosterau/effect-biz/Payments";
 import * as PayPalPayments from "../src/PayPalPayments.ts";
 import { capabilitiesOver, stubPayPal, toJson } from "./support.ts";
@@ -32,7 +33,7 @@ const KEY = IdempotencyKey.IdempotencyKey.make("write-0001");
 type Capabilities = Layer.Success<typeof PayPalPayments.capabilities>;
 
 /** Run `operation` over a stubbed API answering `{}` (the decode fails; the request was recorded first). */
-const requestsOf = async (operation: Effect.Effect<unknown, unknown, Capabilities>) => {
+const requestsOf = async (operation: Effect.Effect<unknown, PaymentsError, Capabilities>) => {
   const { calls, layer } = stubPayPal(() => ({}));
   const exit = await Effect.runPromise(
     Effect.exit(operation.pipe(Effect.provide(capabilitiesOver(layer)))),
@@ -103,7 +104,7 @@ describe("PayPal maps the neutral idempotencyKey to PayPal-Request-Id", () => {
   it.each(operations(undefined).map(([name]) => name))(
     "%s refuses a raw string before sending anything",
     async (name) => {
-      // Untyped code can still pass a string the brand would have refused.
+      // SAFETY: untyped code can still pass a string the brand would have refused.
       const bad = "not a valid key" as IdempotencyKey.IdempotencyKey;
       const { op } = operationNamed(bad, name);
       const { calls, exit } = await requestsOf(op);
@@ -243,6 +244,7 @@ describe("a retried write after a lost response is one logical write (effect-fin
       PaymentIntent.create({
         amount: 100,
         currency: "usd",
+        // SAFETY: untyped code can still pass a string the brand would have refused.
         idempotencyKey: "bad key" as IdempotencyKey.IdempotencyKey,
       }).pipe(Effect.flip, Effect.provide(PayPalPayments.layer(config)), Effect.provide(fake.http)),
     );

@@ -202,6 +202,7 @@ describe("StripePayments lenient enumerations", () => {
   it("still fails a status that is not a string", async () => {
     const error = await run(
       Effect.flip(PaymentIntent.retrieve("pi_1")),
+      // SAFETY: a wire status that is not a string, which the fixture's type rules out.
       intent("pi_1", 7 as never),
     );
     expect(error).toMatchObject({ message: "Stripe returned a malformed payment intent response" });

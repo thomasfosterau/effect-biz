@@ -16,12 +16,18 @@ class DistilledOnlyError extends Schema.TaggedError<DistilledOnlyError>()("Disti
   message: Schema.String,
 }) {}
 
-const callWith = (failure: unknown) => {
+/** A failure with neither a `_tag` nor a `message`. */
+interface Untagged {
+  readonly _tag?: undefined;
+  readonly message?: undefined;
+}
+
+const callWith = (failure: DistilledOnlyError | Untagged) => {
   const { http, calls } = stubFetch(() => jsonResponse(200, {}));
   const result = Effect.runPromise(
     Effect.flip(
       Effect.flatMap(StripeHttp, (client) =>
-        client.call("GET", () => Effect.fail(failure), {}),
+        Effect.asVoid(client.call("GET", () => Effect.fail(failure), {})),
       ).pipe(
         Effect.provide(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 })),
         Effect.provide(http),

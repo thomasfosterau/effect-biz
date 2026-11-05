@@ -15,6 +15,7 @@ import * as IdempotencyKey from "@thomasfosterau/effect-biz/Payments.Idempotency
 import {
   PaymentInvalidRequestError,
   PaymentNetworkError,
+  type PaymentsError,
 } from "@thomasfosterau/effect-biz/Payments";
 import { AirwallexClient, type AirwallexRequest } from "../src/Airwallex.ts";
 import * as AirwallexPayments from "../src/AirwallexPayments.ts";
@@ -30,7 +31,7 @@ const KEY = IdempotencyKey.IdempotencyKey.make("write-0001");
 type Capabilities = Layer.Success<typeof AirwallexPayments.capabilities>;
 
 /** Run `operation` over a fake client answering `{}` (the decode fails; the request was recorded first). */
-const requestsOf = async (operation: Effect.Effect<unknown, unknown, Capabilities>) => {
+const requestsOf = async (operation: Effect.Effect<unknown, PaymentsError, Capabilities>) => {
   const calls: Array<AirwallexRequest> = [];
   const client = AirwallexClient.of({
     request: (request) => Effect.sync(() => (calls.push(request), {})),
@@ -96,15 +97,17 @@ describe("Airwallex maps the neutral idempotencyKey to request_id", () => {
       const [, , op] = found;
       const { calls } = await requestsOf(op);
       expect(calls.map((call) => call.requestId)).toEqual([undefined]);
-      const body = calls[0]?.body as { request_id: string } | undefined;
-      expect(body?.request_id).toMatch(/^[0-9a-f-]{36}$/);
+      const body = Schema.decodeUnknownSync(Schema.Struct({ request_id: Schema.String }))(
+        calls[0]?.body,
+      );
+      expect(body.request_id).toMatch(/^[0-9a-f-]{36}$/);
     },
   );
 
   it.each(operations(undefined).map(([name]) => name))(
     "%s refuses a raw string before sending anything",
     async (name) => {
-      // Untyped code can still pass a string the brand would have refused.
+      // SAFETY: untyped code can still pass a string the brand would have refused.
       const bad = "not a valid key" as IdempotencyKey.IdempotencyKey;
       const found = operations(bad).find(([candidate]) => candidate === name);
       assert.isDefined(found);
@@ -249,6 +252,7 @@ describe("a retried write after a lost response is one logical write (effect-fin
     const error = await Effect.runPromise(
       Customer.create({
         email: "a@b.com",
+        // SAFETY: untyped code can still pass a string the brand would have refused.
         idempotencyKey: "bad key" as IdempotencyKey.IdempotencyKey,
       }).pipe(
         Effect.flip,

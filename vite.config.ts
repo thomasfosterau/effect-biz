@@ -101,7 +101,7 @@ export default defineConfig({
       // (effect/require-safety-comment-for-type-assertion): a structural read
       // of a value the type system cannot narrow (a decoded wire body, a
       // Distilled operation's erased input, a test fixture).
-      "typescript/no-unsafe-type-assertion": "warn", // 37 sites (5 src, 2 scripts, 30 tests)
+      "typescript/no-unsafe-type-assertion": "warn", // 24 sites (4 src, 2 scripts, 18 tests)
       // `expect(value, message)`: vitest's second argument is the failure
       // message, which the jest-derived default (one argument) rejects.
       "vitest/valid-expect": ["error", { maxArgs: 2 }],
@@ -135,7 +135,6 @@ export default defineConfig({
       "effect/no-unknown-parameters": "warn",
       "effect/no-unknown-returns": "warn",
       "effect/no-unsafe-dictionary-type": "warn",
-      "effect/no-runtime-typeof": "warn",
       "typescript/no-explicit-any": "off",
       "typescript/no-empty-object-type": "off",
       "typescript/ban-ts-comment": "off",
@@ -158,21 +157,17 @@ export default defineConfig({
           "effect/use-console-service": "off",
           "effect/use-filesystem-service": "off",
           "effect/use-path-service": "off",
-          "effect/avoid-native-fetch": "off",
-          "effect/effect-promise-vs-trypromise": "off",
           // `...(process.env.X ? { x } : {})` is how a vitest option is left
           // unset under `exactOptionalPropertyTypes`.
           "effect/no-conditional-empty-object-spread": "off",
         },
       },
-      // Type-level tests: the expect-error directives ARE the assertions
-      // (a statement that must fail to compile), and every binding exists to
-      // be asserted against, never to be read.
+      // Type-level tests: every binding exists to be asserted against, never
+      // to be read.
       {
         files: ["**/tests/**/*.types.ts"],
         rules: {
           "eslint/no-unused-vars": "off",
-          "effect/avoid-ts-ignore": "off",
         },
       },
       // `operation<F>` returns the generated resource module's annotated
@@ -203,8 +198,6 @@ export default defineConfig({
           "effect/effect-run-in-body": "off",
           "effect/use-console-service": "off",
           "effect/avoid-process-env": "off",
-          "effect/use-clock-service": "off",
-          "effect/require-safety-comment-for-type-assertion": "warn",
         },
       },
       // The runnable examples and payments-stripe's resource generator are
@@ -217,34 +210,23 @@ export default defineConfig({
         },
       },
       // Test suites ARE the runtime boundary: `Effect.runPromise` in a test
-      // body is the harness running the effect under test, and a bare
-      // `new Error("boom")` there is a fixture. Fixture casts and a wall-clock
-      // read stay visible as warnings.
+      // body is the harness running the effect under test (270 sites), and a
+      // bare `new Error(…)` there is a fixture standing for what `fetch` or
+      // the Stripe SDK throws, which the code under test must map (11 sites).
       {
         files: ["**/tests/**/*.ts"],
         rules: {
           "effect/effect-run-in-body": "off",
           "effect/avoid-untagged-errors": "off",
-          "effect/require-safety-comment-for-type-assertion": "warn",
-          "effect/use-clock-service": "warn",
-          "effect/avoid-process-env": "warn",
-          "effect/require-effect-concurrency": "warn",
           // A test is an application entry point: each case provides its own
           // stub layers, which is exactly where `Effect.provide` belongs.
           "effecttsgo/strict-effect-provide": "off",
           // A helper declared inside the `it` that uses it keeps each case
           // self-contained; `src/` still hoists them.
           "unicorn/consistent-function-scoping": "off",
-          // Allowances adopted with type-aware linting (counts as of adoption;
-          // a new site is a defect; paying them down is #162).
-          // The capability tables erase each operation to
-          // `Effect<unknown, unknown, …>` so one `it.each` runs them all.
-          "effecttsgo/any-unknown-in-error-context": "warn", // 55 sites
-          // Sibling `Effect.gen` blocks inside one case reuse the same names
-          // (`errors`, `after`, `leader`) for the same roles.
-          "eslint/no-shadow": "warn", // 22 sites
-          // A credentials effect that fails although its type rules it out,
-          // to reach the no-response path (SAFETY-commented).
+          // Can't-apply (#162): a credentials effect that fails although its
+          // type rules it out, to reach Distilled's no-response path; no typed
+          // construction can produce it (SAFETY-commented).
           "effecttsgo/unsafe-effect-type-assertion": "warn", // 1 site
           // The webhook suite exercises the `Buffer` payload the SDK-based
           // verifier accepts; the WebCrypto verifier (effect-finance#41) drops it.

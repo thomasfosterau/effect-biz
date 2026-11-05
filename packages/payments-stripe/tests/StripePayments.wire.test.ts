@@ -91,7 +91,7 @@ const failure = (status: number, body: unknown, headers: Record<string, string> 
 
 /** One call of every operation, with the method and path it must reach. */
 const everyCall: ReadonlyArray<
-  readonly [string, Effect.Effect<unknown, unknown, Capabilities>, string]
+  readonly [string, Effect.Effect<unknown, PaymentsError, Capabilities>, string]
 > = [
   ["Customer.create", Customer.create({ email: "a@example.com" }), "POST /v1/customers"],
   ["Customer.retrieve", Customer.retrieve("cus_1"), "GET /v1/customers/cus_1"],
@@ -219,7 +219,9 @@ describe("StripePayments request policy", () => {
   it.each(badIds)(
     "%s refuses %s id instead of addressing another endpoint",
     async (_, _id, resource, call) => {
-      const { result, calls } = over(Effect.flip(call), () => jsonResponse(200, customer));
+      const { result, calls } = over(Effect.flip(Effect.asVoid(call)), () =>
+        jsonResponse(200, customer),
+      );
       const error = await result;
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
       expect(error).toMatchObject({ param: "id" });

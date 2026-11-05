@@ -2,6 +2,7 @@ import { describe, it, expect } from "vite-plus/test";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
 import * as Product from "@thomasfosterau/effect-biz/Payments.Product";
 import * as Price from "@thomasfosterau/effect-biz/Payments.Price";
 import * as PaymentIntent from "@thomasfosterau/effect-biz/Payments.PaymentIntent";
@@ -10,6 +11,7 @@ import * as Refund from "@thomasfosterau/effect-biz/Payments.Refund";
 import {
   PaymentInvalidRequestError,
   PaymentProviderError,
+  type PaymentsError,
 } from "@thomasfosterau/effect-biz/Payments";
 import type * as PayPalPayments from "../src/PayPalPayments.ts";
 import { capabilitiesOver, type PayPalCall, stubPayPal } from "./support.ts";
@@ -25,6 +27,49 @@ const makeFakeClient = (responder: (req: PayPalCall) => unknown) => {
 };
 
 const provide = capabilitiesOver;
+
+/** Reads back a plan request's billing cycles, echoing each fixed price as sent. */
+const decodePlanEcho = Schema.decodeUnknownSync(
+  Schema.Struct({
+    billing_cycles: Schema.Array(
+      Schema.Struct({ pricing_scheme: Schema.Struct({ fixed_price: Schema.Unknown }) }),
+    ),
+  }),
+);
+
+/** Reads a plan request's fixed price as the major-unit string it was sent as. */
+const decodePlanBody = Schema.decodeUnknownSync(
+  Schema.Struct({
+    billing_cycles: Schema.Array(
+      Schema.Struct({
+        pricing_scheme: Schema.Struct({
+          fixed_price: Schema.Struct({ value: Schema.String }),
+        }),
+      }),
+    ),
+  }),
+);
+
+/** Reads back an order request's purchase units, echoing each amount as sent. */
+const decodeOrderEcho = Schema.decodeUnknownSync(
+  Schema.Struct({ purchase_units: Schema.Array(Schema.Struct({ amount: Schema.Unknown })) }),
+);
+
+/** Reads an order request's amounts as the major-unit strings they were sent as. */
+const decodeOrderBody = Schema.decodeUnknownSync(
+  Schema.Struct({
+    purchase_units: Schema.Array(
+      Schema.Struct({ amount: Schema.Struct({ value: Schema.String }) }),
+    ),
+  }),
+);
+
+/** Reads a refund request's amount. */
+const decodeRefundBody = Schema.decodeUnknownSync(
+  Schema.Struct({
+    amount: Schema.Struct({ currency_code: Schema.String, value: Schema.String }),
+  }),
+);
 
 /** An RFC 3339 timestamp as whole epoch seconds, as the mapping reads it. */
 const epochSeconds = (timestamp: string): number =>
@@ -71,9 +116,7 @@ describe("PayPalPayments capabilities", () => {
           tenure_type: "REGULAR",
           frequency: { interval_unit: "MONTH", interval_count: 1 },
           pricing_scheme: {
-            fixed_price: (
-              req.body as { billing_cycles: { pricing_scheme: { fixed_price: unknown } }[] }
-            ).billing_cycles[0].pricing_scheme.fixed_price,
+            fixed_price: decodePlanEcho(req.body).billing_cycles[0].pricing_scheme.fixed_price,
           },
         },
       ],
@@ -90,9 +133,7 @@ describe("PayPalPayments capabilities", () => {
     );
 
     // 1000 minor units -> "10.00" major-unit string on the request...
-    const body = calls[0].body as {
-      billing_cycles: { pricing_scheme: { fixed_price: { value: string } } }[];
-    };
+    const body = decodePlanBody(calls[0].body);
     expect(body.billing_cycles[0].pricing_scheme.fixed_price.value).toBe("10.00");
     // ...and back to 1000 minor units on the response.
     expect(price.unitAmount).toBe(1000);
@@ -131,7 +172,7 @@ describe("PayPalPayments capabilities", () => {
       status: "COMPLETED",
       purchase_units: [
         {
-          amount: (req.body as { purchase_units: { amount: unknown }[] }).purchase_units[0].amount,
+          amount: decodeOrderEcho(req.body).purchase_units[0].amount,
           custom_id: "cus_x",
         },
       ],
@@ -146,9 +187,7 @@ describe("PayPalPayments capabilities", () => {
       }).pipe(Effect.provide(provide(client))),
     );
 
-    const body = calls[0].body as {
-      purchase_units: { amount: { value: string } }[];
-    };
+    const body = decodeOrderBody(calls[0].body);
     expect(body.purchase_units[0].amount.value).toBe("20.00");
     expect(intent.amount).toBe(2000);
     expect(intent.status).toBe("succeeded");
@@ -209,7 +248,7 @@ describe("PayPalPayments capabilities", () => {
       return {
         id: "REF-1",
         status: "COMPLETED",
-        amount: (req.body as { amount: { currency_code: string; value: string } }).amount,
+        amount: decodeRefundBody(req.body).amount,
       };
     });
 
@@ -223,7 +262,7 @@ describe("PayPalPayments capabilities", () => {
       path: "/v2/payments/captures/CAP-1",
     });
     expect(calls[1].path).toBe("/v2/payments/captures/CAP-1/refund");
-    expect((calls[1].body as { amount: { value: string } }).amount.value).toBe("5.00");
+    expect(decodeRefundBody(calls[1].body).amount.value).toBe("5.00");
     expect(refund.amount).toBe(500);
     expect(refund.status).toBe("succeeded");
   });
@@ -288,11 +327,15 @@ describe("PayPalPayments create and update options", () => {
 
   /** The failure of `effect` and the calls it sent. */
   const refused = async (
-    effect: Effect.Effect<unknown, unknown, Layer.Success<typeof PayPalPayments.capabilities>>,
+    effect: Effect.Effect<
+      unknown,
+      PaymentsError,
+      Layer.Success<typeof PayPalPayments.capabilities>
+    >,
   ) => {
     const { client, calls } = makeFakeClient(() => PRODUCT);
     const error = await Effect.runPromise(
-      Effect.flip(effect).pipe(Effect.provide(provide(client))),
+      Effect.flip(Effect.asVoid(effect)).pipe(Effect.provide(provide(client))),
     );
     return { error, calls };
   };
@@ -407,7 +450,7 @@ describe("PayPalPayments list paging", () => {
   it.each<
     readonly [
       string,
-      Effect.Effect<unknown, unknown, Layer.Success<typeof PayPalPayments.capabilities>>,
+      Effect.Effect<unknown, PaymentsError, Layer.Success<typeof PayPalPayments.capabilities>>,
     ]
   >([
     ["an item id", Product.list({ startingAfter: "PROD-1" })],
@@ -417,7 +460,7 @@ describe("PayPalPayments list paging", () => {
   ])("refuses %s, sending nothing", async (_name, effect) => {
     const { client, calls } = makeFakeClient(twoPages);
     const error = await Effect.runPromise(
-      Effect.flip(effect).pipe(Effect.provide(provide(client))),
+      Effect.flip(Effect.asVoid(effect)).pipe(Effect.provide(provide(client))),
     );
     expect(error).toBeInstanceOf(PaymentInvalidRequestError);
     expect(calls).toEqual([]);
@@ -576,9 +619,7 @@ describe("PayPalPayments money", () => {
   const echoOrder = (req: PayPalCall) => ({
     id: "ORD-1",
     status: "CREATED",
-    purchase_units: [
-      { amount: (req.body as { purchase_units: { amount: unknown }[] }).purchase_units[0].amount },
-    ],
+    purchase_units: [{ amount: decodeOrderEcho(req.body).purchase_units[0].amount }],
   });
 
   it("formats HUF, TWD and JPY without decimals, as PayPal requires", async () => {
@@ -590,7 +631,7 @@ describe("PayPalPayments money", () => {
           return PaymentIntent.create({ amount: 1000, currency }).pipe(
             Effect.provide(provide(client)),
             Effect.map((intent) => {
-              const body = calls[0].body as { purchase_units: { amount: { value: string } }[] };
+              const body = decodeOrderBody(calls[0].body);
               expect(body.purchase_units[0].amount.value).toBe("1000");
               expect(intent.amount).toBe(1000);
             }),
@@ -608,7 +649,7 @@ describe("PayPalPayments money", () => {
         Effect.provide(provide(client)),
       ),
     );
-    const body = calls[0].body as { purchase_units: { amount: { value: string } }[] };
+    const body = decodeOrderBody(calls[0].body);
     expect(body.purchase_units[0].amount.value).toBe("12.345");
     expect(intent.amount).toBe(12345);
   });

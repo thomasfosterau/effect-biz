@@ -11,7 +11,7 @@ import * as Price from "@thomasfosterau/effect-biz/Payments.Price";
 import * as Product from "@thomasfosterau/effect-biz/Payments.Product";
 import * as Refund from "@thomasfosterau/effect-biz/Payments.Refund";
 import * as Subscription from "@thomasfosterau/effect-biz/Payments.Subscription";
-import { PaymentsUnavailable } from "@thomasfosterau/effect-biz/Payments";
+import { PaymentsUnavailable, type PaymentsError } from "@thomasfosterau/effect-biz/Payments";
 import * as StripeCustomer from "../src/Customer.ts";
 import * as StripeHttp from "../src/StripeHttp.ts";
 import * as StripePayments from "../src/StripePayments.ts";
@@ -75,7 +75,7 @@ const everyCall = {
     customer: "cus_1",
     returnUrl: "https://example.test/account",
   }),
-} satisfies Record<string, Effect.Effect<unknown, unknown, Capabilities>>;
+} satisfies Record<string, Effect.Effect<unknown, PaymentsError, Capabilities>>;
 
 const customer = () =>
   jsonResponse(200, { id: "cus_1", object: "customer", created: 1_700_000_000, livemode: false });
@@ -93,12 +93,12 @@ describe("StripePayments.layerConfig", () => {
     expect(calls).toHaveLength(0);
   });
 
-  it.each(Rec.toEntries<string, Effect.Effect<unknown, unknown, Capabilities>>(everyCall))(
+  it.each(Rec.toEntries<string, Effect.Effect<unknown, PaymentsError, Capabilities>>(everyCall))(
     "fails %s with PaymentsUnavailable while the key is absent",
     async (_, call) => {
       const { http, calls } = stubFetch(customer);
       const error = await Effect.runPromise(
-        Effect.flip(call).pipe(
+        Effect.flip(Effect.asVoid(call)).pipe(
           Effect.provide(StripePayments.layerConfig()),
           Effect.provide(http),
           withConfig({}),
