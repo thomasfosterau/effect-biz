@@ -101,7 +101,7 @@ export default defineConfig({
       // (effect/require-safety-comment-for-type-assertion): a structural read
       // of a value the type system cannot narrow (a decoded wire body, a
       // Distilled operation's erased input, a test fixture).
-      "typescript/no-unsafe-type-assertion": "warn", // 37 sites (5 src, 2 scripts, 30 tests)
+      "typescript/no-unsafe-type-assertion": "warn", // 24 sites (4 src, 2 scripts, 18 tests)
       // `expect(value, message)`: vitest's second argument is the failure
       // message, which the jest-derived default (one argument) rejects.
       "vitest/valid-expect": ["error", { maxArgs: 2 }],
@@ -235,16 +235,9 @@ export default defineConfig({
           // A helper declared inside the `it` that uses it keeps each case
           // self-contained; `src/` still hoists them.
           "unicorn/consistent-function-scoping": "off",
-          // Allowances adopted with type-aware linting (counts as of adoption;
-          // a new site is a defect; paying them down is #162).
-          // The capability tables erase each operation to
-          // `Effect<unknown, unknown, …>` so one `it.each` runs them all.
-          "effecttsgo/any-unknown-in-error-context": "warn", // 55 sites
-          // Sibling `Effect.gen` blocks inside one case reuse the same names
-          // (`errors`, `after`, `leader`) for the same roles.
-          "eslint/no-shadow": "warn", // 22 sites
-          // A credentials effect that fails although its type rules it out,
-          // to reach the no-response path (SAFETY-commented).
+          // Can't-apply (#162): a credentials effect that fails although its
+          // type rules it out, to reach Distilled's no-response path; no typed
+          // construction can produce it (SAFETY-commented).
           "effecttsgo/unsafe-effect-type-assertion": "warn", // 1 site
           // The webhook suite exercises the `Buffer` payload the SDK-based
           // verifier accepts; the WebCrypto verifier (effect-finance#41) drops it.

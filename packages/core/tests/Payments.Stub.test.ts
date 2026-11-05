@@ -5,7 +5,11 @@ import * as BillingPortal from "../src/Payments.BillingPortal.ts";
 import * as CheckoutSession from "../src/Payments.CheckoutSession.ts";
 import * as Customer from "../src/Payments.Customer.ts";
 import * as PaymentIntent from "../src/Payments.PaymentIntent.ts";
-import { PaymentInvalidRequestError, PaymentsUnavailable } from "../src/Payments.PaymentsError.ts";
+import {
+  PaymentInvalidRequestError,
+  type PaymentsError,
+  PaymentsUnavailable,
+} from "../src/Payments.PaymentsError.ts";
 import * as Price from "../src/Payments.Price.ts";
 import * as Product from "../src/Payments.Product.ts";
 import * as Refund from "../src/Payments.Refund.ts";
@@ -14,7 +18,10 @@ import * as Subscription from "../src/Payments.Subscription.ts";
 
 /** Every operation of every capability, by name. */
 const everyCall: ReadonlyArray<
-  readonly [string, Effect.Effect<unknown, unknown, Layer.Success<ReturnType<typeof Stub.layer>>>]
+  readonly [
+    string,
+    Effect.Effect<unknown, PaymentsError, Layer.Success<ReturnType<typeof Stub.layer>>>,
+  ]
 > = [
   ["Customer.create", Customer.create({ email: "a@example.test" })],
   ["Customer.retrieve", Customer.retrieve("cus_1")],
@@ -64,14 +71,14 @@ describe("Stub", () => {
   it.each(everyCall)("layer fails %s with the given failure", async (_, call) => {
     const failure = new PaymentInvalidRequestError({ message: "nope" });
     const error = await Effect.runPromise(
-      Effect.flip(call).pipe(Effect.provide(Stub.layer(Effect.fail(failure)))),
+      Effect.flip(Effect.asVoid(call)).pipe(Effect.provide(Stub.layer(Effect.fail(failure)))),
     );
     expect(error).toBe(failure);
   });
 
   it.each(everyCall)("unavailable fails %s with PaymentsUnavailable", async (_, call) => {
     const error = await Effect.runPromise(
-      Effect.flip(call).pipe(Effect.provide(Stub.unavailable("stripe"))),
+      Effect.flip(Effect.asVoid(call)).pipe(Effect.provide(Stub.unavailable("stripe"))),
     );
     expect(error).toBeInstanceOf(PaymentsUnavailable);
     expect(error).toMatchObject({

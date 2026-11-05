@@ -375,7 +375,7 @@ describe("PayPalPayments requests", () => {
         string,
         (
           key: IdempotencyKey.IdempotencyKey | undefined,
-        ) => Effect.Effect<unknown, unknown, Capabilities>,
+        ) => Effect.Effect<unknown, PaymentsError, Capabilities>,
       ]
     > = [
       ["/v1/catalogs/products", (idempotencyKey) => Product.create({ name: "P", idempotencyKey })],
@@ -512,21 +512,19 @@ describe("PayPalPayments requests", () => {
   });
 
   it("refuses an empty id before sending anything", async () => {
+    const operations: ReadonlyArray<Effect.Effect<unknown, PaymentsError, Capabilities>> = [
+      Product.retrieve(""),
+      Price.update("", { active: true }),
+      PaymentIntent.confirm(""),
+      Subscription.cancel(""),
+      Refund.retrieve(""),
+    ];
     await Effect.runPromise(
       Effect.forEach(
-        [
-          Product.retrieve(""),
-          Price.update("", { active: true }),
-          PaymentIntent.confirm(""),
-          Subscription.cancel(""),
-          Refund.retrieve(""),
-        ],
+        operations,
         (operation) => {
           const api = paypal(() => jsonResponse(200, {}));
-          return provided(
-            Effect.flip(operation as Effect.Effect<unknown, PaymentsError, Capabilities>),
-            api.http,
-          ).pipe(
+          return provided(Effect.flip(Effect.asVoid(operation)), api.http).pipe(
             Effect.map((error) => {
               expect(error).toBeInstanceOf(PaymentInvalidRequestError);
               expect(error).toMatchObject({ param: "id" });

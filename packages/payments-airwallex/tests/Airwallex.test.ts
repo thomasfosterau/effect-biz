@@ -36,6 +36,13 @@ const toJsonText = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** `JSON.parse` through `Schema`. */
 const fromJsonText = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown));
+/**
+ * The failure of a request, with its (unread) body discarded so the flipped
+ * effect carries no `unknown` in its error channel.
+ */
+const failureOf = <E, R>(effect: Effect.Effect<unknown, E, R>): Effect.Effect<E, void, R> =>
+  Effect.flip(Effect.asVoid(effect));
+
 const LOGIN_RESPONSE = () =>
   jsonResponse(201, {
     token: "tok_123",
@@ -124,7 +131,7 @@ describe("Airwallex client", () => {
     const error = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* make(config({}));
-        return yield* client.request({
+        yield* client.request({
           method: "GET",
           path: "/api/v1/pa/customers/cus_1",
         });
@@ -143,7 +150,7 @@ describe("Airwallex client", () => {
       return Effect.runPromise(
         Effect.gen(function* () {
           const client = yield* make(config({}));
-          return yield* client.request({ method: "GET", path: "/api/v1/pa/customers/cus_1" });
+          yield* client.request({ method: "GET", path: "/api/v1/pa/customers/cus_1" });
         }).pipe(Effect.flip, Effect.provide(http)),
       );
     };
@@ -212,7 +219,7 @@ describe("Airwallex client", () => {
     const second = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* make(config({}));
-        const first = yield* Effect.flip(
+        const first = yield* failureOf(
           client.request({ method: "GET", path: "/api/v1/pa/customers/cus_1" }),
         );
         expect(first).toBeInstanceOf(PaymentAuthenticationError);
@@ -268,7 +275,7 @@ describe("Airwallex client", () => {
       Effect.gen(function* () {
         const client = yield* make(config({}));
         const slow = yield* Effect.forkChild(
-          Effect.flip(client.request({ method: "GET", path: "/api/v1/pa/customers/SLOW" })),
+          failureOf(client.request({ method: "GET", path: "/api/v1/pa/customers/SLOW" })),
         );
         yield* Effect.tryPromise(() => slowStarted);
         // Refreshes the token (login 2) while the T1 request is in flight.
@@ -334,13 +341,13 @@ describe("Airwallex client timeouts", () => {
     const { error, pendingBefore } = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* make(config({ loginTimeout: 10_000 }));
-        const fiber = yield* Effect.forkChild(Effect.flip(client.request(get)));
+        const fiber = yield* Effect.forkChild(failureOf(client.request(get)));
         yield* macrotask;
         yield* TestClock.adjust("9 seconds");
         yield* macrotask;
-        const pendingBefore = fiber.pollUnsafe() === undefined;
+        const pending = fiber.pollUnsafe() === undefined;
         yield* TestClock.adjust("1 second");
-        return { error: yield* Fiber.join(fiber), pendingBefore };
+        return { error: yield* Fiber.join(fiber), pendingBefore: pending };
       }).pipe(Effect.provide(http), Effect.provide(TestClock.layer())),
     );
 
@@ -357,22 +364,22 @@ describe("Airwallex client timeouts", () => {
     const { errors, pendingBefore, after } = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* make(config({ loginTimeout: 10_000 }));
-        const leader = yield* Effect.forkChild(Effect.flip(client.request(get)));
+        const first = yield* Effect.forkChild(failureOf(client.request(get)));
         yield* macrotask;
         // Four more callers arrive while the login is in flight.
         const queued = yield* Effect.forEach(Array.from({ length: 4 }), () =>
-          Effect.forkChild(Effect.flip(client.request(get))),
+          Effect.forkChild(failureOf(client.request(get))),
         );
         yield* macrotask;
         yield* TestClock.adjust("9 seconds");
         yield* macrotask;
-        const fibers = [leader, ...queued];
-        const pendingBefore = fibers.every((fiber) => fiber.pollUnsafe() === undefined);
+        const fibers = [first, ...queued];
+        const pending = fibers.every((fiber) => fiber.pollUnsafe() === undefined);
         yield* TestClock.adjust("1 second");
-        const errors = yield* Effect.forEach(fibers, Fiber.join);
+        const failures = yield* Effect.forEach(fibers, Fiber.join);
         // A caller arriving after the failure starts a fresh login.
-        const after = yield* client.request(get);
-        return { errors, pendingBefore, after };
+        const retried = yield* client.request(get);
+        return { errors: failures, pendingBefore: pending, after: retried };
       }).pipe(Effect.provide(http), Effect.provide(TestClock.layer())),
     );
 
@@ -394,12 +401,12 @@ describe("Airwallex client timeouts", () => {
     const { errors, after } = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* make(config({}));
-        const errors = yield* Effect.all(
-          Array.from({ length: 5 }, () => Effect.flip(client.request(get))),
+        const failures = yield* Effect.all(
+          Array.from({ length: 5 }, () => failureOf(client.request(get))),
           { concurrency: "unbounded" },
         );
-        const after = yield* client.request(get);
-        return { errors, after };
+        const retried = yield* client.request(get);
+        return { errors: failures, after: retried };
       }).pipe(Effect.provide(http)),
     );
 
@@ -418,14 +425,17 @@ describe("Airwallex client timeouts", () => {
     const { leader, waiter } = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* make(config({ loginTimeout: 10_000 }));
-        const leader = yield* Effect.forkChild(Effect.flip(client.request(get)));
+        const leaderFiber = yield* Effect.forkChild(failureOf(client.request(get)));
         yield* macrotask;
-        const waiter = yield* Effect.forkChild(
-          Effect.flip(client.request(get).pipe(Effect.timeout("2 seconds"))),
+        const waiterFiber = yield* Effect.forkChild(
+          failureOf(client.request(get).pipe(Effect.timeout("2 seconds"))),
         );
         yield* macrotask;
         yield* TestClock.adjust("10 seconds");
-        return { leader: yield* Fiber.join(leader), waiter: yield* Fiber.join(waiter) };
+        return {
+          leader: yield* Fiber.join(leaderFiber),
+          waiter: yield* Fiber.join(waiterFiber),
+        };
       }).pipe(Effect.provide(http), Effect.provide(TestClock.layer())),
     );
 
@@ -442,19 +452,19 @@ describe("Airwallex client timeouts", () => {
         const client = yield* make(config({ loginTimeout: 10_000 }));
         // The caller gives up after 2 s, well inside the 10 s login timeout,
         // interrupting the login it is running.
-        const first = yield* Effect.forkChild(
-          Effect.flip(client.request(get).pipe(Effect.timeout("2 seconds"))),
+        const firstFiber = yield* Effect.forkChild(
+          failureOf(client.request(get).pipe(Effect.timeout("2 seconds"))),
         );
         yield* macrotask;
         // Waiting on the leader's login when the leader is interrupted.
-        const second = yield* Effect.forkChild(client.request(get));
-        const third = yield* Effect.forkChild(client.request(get));
+        const secondFiber = yield* Effect.forkChild(client.request(get));
+        const thirdFiber = yield* Effect.forkChild(client.request(get));
         yield* macrotask;
         yield* TestClock.adjust("2 seconds");
         return {
-          first: yield* Fiber.join(first),
-          second: yield* Fiber.join(second),
-          third: yield* Fiber.join(third),
+          first: yield* Fiber.join(firstFiber),
+          second: yield* Fiber.join(secondFiber),
+          third: yield* Fiber.join(thirdFiber),
         };
       }).pipe(Effect.provide(http), Effect.provide(TestClock.layer())),
     );
@@ -503,7 +513,7 @@ describe("Airwallex client timeouts", () => {
     const error = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* make(config({ timeout: 5_000 }));
-        const fiber = yield* Effect.forkChild(Effect.flip(client.request(get)));
+        const fiber = yield* Effect.forkChild(failureOf(client.request(get)));
         yield* macrotask;
         yield* macrotask;
         yield* TestClock.adjust("5 seconds");
@@ -587,9 +597,9 @@ describe("Airwallex client secrets", () => {
         answers,
         (answer) => {
           const { http } = stubSharedFetch(answer);
-          return Effect.flatMap(make(config({})), (client) =>
-            Effect.flip(client.request(get)),
-          ).pipe(Effect.provide(http));
+          return Effect.flatMap(make(config({})), (client) => failureOf(client.request(get))).pipe(
+            Effect.provide(http),
+          );
         },
         { concurrency: 1 },
       ),
@@ -667,7 +677,7 @@ describe("Airwallex client requestId (request_id)", () => {
       Effect.gen(function* () {
         const client = yield* make(config({}));
         const write = client.request({ ...create, requestId: "signup-8" });
-        const first = yield* Effect.flip(write);
+        const first = yield* failureOf(write);
         const second = yield* write;
         return { first, second };
       }).pipe(Effect.provide(http)),
@@ -687,10 +697,10 @@ describe("Airwallex client requestId (request_id)", () => {
       Effect.gen(function* () {
         const client = yield* make(config({}));
         return yield* Effect.all([
-          Effect.flip(client.request({ ...create, requestId: "" })),
-          Effect.flip(client.request({ method: "GET", path: "/api/v1/x", requestId: "r" })),
-          Effect.flip(client.request({ ...create, body: [1], requestId: "r" })),
-          Effect.flip(client.request({ ...create, body: "text", requestId: "r" })),
+          failureOf(client.request({ ...create, requestId: "" })),
+          failureOf(client.request({ method: "GET", path: "/api/v1/x", requestId: "r" })),
+          failureOf(client.request({ ...create, body: [1], requestId: "r" })),
+          failureOf(client.request({ ...create, body: "text", requestId: "r" })),
         ]);
       }).pipe(Effect.provide(http)),
     );
@@ -711,7 +721,7 @@ describe("Airwallex layerFromEnv and empty variables", () => {
   ) => {
     const { http, calls } = stubFetch(() => jsonResponse(200, { id: "x" }));
     const program = Effect.flatMap(AirwallexClient, (client) =>
-      client.request({ method: "GET", path: "/probe" }),
+      Effect.asVoid(client.request({ method: "GET", path: "/probe" })),
     ).pipe(
       Effect.provide(layerFromEnv()),
       Effect.provide(http),
@@ -781,7 +791,7 @@ describe("Airwallex AIRWALLEX_ENV", () => {
   const build = (values: Record<string, string>) => {
     const { http, calls } = stubFetch(() => jsonResponse(200, { id: "x" }));
     const program = Effect.flatMap(AirwallexClient, (client) =>
-      client.request({ method: "GET", path: "/probe" }),
+      Effect.asVoid(client.request({ method: "GET", path: "/probe" })),
     ).pipe(
       Effect.provide(layerFromEnv()),
       Effect.provide(http),

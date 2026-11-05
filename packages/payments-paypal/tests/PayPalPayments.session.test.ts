@@ -176,9 +176,9 @@ describe("PayPalPayments session: login timeouts", () => {
         yield* macrotask;
         yield* TestClock.adjust("9 seconds");
         yield* macrotask;
-        const pendingBefore = fiber.pollUnsafe() === undefined;
+        const pending = fiber.pollUnsafe() === undefined;
         yield* TestClock.adjust("1 second");
-        return { error: yield* Fiber.join(fiber), pendingBefore };
+        return { error: yield* Fiber.join(fiber), pendingBefore: pending };
       }).pipe(
         Effect.provide(PayPalPayments.layer(config({ loginTimeout: 10_000 }))),
         Effect.provide(http),
@@ -198,7 +198,7 @@ describe("PayPalPayments session: login timeouts", () => {
 
     const { errors, pendingBefore, after } = await Effect.runPromise(
       Effect.gen(function* () {
-        const leader = yield* Effect.forkChild(Effect.flip(retrieve));
+        const first = yield* Effect.forkChild(Effect.flip(retrieve));
         yield* macrotask;
         // Four more callers arrive while the login is in flight.
         const queued = yield* Effect.forEach(
@@ -209,13 +209,13 @@ describe("PayPalPayments session: login timeouts", () => {
         yield* macrotask;
         yield* TestClock.adjust("9 seconds");
         yield* macrotask;
-        const fibers = [leader, ...queued];
-        const pendingBefore = fibers.every((fiber) => fiber.pollUnsafe() === undefined);
+        const fibers = [first, ...queued];
+        const pending = fibers.every((fiber) => fiber.pollUnsafe() === undefined);
         yield* TestClock.adjust("1 second");
-        const errors = yield* Effect.forEach(fibers, Fiber.join, { concurrency: 1 });
+        const failures = yield* Effect.forEach(fibers, Fiber.join, { concurrency: 1 });
         // A caller arriving after the failure starts a fresh login.
-        const after = yield* retrieve;
-        return { errors, pendingBefore, after };
+        const retried = yield* retrieve;
+        return { errors: failures, pendingBefore: pending, after: retried };
       }).pipe(
         Effect.provide(PayPalPayments.layer(config({ loginTimeout: 10_000 }))),
         Effect.provide(http),
@@ -241,12 +241,12 @@ describe("PayPalPayments session: login timeouts", () => {
     const { errors, after } = await Effect.runPromise(
       run(
         Effect.gen(function* () {
-          const errors = yield* Effect.all(
+          const failures = yield* Effect.all(
             Array.from({ length: 5 }, () => Effect.flip(retrieve)),
             { concurrency: "unbounded" },
           );
-          const after = yield* retrieve;
-          return { errors, after };
+          const retried = yield* retrieve;
+          return { errors: failures, after: retried };
         }),
         http,
       ),
@@ -266,14 +266,17 @@ describe("PayPalPayments session: login timeouts", () => {
 
     const { leader, waiter } = await Effect.runPromise(
       Effect.gen(function* () {
-        const leader = yield* Effect.forkChild(Effect.flip(retrieve));
+        const leaderFiber = yield* Effect.forkChild(Effect.flip(retrieve));
         yield* macrotask;
-        const waiter = yield* Effect.forkChild(
+        const waiterFiber = yield* Effect.forkChild(
           Effect.flip(retrieve.pipe(Effect.timeout("2 seconds"))),
         );
         yield* macrotask;
         yield* TestClock.adjust("10 seconds");
-        return { leader: yield* Fiber.join(leader), waiter: yield* Fiber.join(waiter) };
+        return {
+          leader: yield* Fiber.join(leaderFiber),
+          waiter: yield* Fiber.join(waiterFiber),
+        };
       }).pipe(
         Effect.provide(PayPalPayments.layer(config({ loginTimeout: 10_000 }))),
         Effect.provide(http),
@@ -293,19 +296,19 @@ describe("PayPalPayments session: login timeouts", () => {
       Effect.gen(function* () {
         // The caller gives up after 2 s, well inside the 10 s login timeout,
         // interrupting the login it is running.
-        const first = yield* Effect.forkChild(
+        const firstFiber = yield* Effect.forkChild(
           Effect.flip(retrieve.pipe(Effect.timeout("2 seconds"))),
         );
         yield* macrotask;
         // Waiting on the leader's login when the leader is interrupted.
-        const second = yield* Effect.forkChild(retrieve);
-        const third = yield* Effect.forkChild(retrieve);
+        const secondFiber = yield* Effect.forkChild(retrieve);
+        const thirdFiber = yield* Effect.forkChild(retrieve);
         yield* macrotask;
         yield* TestClock.adjust("2 seconds");
         return {
-          first: yield* Fiber.join(first),
-          second: yield* Fiber.join(second),
-          third: yield* Fiber.join(third),
+          first: yield* Fiber.join(firstFiber),
+          second: yield* Fiber.join(secondFiber),
+          third: yield* Fiber.join(thirdFiber),
         };
       }).pipe(
         Effect.provide(PayPalPayments.layer(config({ loginTimeout: 10_000 }))),

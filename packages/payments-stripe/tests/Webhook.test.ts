@@ -325,7 +325,9 @@ describe("Webhook", () => {
     Arr.forEach(wrappers, ([name, program, header]) => {
       it(`${name} maps a thrown Error onto SignatureVerificationError`, async () => {
         const error = await Effect.runPromise(
-          Effect.flip(program).pipe(Effect.provide(throwing(new Error("sdk refused")))),
+          Effect.flip(Effect.asVoid(program)).pipe(
+            Effect.provide(throwing(new Error("sdk refused"))),
+          ),
         );
         expect(error).toBeInstanceOf(SignatureVerificationError);
         expect(error.message).toBe("sdk refused");
@@ -335,7 +337,7 @@ describe("Webhook", () => {
 
       it(`${name} maps a thrown non-Error by its string form`, async () => {
         const error = await Effect.runPromise(
-          Effect.flip(program).pipe(Effect.provide(throwing("plain"))),
+          Effect.flip(Effect.asVoid(program)).pipe(Effect.provide(throwing("plain"))),
         );
         expect(error.message).toBe("plain");
       });

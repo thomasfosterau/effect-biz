@@ -9,12 +9,16 @@ import * as Refund from "@thomasfosterau/effect-biz/Payments.Refund";
 import {
   PaymentInvalidRequestError,
   PaymentProviderError,
+  type PaymentsError,
 } from "@thomasfosterau/effect-biz/Payments";
 import { AirwallexClient, type AirwallexRequest } from "../src/Airwallex.ts";
 import * as AirwallexPayments from "../src/AirwallexPayments.ts";
 
 /** `JSON.stringify` through `Schema`: the JSON text a request body is sent as. */
 const toJsonText = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
+/** Reads a request body's amount, as the fake echoes it back. */
+const decodeAmount = Schema.decodeUnknownSync(Schema.Struct({ amount: Schema.Finite }));
 
 /**
  * A fake Airwallex client. It records every request and returns whatever the
@@ -66,7 +70,7 @@ describe("AirwallexPayments capabilities", () => {
   it("converts minor units to major units on the way out, and back on the way in", async () => {
     const { client, calls } = makeFakeClient((req) => ({
       id: "int_aw",
-      amount: (req.body as { amount: number }).amount,
+      amount: decodeAmount(req.body).amount,
       currency: "USD",
       status: "SUCCEEDED",
       customer_id: "cus_aw",
@@ -88,7 +92,7 @@ describe("AirwallexPayments capabilities", () => {
   it("treats zero-decimal currencies (JPY) as 1:1", async () => {
     const { client, calls } = makeFakeClient((req) => ({
       id: "int_jpy",
-      amount: (req.body as { amount: number }).amount,
+      amount: decodeAmount(req.body).amount,
       currency: "JPY",
       status: "REQUIRES_PAYMENT_METHOD",
       created_at: "2026-01-02T00:00:00Z",
@@ -110,7 +114,7 @@ describe("AirwallexPayments capabilities", () => {
       }
       return {
         id: "ref_aw",
-        amount: (req.body as { amount: number }).amount,
+        amount: decodeAmount(req.body).amount,
         currency: "USD",
         status: "RECEIVED",
         payment_intent_id: "int_aw",
@@ -215,7 +219,7 @@ describe("AirwallexPayments list paging", () => {
   it.each<
     readonly [
       string,
-      Effect.Effect<unknown, unknown, Layer.Success<typeof AirwallexPayments.capabilities>>,
+      Effect.Effect<unknown, PaymentsError, Layer.Success<typeof AirwallexPayments.capabilities>>,
     ]
   >([
     ["an item id", Customer.list({ startingAfter: "cus_1" })],
@@ -225,7 +229,7 @@ describe("AirwallexPayments list paging", () => {
   ])("refuses %s, sending nothing", async (_name, effect) => {
     const { client, calls } = makeFakeClient(twoPages);
     const error = await Effect.runPromise(
-      Effect.flip(effect).pipe(Effect.provide(provide(client))),
+      Effect.flip(Effect.asVoid(effect)).pipe(Effect.provide(provide(client))),
     );
     expect(error).toBeInstanceOf(PaymentInvalidRequestError);
     expect(calls).toEqual([]);
@@ -239,7 +243,7 @@ describe("AirwallexPayments decoding", () => {
     body: (req: AirwallexRequest) => unknown,
   ): Promise<E> =>
     Effect.runPromise(
-      Effect.flip(effect).pipe(Effect.provide(provide(makeFakeClient(body).client))),
+      Effect.flip(Effect.asVoid(effect)).pipe(Effect.provide(provide(makeFakeClient(body).client))),
     );
 
   it("fails a customer missing its id with a provider error", async () => {
@@ -383,7 +387,7 @@ describe("AirwallexPayments money (effect-finance#68)", () => {
   it("sends a large amount as a number whose JSON text is the exact decimal", async () => {
     const { client, calls } = makeFakeClient((req) => ({
       id: "int_aw",
-      amount: (req.body as { amount: number }).amount,
+      amount: decodeAmount(req.body).amount,
       currency: "USD",
       status: "REQUIRES_PAYMENT_METHOD",
     }));

@@ -16,6 +16,7 @@ import * as Refund from "@thomasfosterau/effect-biz/Payments.Refund";
 import * as CheckoutSession from "@thomasfosterau/effect-biz/Payments.CheckoutSession";
 import * as IdempotencyKey from "@thomasfosterau/effect-biz/Payments.IdempotencyKey";
 import {
+  type PaymentConfigError,
   PaymentInvalidRequestError,
   PaymentNetworkError,
   type PaymentsError,
@@ -42,8 +43,12 @@ const noRetries = StripePayments.layer({
 
 /** Run one operation against a stubbed API and return the `Idempotency-Key` it sent. */
 const requestOf = async (
-  operation: Effect.Effect<unknown, unknown, Capabilities>,
-  capabilities: Layer.Layer<Capabilities, unknown, HttpClient.HttpClient | Credentials> = noRetries,
+  operation: Effect.Effect<unknown, PaymentsError, Capabilities>,
+  capabilities: Layer.Layer<
+    Capabilities,
+    PaymentConfigError,
+    HttpClient.HttpClient | Credentials
+  > = noRetries,
 ): Promise<{ readonly idempotencyKey: string | undefined; readonly count: number }> => {
   const stub = stubStripe(() => ({}));
   // The empty answer fails the decode; the request was recorded before that.
@@ -108,7 +113,11 @@ describe("Stripe maps the neutral idempotencyKey to Idempotency-Key", () => {
   it.each(operations(bad))("%s refuses a raw string before sending anything", async (_name, op) => {
     const stub = stubStripe(() => ({}));
     const error = await Effect.runPromise(
-      Effect.flip(op.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer))),
+      Effect.flip(
+        Effect.asVoid(
+          op.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer)),
+        ),
+      ),
     );
     expect(error).toBeInstanceOf(PaymentInvalidRequestError);
     expect(stub.calls).toEqual([]);
