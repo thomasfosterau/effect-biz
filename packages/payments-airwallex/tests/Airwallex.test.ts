@@ -367,8 +367,10 @@ describe("Airwallex client timeouts", () => {
         const first = yield* Effect.forkChild(failureOf(client.request(get)));
         yield* macrotask;
         // Four more callers arrive while the login is in flight.
-        const queued = yield* Effect.forEach(Array.from({ length: 4 }), () =>
-          Effect.forkChild(failureOf(client.request(get))),
+        const queued = yield* Effect.forEach(
+          Array.from({ length: 4 }),
+          () => Effect.forkChild(failureOf(client.request(get))),
+          { concurrency: 1 },
         );
         yield* macrotask;
         yield* TestClock.adjust("9 seconds");
@@ -376,7 +378,7 @@ describe("Airwallex client timeouts", () => {
         const fibers = [first, ...queued];
         const pending = fibers.every((fiber) => fiber.pollUnsafe() === undefined);
         yield* TestClock.adjust("1 second");
-        const failures = yield* Effect.forEach(fibers, Fiber.join);
+        const failures = yield* Effect.forEach(fibers, Fiber.join, { concurrency: 1 });
         // A caller arriving after the failure starts a fresh login.
         const retried = yield* client.request(get);
         return { errors: failures, pendingBefore: pending, after: retried };
@@ -696,12 +698,15 @@ describe("Airwallex client requestId (request_id)", () => {
     const errors = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* make(config({}));
-        return yield* Effect.all([
-          failureOf(client.request({ ...create, requestId: "" })),
-          failureOf(client.request({ method: "GET", path: "/api/v1/x", requestId: "r" })),
-          failureOf(client.request({ ...create, body: [1], requestId: "r" })),
-          failureOf(client.request({ ...create, body: "text", requestId: "r" })),
-        ]);
+        return yield* Effect.all(
+          [
+            failureOf(client.request({ ...create, requestId: "" })),
+            failureOf(client.request({ method: "GET", path: "/api/v1/x", requestId: "r" })),
+            failureOf(client.request({ ...create, body: [1], requestId: "r" })),
+            failureOf(client.request({ ...create, body: "text", requestId: "r" })),
+          ],
+          { concurrency: 1 },
+        );
       }).pipe(Effect.provide(http)),
     );
     Arr.forEach(errors, (error) => expect(error).toBeInstanceOf(PaymentInvalidRequestError));

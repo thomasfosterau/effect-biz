@@ -191,7 +191,9 @@ describe("PayPalPayments authentication", () => {
         : jsonResponse(200, PRODUCT),
     );
     const [first, second] = await run(
-      Effect.all([Effect.flip(Product.retrieve("PROD-1")), Product.retrieve("PROD-1")]),
+      Effect.all([Effect.flip(Product.retrieve("PROD-1")), Product.retrieve("PROD-1")], {
+        concurrency: 1,
+      }),
       api.http,
     );
     expect(first).toBeInstanceOf(PaymentAuthenticationError);
@@ -206,10 +208,10 @@ describe("PayPalPayments authentication", () => {
   it("keeps a token that a 403 refused: only a 401 means the token is bad", async () => {
     const api = paypal(() => jsonResponse(403, { name: "NOT_AUTHORIZED", message: "No scope" }));
     await run(
-      Effect.all([
-        Effect.flip(Product.retrieve("PROD-1")),
-        Effect.flip(Product.retrieve("PROD-1")),
-      ]),
+      Effect.all(
+        [Effect.flip(Product.retrieve("PROD-1")), Effect.flip(Product.retrieve("PROD-1"))],
+        { concurrency: 1 },
+      ),
       api.http,
     );
     expect(api.loginRequests()).toHaveLength(1);

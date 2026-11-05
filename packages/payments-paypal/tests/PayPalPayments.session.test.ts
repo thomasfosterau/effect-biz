@@ -69,7 +69,8 @@ const hangingPayPal = (hung: {
   readonly refused?: ReadonlyArray<number>;
   readonly resources?: boolean;
 }) => {
-  const state = { logins: 0, aborted: 0, resources: [] as Array<string | null> };
+  const resources: Array<string | null> = [];
+  const state = { logins: 0, aborted: 0, resources };
   const hang = (request: CapturedRequest) =>
     new Promise<Response>((_resolve, reject) => {
       request.init?.signal?.addEventListener("abort", () => {

@@ -224,7 +224,7 @@ describe("Webhook", () => {
       const result = await Effect.runPromise(program.pipe(Effect.provide(testLayer)));
 
       expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
+      expect(result).toBeTypeOf("string");
       expect(result).toMatch(/^t=\d+,v1=[a-f0-9]+/);
     });
 
@@ -254,7 +254,7 @@ describe("Webhook", () => {
       const result = await Effect.runPromise(program.pipe(Effect.provide(testLayer)));
 
       expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
+      expect(result).toBeTypeOf("string");
       expect(result).toMatch(/^t=\d+,v1=[a-f0-9]+/);
     });
   });

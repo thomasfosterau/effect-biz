@@ -107,7 +107,7 @@ describe("Airwallex maps the neutral idempotencyKey to request_id", () => {
   it.each(operations(undefined).map(([name]) => name))(
     "%s refuses a raw string before sending anything",
     async (name) => {
-      // Untyped code can still pass a string the brand would have refused.
+      // SAFETY: untyped code can still pass a string the brand would have refused.
       const bad = "not a valid key" as IdempotencyKey.IdempotencyKey;
       const found = operations(bad).find(([candidate]) => candidate === name);
       assert.isDefined(found);
@@ -252,6 +252,7 @@ describe("a retried write after a lost response is one logical write (effect-fin
     const error = await Effect.runPromise(
       Customer.create({
         email: "a@b.com",
+        // SAFETY: untyped code can still pass a string the brand would have refused.
         idempotencyKey: "bad key" as IdempotencyKey.IdempotencyKey,
       }).pipe(
         Effect.flip,

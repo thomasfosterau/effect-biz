@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vite-plus/test";
+import { assert, describe, it, expect } from "vite-plus/test";
 import * as Arr from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -238,10 +238,13 @@ describe("RequestOptions on a resource-module operation", () => {
 
   it("overrides the pinned Stripe-Version for one call", async () => {
     const { result, calls } = over(
-      Effect.all([
-        Customer.retrieve("cus_1", undefined, { apiVersion: "2025-08-27.basil" }),
-        Customer.retrieve("cus_1"),
-      ]),
+      Effect.all(
+        [
+          Customer.retrieve("cus_1", undefined, { apiVersion: "2025-08-27.basil" }),
+          Customer.retrieve("cus_1"),
+        ],
+        { concurrency: 1 },
+      ),
     );
     await result;
     expect(calls.map((call) => call.headers.get("stripe-version"))).toEqual([
@@ -252,13 +255,16 @@ describe("RequestOptions on a resource-module operation", () => {
 
   it("prefers the call's version and account over the configured ones", async () => {
     const { result, calls } = over(
-      Effect.all([
-        Customer.retrieve("cus_1", undefined, {
-          apiVersion: "2025-08-27.basil",
-          stripeAccount: "acct_call",
-        }),
-        Customer.retrieve("cus_1"),
-      ]),
+      Effect.all(
+        [
+          Customer.retrieve("cus_1", undefined, {
+            apiVersion: "2025-08-27.basil",
+            stripeAccount: "acct_call",
+          }),
+          Customer.retrieve("cus_1"),
+        ],
+        { concurrency: 1 },
+      ),
       undefined,
       { apiVersion: "2025-07-30.basil", stripeAccount: "acct_config" },
     );
@@ -352,7 +358,9 @@ describe("the /v2 request policy", () => {
 
   it("generates a fresh key for each /v2 DELETE call", async () => {
     const { result, calls } = over(
-      Effect.all([V2CoreEventDestination.del("ed_1"), V2CoreEventDestination.del("ed_1")]),
+      Effect.all([V2CoreEventDestination.del("ed_1"), V2CoreEventDestination.del("ed_1")], {
+        concurrency: 1,
+      }),
     );
     await result;
     const keys = calls.map((call) => call.headers.get("idempotency-key"));
@@ -461,8 +469,8 @@ describe("file uploads", () => {
     const { result, calls } = over(File.create({ purpose: "dispute_evidence", file: pdf }));
     await result;
     const part = calls[0]?.form?.get("file");
-    expect(part).toBeInstanceOf(Blob);
-    expect((part as globalThis.File).name).toBe("evidence.pdf");
+    assert(part instanceof globalThis.File, "the file part is a File");
+    expect(part.name).toBe("evidence.pdf");
   });
 
   it("sends an upload's nested params as bracketed form fields", async () => {
@@ -487,7 +495,9 @@ describe("file uploads", () => {
 
   it("honours a configured uploads origin, and keeps the API origin for the rest", async () => {
     const { result, calls } = over(
-      Effect.all([File.create({ purpose: "dispute_evidence", file: "evidence" }), File.list()]),
+      Effect.all([File.create({ purpose: "dispute_evidence", file: "evidence" }), File.list()], {
+        concurrency: 1,
+      }),
       undefined,
       { uploadsBaseUrl: "http://localhost:12112", baseUrl: "http://localhost:12111" },
     );
