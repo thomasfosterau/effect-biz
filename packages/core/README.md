@@ -10,7 +10,7 @@ The foundation of the effect-biz package family: the identifiers, tenancy contex
 pnpm add effect @thomasfosterau/effect-biz
 ```
 
-`effect` is a peer (`^4.0.0`): your application owns the single copy.
+`effect` is a peer (`^4.0.5`, the floor the Distilled-based payments providers force on the whole package family): your application owns the single copy.
 
 ## Status
 

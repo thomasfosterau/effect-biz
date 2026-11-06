@@ -104,7 +104,7 @@ import {
 /**
  * The Stripe API version every capability layer pins in `Stripe-Version`
  * unless configured: the one the pinned `@distilled.cloud/stripe` release's
- * schemas are generated from (`2026-09-30.endive` for `1.0.0-rc.15`). It moves
+ * schemas are generated from (`2026-09-30.endive` for `1.0.0-rc.18`). It moves
  * whenever this package moves its Distilled pin, so create the webhook
  * endpoints whose events a program reads beside the capabilities at this
  * version. The resource modules and `StripeHttp` pin the same one.

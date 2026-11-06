@@ -46,7 +46,7 @@ import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import { HttpClient, HttpClientError, HttpClientRequest } from "effect/http";
 import { ResponseValidation } from "@distilled.cloud/core/response-validation";
-import { Credentials, type Config as PayPalCredentials } from "@distilled.cloud/paypal/Credentials";
+import { Credentials } from "@distilled.cloud/paypal/Credentials";
 import type { PaypalOpContext } from "@distilled.cloud/paypal/Protocol";
 import { Retry } from "@distilled.cloud/paypal/Retry";
 import type { PaymentConfigError, PaymentsError } from "@thomasfosterau/effect-biz/Payments";
@@ -159,8 +159,13 @@ const withJsonHeaders = (
 
 /** What one call authenticates with: the credentials, and what to do on a 401. */
 interface Grant {
-  /** Distilled's `Credentials`: resolved by its protocol when it builds the request. */
-  readonly credentials: Effect.Effect<PayPalCredentials>;
+  /**
+   * Distilled's `Credentials`: resolved by its protocol when it builds the
+   * request. Its type is the service's own, which may fail with Distilled's
+   * `ConfigError` (`@distilled.cloud/paypal` 1.0.0-rc.18); the grants built
+   * here never do.
+   */
+  readonly credentials: Credentials["Service"];
   /** Run after PayPal answered 401 to these credentials. */
   readonly refused: Effect.Effect<void>;
 }
@@ -183,7 +188,7 @@ const make = (
     const attempt = <I, O, E>(
       operation: Operation<I, O, E>,
       input: I,
-      credentials: Effect.Effect<PayPalCredentials>,
+      credentials: Credentials["Service"],
     ): Effect.Effect<readonly [Outcome, Option.Option<Observed>]> =>
       Effect.gen(function* () {
         // Keep what the classification needs of the response, read before

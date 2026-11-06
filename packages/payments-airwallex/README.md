@@ -12,7 +12,7 @@ The same neutral program runs on Airwallex, Stripe or PayPal — only the layer 
 pnpm add @thomasfosterau/effect-biz @thomasfosterau/effect-biz-payments-airwallex effect
 ```
 
-`effect` is a peer dependency (`^4.0.0`). The core (`@thomasfosterau/effect-biz`) is a dependency of this package; install it yourself too, since your program imports its capability modules. No vendor SDK, and nothing reads `process`: the layers need only an `HttpClient` (`effect/http`), so they run on Node, Bun, Deno and Workers alike.
+`effect` is a peer dependency (`^4.0.5`, the family-wide floor the Distilled-based Stripe and PayPal providers force). The core (`@thomasfosterau/effect-biz`) is a dependency of this package; install it yourself too, since your program imports its capability modules. No vendor SDK, and nothing reads `process`: the layers need only an `HttpClient` (`effect/http`), so they run on Node, Bun, Deno and Workers alike.
 
 ## Usage
 

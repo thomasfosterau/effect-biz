@@ -5,6 +5,7 @@ import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import type * as SchemaAST from "effect/SchemaAST";
 import { strict as strictValidation } from "@distilled.cloud/core/response-validation";
+import { isLite, toEffect } from "@distilled.cloud/core/schema-lite-impl";
 import * as Distilled from "@distilled.cloud/stripe/stripe";
 import * as CheckoutSession from "@thomasfosterau/effect-biz/Payments.CheckoutSession";
 import * as PaymentIntent from "@thomasfosterau/effect-biz/Payments.PaymentIntent";
@@ -64,14 +65,10 @@ const onDefaultLayer = <A, E>(
  * exact. An excess property is stripped, not rejected, unless `options` sets
  * `onExcessProperty: "error"`; and Distilled types Stripe's enums and amounts
  * as bare `String` / `Number`, so an unknown status or a fractional amount
- * still decodes. Distilled declares its schemas `Schema.Schema<T>`, which
- * leaves the decoding services open; they need none.
+ * still decodes. `Schema.Top` leaves the decoding services open; they need
+ * none.
  */
-const strictly = (
-  schema: Schema.Schema<unknown>,
-  body: unknown,
-  options?: SchemaAST.ParseOptions,
-): unknown =>
+const strictly = (schema: Schema.Top, body: unknown, options?: SchemaAST.ParseOptions): unknown =>
   // SAFETY: Distilled's generated schemas are plain structs, unions and
   // suspensions over `effect/Schema` built-ins, which need no services.
   Schema.decodeUnknownSync(schema as Schema.Codec<unknown, unknown>, options)(body);
@@ -82,6 +79,29 @@ const strictly = (
  * Distilled's schema does not declare.
  */
 const closed: SchemaAST.ParseOptions = { onExcessProperty: "error" };
+
+/**
+ * Distilled's response schema for an operation, as an Effect `Schema`. From
+ * `1.0.0-rc.18` the generated module exports the shapes as types only, and an
+ * operation's `output` is a lite schema (`@distilled.cloud/core/schema-lite-impl`),
+ * not an Effect schema; `toEffect` rebuilds the Effect schema Distilled's own
+ * strict checker is tested against.
+ */
+const effectSchemaOf = (operation: { readonly output: unknown }) => {
+  const { output } = operation;
+  if (!isLite(output)) throw new TypeError("the operation's output is not a lite schema");
+  const schema = toEffect(Schema, output.ast);
+  if (!Schema.isSchema(schema)) throw new TypeError("toEffect returned no Effect schema");
+  return schema;
+};
+
+/** Distilled's response schemas for the fixtures. */
+const Schemas = {
+  CheckoutSession: effectSchemaOf(Distilled.GetCheckoutSession),
+  PaymentIntent: effectSchemaOf(Distilled.GetPaymentIntent),
+  Product: effectSchemaOf(Distilled.GetProduct),
+  Subscription: effectSchemaOf(Distilled.GetSubscription),
+};
 
 /** `text` with every regular-expression metacharacter escaped. */
 const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -96,44 +116,44 @@ const without = (fixture: Readonly<Record<string, unknown>>, member: string) =>
 
 describe("endive fixtures", () => {
   it("the subscription is endive-shaped: Distilled's schema decodes it strictly", () => {
-    expect(() => strictly(Distilled.Subscription, endiveSubscription)).not.toThrow();
+    expect(() => strictly(Schemas.Subscription, endiveSubscription)).not.toThrow();
   });
 
   it("the checkout session is endive-shaped: Distilled's schema decodes it strictly", () => {
-    expect(() => strictly(Distilled.CheckoutSession, endiveCheckoutSession)).not.toThrow();
+    expect(() => strictly(Schemas.CheckoutSession, endiveCheckoutSession)).not.toThrow();
   });
 
   it("the payment intent is endive-shaped: Distilled's schema decodes it strictly", () => {
-    expect(() => strictly(Distilled.PaymentIntent, endivePaymentIntent)).not.toThrow();
+    expect(() => strictly(Schemas.PaymentIntent, endivePaymentIntent)).not.toThrow();
   });
 
   it("the product is endive-shaped: Distilled's schema decodes it strictly", () => {
-    expect(() => strictly(Distilled.Product, endiveProduct)).not.toThrow();
+    expect(() => strictly(Schemas.Product, endiveProduct)).not.toThrow();
   });
 
   it("the payment intent and the product carry no member Distilled's schema lacks", () => {
-    expect(() => strictly(Distilled.PaymentIntent, endivePaymentIntent, closed)).not.toThrow();
-    expect(() => strictly(Distilled.Product, endiveProduct, closed)).not.toThrow();
+    expect(() => strictly(Schemas.PaymentIntent, endivePaymentIntent, closed)).not.toThrow();
+    expect(() => strictly(Schemas.Product, endiveProduct, closed)).not.toThrow();
   });
 
   it("an invented member is caught by the closed decode", () => {
     expect(() =>
-      strictly(Distilled.PaymentIntent, { ...endivePaymentIntent, invented_member: 1 }, closed),
+      strictly(Schemas.PaymentIntent, { ...endivePaymentIntent, invented_member: 1 }, closed),
     ).toThrow(failureAt("Expected no excess property", "invented_member"));
     expect(() =>
-      strictly(Distilled.Product, { ...endiveProduct, invented_member: 1 }, closed),
+      strictly(Schemas.Product, { ...endiveProduct, invented_member: 1 }, closed),
     ).toThrow(failureAt("Expected no excess property", "invented_member"));
   });
 
   it("the basil subscription is not: the check would catch a stale fixture", () => {
-    expect(() => strictly(Distilled.Subscription, basilSubscription)).toThrow("Missing key");
+    expect(() => strictly(Schemas.Subscription, basilSubscription)).toThrow("Missing key");
   });
 
   it("the basil product is not: it lacks endive's `tax_details`", () => {
-    expect(() => strictly(Distilled.Product, basilProduct)).toThrow(
+    expect(() => strictly(Schemas.Product, basilProduct)).toThrow(
       failureAt("Missing key", "tax_details"),
     );
-    expect(() => strictly(Distilled.Product, without(endiveProduct, "tax_details"))).toThrow(
+    expect(() => strictly(Schemas.Product, without(endiveProduct, "tax_details"))).toThrow(
       failureAt("Missing key", "tax_details"),
     );
   });
@@ -141,7 +161,7 @@ describe("endive fixtures", () => {
   it.each(["allowed_payment_method_types", "payment_record"])(
     "a payment intent without endive's `%s` is not",
     (member) => {
-      expect(() => strictly(Distilled.PaymentIntent, without(endivePaymentIntent, member))).toThrow(
+      expect(() => strictly(Schemas.PaymentIntent, without(endivePaymentIntent, member))).toThrow(
         failureAt("Missing key", member),
       );
     },

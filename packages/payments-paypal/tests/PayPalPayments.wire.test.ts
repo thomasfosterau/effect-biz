@@ -738,12 +738,9 @@ describe("PayPalPayments errors", () => {
     const noToken: Effect.Effect<Effect.Success<Credentials["Service"]>, ConfigError> = Effect.fail(
       new ConfigError({ message: "No token" }),
     );
-    const failing = Layer.succeed(
-      Credentials,
-      // SAFETY: a consumer's credentials effect that fails at run time, which
-      // its type rules out, to reach the no-response path.
-      noToken as Credentials["Service"],
-    );
+    // Distilled's `Credentials` admits a `ConfigError` (from 1.0.0-rc.18), the
+    // no-response path this test reaches.
+    const failing = Layer.succeed(Credentials, noToken);
     const stub = stubFetch(() => jsonResponse(200, PRODUCT));
     const error = await Effect.runPromise(
       Effect.flip(Product.retrieve("PROD-1")).pipe(

@@ -735,10 +735,9 @@ export const runtimeOperations = (
   Arr.sort(
     R.keys(distilled).filter((name) => {
       const value = distilled[name];
-      return (
-        Predicate.isFunction(value) &&
-        Object.getOwnPropertyDescriptor(value, "input")?.get !== undefined
-      );
+      // An operation carries its schemas as `input` / `output`: an own getter
+      // up to 1.0.0-rc.15, inherited from 1.0.0-rc.18 (`OperationSchemas`).
+      return Predicate.isFunction(value) && "input" in value && "output" in value;
     }),
     Order.String,
   );
@@ -932,10 +931,12 @@ const renderModule = (
     'import type { RequestOptions, StripeHttp } from "./StripeHttp.js";',
     "",
     "/**",
-    " * The input and output types (each also its `Schema`) of this module's",
-    " * operations, as `@distilled.cloud/stripe/stripe` declares them.",
+    " * The input and output types of this module's operations, as",
+    " * `@distilled.cloud/stripe/stripe` declares them. Types only: from",
+    " * `1.0.0-rc.18` Distilled keeps its schemas module-private and exposes an",
+    " * operation's through its `input` / `output` (`Distilled.GetCustomer.output`).",
     " */",
-    `export { ${types.join(", ")} } from "@distilled.cloud/stripe/stripe";`,
+    `export type { ${types.join(", ")} } from "@distilled.cloud/stripe/stripe";`,
     "",
     operations.map(renderOperation).join("\n\n"),
     "",

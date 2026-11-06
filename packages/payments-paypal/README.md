@@ -12,7 +12,7 @@ The same neutral program runs on PayPal, Stripe or Airwallex — only the layer 
 pnpm add @thomasfosterau/effect-biz @thomasfosterau/effect-biz-payments-paypal effect
 ```
 
-`effect` is a peer dependency, at `^4.0.0`: that is the peer range `@distilled.cloud/paypal` and `@distilled.cloud/core` declare, and no `4.0.0-rc.*` prerelease satisfies it. Those two are dependencies, pinned exactly (they are pre-1.0): about 9 MB installed with core's `graphql` dependency (shared with the Stripe package when both are installed), of which a bundler keeps only the operations the capabilities you use call.
+`effect` is a peer dependency, at `^4.0.5`: that is the peer range `@distilled.cloud/paypal` and `@distilled.cloud/core` declare, and neither 4.0.0–4.0.4 nor a `4.0.0-rc.*` prerelease satisfies it. Those two are dependencies, pinned exactly (they are pre-1.0): about 9 MB installed with core's `graphql` dependency (shared with the Stripe package when both are installed), of which a bundler keeps only the operations the capabilities you use call.
 
 ## Usage
 
@@ -89,7 +89,7 @@ const products = PayPalPayments.productsLayer.pipe(
 
 ### Calls of your own
 
-This package publishes no PayPal REST client of its own: `./PayPal` (`PayPalClient`, `PayPal.layer` / `layerFromEnv` / `make`, `PayPalRequest`) was removed once the capabilities ran on Distilled. For an endpoint the capabilities do not cover, call `@distilled.cloud/paypal`'s operations directly, with an access token you obtained yourself (this package's OAuth login is internal to `layer` / `layerFromEnv`). Depend on `@distilled.cloud/paypal` at exactly this package's version of it (`1.0.0-rc.15` today; check this package's `dependencies` after an upgrade):
+This package publishes no PayPal REST client of its own: `./PayPal` (`PayPalClient`, `PayPal.layer` / `layerFromEnv` / `make`, `PayPalRequest`) was removed once the capabilities ran on Distilled. For an endpoint the capabilities do not cover, call `@distilled.cloud/paypal`'s operations directly, with an access token you obtained yourself (this package's OAuth login is internal to `layer` / `layerFromEnv`). Depend on `@distilled.cloud/paypal` at exactly this package's version of it (`1.0.0-rc.18` today; check this package's `dependencies` after an upgrade):
 
 ```typescript
 import { Effect, Layer, Redacted } from "effect";
@@ -109,7 +109,7 @@ const order = getOrder({ id: "5O190127TN364715T" }).pipe(
 
 Distilled's own request policy then applies, not this package's: its failures are Distilled's error classes, not `PaymentsError`; it retries 5xx and 429 responses by default; and a write is deduplicated only by the `payPalRequestId` you pass.
 
-Distilled's input types (`@distilled.cloud/paypal` `1.0.0-rc.15`) declare optional members as bare `?: T`. Under `exactOptionalPropertyTypes`, a call that forwards an optional of its own (`createProduct({ name, type: "SERVICE", description })` with `description: string | undefined`) fails to type-check: omit an absent member rather than pass `undefined`. The capability layers are unaffected; their params take `?: T | undefined`.
+Distilled's input types (`@distilled.cloud/paypal` `1.0.0-rc.18`) declare optional members as bare `?: T`. Under `exactOptionalPropertyTypes`, a call that forwards an optional of its own (`createProduct({ name, type: "SERVICE", description })` with `description: string | undefined`) fails to type-check: omit an absent member rather than pass `undefined`. The capability layers are unaffected; their params take `?: T | undefined`.
 
 ### Runtime: a `process` global
 
