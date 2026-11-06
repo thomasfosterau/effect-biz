@@ -103,6 +103,18 @@ export const stubApi = <Call>(
   return { calls, requests: stub.calls, http: stub.http, fetch: stub.fetch };
 };
 
+/** A promise the test itself built (a stub's latch, a nested run) rejected. */
+export class TestPromiseRejected extends Schema.TaggedError<
+  TestPromiseRejected,
+  { readonly brand: unique symbol }
+>()("TestPromiseRejected", { cause: Schema.Defect() }) {}
+
+/** Await a promise the test built, failing with `TestPromiseRejected` if it rejects. */
+export const awaitTestPromise = <A>(
+  evaluate: () => Promise<A>,
+): Effect.Effect<A, TestPromiseRejected> =>
+  Effect.tryPromise({ try: evaluate, catch: (cause) => new TestPromiseRejected({ cause }) });
+
 /** Let pending promises (the stubbed `fetch`) settle. */
 export const macrotask = Effect.callback<void>((resume) => {
   const timer = setTimeout(() => resume(Effect.void), 0);

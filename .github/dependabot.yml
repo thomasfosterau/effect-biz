@@ -1,30 +1,33 @@
 # Dependabot version-update configuration. Copied in shape from the
 # effect-finance repository.
 #
-# `groups` collect dependencies that MUST move together, so a set never
-# drifts apart across two PRs. Dependabot puts a dependency in the FIRST group
-# that matches it, so the groups run specific → general and every broad
-# pattern carries `exclude-patterns` for the sets above it.
+# `groups` exist only for sets that MUST move together (one release train
+# with exact cross-pins, or a hard compatibility table), so a lockstep set
+# never drifts apart across two PRs. Everything else gets its own PR.
+# Dependabot puts a dependency in the FIRST group that matches it, so
+# `exclude-patterns` keeps a package out of a group that would otherwise
+# claim it.
 #
 # - `toolchain`: vite-plus pins the `oxlint`, `oxfmt`, `oxlint-tsgolint` and
 #   `vitest` it carries, and `effect-tsgo patch` matches the native `tsc`
 #   (@typescript/native) and vite-plus's `oxlint` / `oxlint-tsgolint` by
 #   gitHead / version, failing `pnpm install` on any pairing it has no
-#   artifact for. The Effect lint rules (@enfect/oxlint) load into that oxlint,
-#   and fallow is the change-set audit. One PR moves them all; when it fails at
-#   install, pick the @effect/tsgo release whose `components` table covers the
-#   new oxlint / tsgolint by hand on that branch.
+#   artifact for. One PR moves them all; when it fails at install, pick the
+#   @effect/tsgo release whose `components` table covers the new oxlint /
+#   tsgolint by hand on that branch. (@enfect/oxlint takes `@oxlint/plugins`
+#   through a `^` range, so it is not tied to the set and comes on its own.)
 # - `distilled`: the three @distilled.cloud packages pin each other exactly.
 #   A Distilled bump also regenerates the Stripe resource modules, which
 #   Dependabot cannot do: finish the PR by hand (AGENTS.md, Common pitfalls).
-#   The optional `stripe` SDK peer tracks Distilled's Stripe API version
-#   (effect-finance#160), so it rides in this group; its majors and minors are
-#   ignored below because they move only on a Distilled bump.
+#   The optional `stripe` SDK peer's majors and minors follow Distilled's
+#   Stripe API version (effect-finance#160) and are ignored below: they move
+#   by hand on a Distilled bump. Its patches come on their own.
 # - `effect`: the Effect 4 release line is a lockstep-versioned singleton set,
-#   moved together with the consuming applications.
-# - `docgen`: @effect/docgen runs its examples with `tsx`.
-# - `changesets`: release tooling.
-# - `minor-and-patch`: everything else that is not a major, in one PR.
+#   moved together with the consuming applications. @effect/docgen is on the
+#   same line: it depends on `effect` itself, which the singleton override
+#   forces onto the catalog pin, so a docgen ahead of `effect` breaks.
+#   @effect/tsgo is the toolchain's and @effect/language-service has its own
+#   release line, so neither is in it.
 #
 # By hand, because Dependabot cannot move them (AGENTS.md lists them too):
 # - the npm-alias catalog entries: `vite`
@@ -59,27 +62,27 @@ updates:
       exclude:
         - "@thomasfosterau/*"
     groups:
+      # vite-plus pins oxlint and vitest exactly; @effect/tsgo's patch supports
+      # only the oxlint / TypeScript pairs its components table lists.
       toolchain:
         applies-to: version-updates
         patterns:
           - "vite-plus"
           - "vite"
+          - "@voidzero-dev/*"
           - "vitest"
           - "@vitest/*"
-          - "oxlint"
-          - "oxfmt"
-          - "oxlint-tsgolint"
           - "@effect/tsgo"
           - "@typescript/native"
           - "typescript"
           - "@typescript/typescript6"
-          - "@enfect/oxlint"
-          - "fallow"
+      # The @distilled.cloud packages pin each other (and core) exactly.
       distilled:
         applies-to: version-updates
         patterns:
           - "@distilled.cloud/*"
-          - "stripe"
+      # One Effect release train; docgen depends on `effect` and must not run
+      # ahead of it.
       effect:
         applies-to: version-updates
         patterns:
@@ -87,41 +90,7 @@ updates:
           - "@effect/*"
         exclude-patterns:
           - "@effect/tsgo"
-          - "@effect/docgen"
-      docgen:
-        applies-to: version-updates
-        patterns:
-          - "@effect/docgen"
-          - "tsx"
-      changesets:
-        applies-to: version-updates
-        patterns:
-          - "@changesets/*"
-      minor-and-patch:
-        applies-to: version-updates
-        patterns:
-          - "*"
-        exclude-patterns:
-          - "vite-plus"
-          - "vite"
-          - "vitest"
-          - "@vitest/*"
-          - "oxlint"
-          - "oxfmt"
-          - "oxlint-tsgolint"
-          - "@effect/*"
-          - "@typescript/*"
-          - "typescript"
-          - "@enfect/oxlint"
-          - "fallow"
-          - "effect"
-          - "tsx"
-          - "@changesets/*"
-          - "@distilled.cloud/*"
-          - "stripe"
-        update-types:
-          - "minor"
-          - "patch"
+          - "@effect/language-service"
     ignore:
       # The SDK is only an optional peer: its types serve the SDK-based
       # `./Webhook` verifier (`constructEvent*`), and no module loads it
@@ -143,8 +112,3 @@ updates:
       prefix: "chore"
     cooldown:
       default-days: 1
-    groups:
-      github-actions:
-        applies-to: version-updates
-        patterns:
-          - "*"

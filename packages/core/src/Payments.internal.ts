@@ -767,11 +767,7 @@ const readPageCursor = (
 };
 
 /** `page`, vendor page `pageNumber`, with the cursor of the next one when it has more. */
-const withPageCursor = <A>(
-  page: Page<A>,
-  pageNumber: number,
-  limit: number | undefined,
-): Page<A> =>
+const withPageCursor = <A>(page: Page<A>, pageNumber: number, limit: number | undefined): Page<A> =>
   page.hasMore
     ? {
         ...page,

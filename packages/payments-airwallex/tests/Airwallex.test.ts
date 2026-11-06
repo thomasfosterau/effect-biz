@@ -19,6 +19,7 @@ import {
 } from "@thomasfosterau/effect-biz/Payments";
 import { AirwallexClient, layerFromEnv, make, type AirwallexConfig } from "../src/Airwallex.ts";
 import {
+  awaitTestPromise,
   type CapturedRequest,
   jsonResponse,
   macrotask,
@@ -277,7 +278,7 @@ describe("Airwallex client", () => {
         const slow = yield* Effect.forkChild(
           failureOf(client.request({ method: "GET", path: "/api/v1/pa/customers/SLOW" })),
         );
-        yield* Effect.tryPromise(() => slowStarted);
+        yield* awaitTestPromise(() => slowStarted);
         // Refreshes the token (login 2) while the T1 request is in flight.
         yield* client.request({ method: "GET", path: "/api/v1/pa/customers/FAST" });
         releaseSlow();

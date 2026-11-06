@@ -17,7 +17,14 @@ import {
 } from "@thomasfosterau/effect-biz/Payments";
 import * as PayPalPayments from "../src/PayPalPayments.ts";
 import type { PayPalConfig } from "../src/PayPalPayments.ts";
-import { type CapturedRequest, jsonResponse, stubFetch, toJson, withTestClock } from "./support.ts";
+import {
+  awaitTestPromise,
+  type CapturedRequest,
+  jsonResponse,
+  stubFetch,
+  toJson,
+  withTestClock,
+} from "./support.ts";
 
 /**
  * The OAuth session behind `PayPalPayments.layer` / `layerFromEnv`
@@ -144,7 +151,7 @@ describe("PayPalPayments session: the cached token", () => {
       run(
         Effect.gen(function* () {
           const slow = yield* Effect.forkChild(Effect.flip(Product.retrieve("SLOW")));
-          yield* Effect.tryPromise(() => slowStarted);
+          yield* awaitTestPromise(() => slowStarted);
           // Refreshes the token (login 2) while the SLOW call is in flight.
           yield* Product.retrieve("FAST");
           releaseSlow();

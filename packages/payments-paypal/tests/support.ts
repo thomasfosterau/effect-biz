@@ -16,6 +16,7 @@ import * as PayPalPayments from "../src/PayPalPayments.ts";
 import { type CapturedRequest, stubApi } from "../../../tests/stubs.ts";
 
 export {
+  awaitTestPromise,
   type CapturedRequest,
   jsonResponse,
   reachableFrom,
