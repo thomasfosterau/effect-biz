@@ -17,9 +17,9 @@
 #
 # Lockstep sets (each one Dependabot group in .github/dependabot.yml):
 # `toolchain` (vite-plus and the oxlint / oxfmt / oxlint-tsgolint / vitest it
-# pins, @vitest/*, @effect/tsgo, the TypeScript 6/7 pair, @enfect/oxlint,
-# fallow), `distilled` (@distilled.cloud/* + stripe), `effect` (effect +
-# @effect/*), `docgen` (@effect/docgen + tsx), `changesets`. By hand, because
+# pins, @vitest/*, @effect/tsgo, the TypeScript 6/7 pair), `distilled`
+# (@distilled.cloud/*), `effect` (effect + @effect/*, @effect/docgen
+# included); everything else is its own Dependabot PR. By hand, because
 # Dependabot cannot: the npm-alias entries `vite` (must equal vite-plus),
 # `typescript` and `@typescript/native` (a pairing @effect/tsgo supports), and
 # the `overrides` literals below.
@@ -79,9 +79,9 @@ catalog:
   # The Effect lint rules (`effect/*`, anti-slop included), registered as an
   # oxlint JS plugin through `configs.recommended` in vite.config.ts. It
   # depends on `effect` 4.1.0 exactly, but the `effect` override below forces
-  # it onto the workspace singleton, which it lints fine against. In the
-  # `toolchain` Dependabot group: a release can add rules at `error`, so it
-  # lands with a `vp check` run.
+  # it onto the workspace singleton, which it lints fine against. Not in the
+  # `toolchain` group (its `@oxlint/plugins` range is a `^`): a release can
+  # add rules at `error`, so its own PR lands with a `vp check` run.
   "@enfect/oxlint": ^0.9.0
   "@types/node": ^26.6.6
   "@vitest/coverage-istanbul": 5.0.5
