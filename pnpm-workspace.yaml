@@ -61,34 +61,33 @@ catalog:
   # which the `effect` singleton override below would contradict. Needs `tsx`
   # and a TypeScript JS API (peer `typescript <7`) — the TS6 alias below
   # satisfies it; the examples themselves type-check under the native `tsc`.
-  "@effect/docgen": 4.0.6
+  "@effect/docgen": 4.1.2
   "@effect/language-service": ^0.87.5
-  "@effect/platform-node": 4.0.6
+  "@effect/platform-node": 4.1.2
   # Effect Language Service as a native (TypeScript-Go) binary — the TS7 side
   # of the 6/7 split. `effect-tsgo patch` overwrites the native `tsc` binary
   # with an Effect-patched build matched by gitHead, so this pins in lockstep
-  # with `@typescript/native` below (0.63.0 ships against typescript 7.0.2) and
-  # with the `oxlint` that `vite-plus` pulls in (0.63.0 supports oxlint 1.88.0
-  # through 1.90.0 and oxlint-tsgolint 7.0.2004 / 7.0.2005; vite-plus 1.4.0
-  # carries oxlint 1.89.0 and oxlint-tsgolint 7.0.2004).
+  # with `@typescript/native` below (0.67.3 ships against typescript 7.0.2) and
+  # with the `oxlint` that `vite-plus` pulls in (0.67.3 patches the oxlint
+  # 1.91.0 and oxlint-tsgolint 7.0.2005 that vite-plus 1.5.0 carries).
   # Each @effect/tsgo release hard-errors (UnsupportedTargetPackageVersionError)
   # on any other component version, failing `pnpm install` itself. Read the
   # `components` table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs
   # before bumping any of the three.
-  "@effect/tsgo": 0.63.0
+  "@effect/tsgo": 0.67.3
   # The Effect lint rules (`effect/*`, anti-slop included), registered as an
   # oxlint JS plugin through `configs.recommended` in vite.config.ts. It
   # depends on `effect` 4.1.0 exactly, but the `effect` override below forces
   # it onto the workspace singleton, which it lints fine against. Not in the
   # `toolchain` group (its `@oxlint/plugins` range is a `^`): a release can
   # add rules at `error`, so its own PR lands with a `vp check` run.
-  "@enfect/oxlint": ^0.9.0
+  "@enfect/oxlint": ^0.10.0
   "@types/node": ^26.6.6
-  "@vitest/coverage-istanbul": 5.0.5
-  effect: 4.0.6
+  "@vitest/coverage-istanbul": 5.1.0
+  effect: 4.1.2
   # Dead code, duplication, complexity and the change-set audit (`fallow
   # audit`, the agent commit gate in .claude/hooks/fallow-gate.sh). Dev-only.
-  fallow: 3.37.0
+  fallow: 3.40.0
   # Exists only for docgen: @effect/docgen requires it as a peer and spawns
   # the `tsx` binary itself to run the compiled examples. Scripts and tasks
   # never invoke it; they run TypeScript with `node` or `vpx <file>.ts`.
@@ -120,11 +119,11 @@ catalog:
   # support (see the @effect/tsgo note above). `vite` is the same release
   # under its aliased core package, and `vitest` (and
   # `@vitest/coverage-istanbul`, whose peer is exact) must match vite-plus's
-  # exact pin (1.4.0 → 5.0.5) because the `vitest: "catalog:"` override forces
+  # exact pin (1.5.0 → 5.1.0) because the `vitest: "catalog:"` override forces
   # every resolution to the catalog singleton.
-  vite-plus: 1.4.0
-  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
-  vitest: 5.0.5
+  vite-plus: 1.5.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.5.0
+  vitest: 5.1.0
 
 # Peer ranges the PUBLISHED packages declare. Kept as a named catalog so the
 # strict catalog mode still governs them while they stay ranges. `pnpm publish`

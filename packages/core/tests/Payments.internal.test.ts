@@ -46,7 +46,13 @@ import {
   timeoutOf,
   tokenCache,
 } from "../src/Payments.internal.ts";
-import { jsonResponse, reachableFrom, stubFetch, withTestClock } from "../../../tests/stubs.ts";
+import {
+  awaitTestPromise,
+  jsonResponse,
+  reachableFrom,
+  stubFetch,
+  withTestClock,
+} from "../../../tests/stubs.ts";
 
 class LoginFailed extends Schema.TaggedError<LoginFailed>()("LoginFailed", {
   attempt: Schema.Number,
@@ -564,7 +570,7 @@ describe("observeResponses", () => {
     const results = await Effect.runPromise(
       Effect.forEach(
         bodies,
-        (body) => Effect.tryPromise(() => observe(() => new Response(body, { status: 200 }))),
+        (body) => awaitTestPromise(() => observe(() => new Response(body, { status: 200 }))),
         { concurrency: 1 },
       ),
     );
