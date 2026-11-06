@@ -36,7 +36,7 @@ vp test run tests/index.test.ts           # single file (from inside the package
 vp run -r build                           # emit dist/
 vp run docgen                             # type-check and run every JSDoc @example and README block
 vp run test:coverage                      # one Istanbul map for the workspace
-fallow audit --base origin/trunk          # dead code, complexity, boundaries for this change set
+vp exec fallow audit --base origin/trunk  # dead code, complexity, boundaries for this change set
 ```
 
 Workflows are hardened for Dependabot PRs: `permissions: {}` by default, actions pinned to commit SHAs, no persisted checkout credentials outside the Release job, no secrets in CI, and the Release job never runs for Dependabot. `uvx zizmor --offline .github` audits them.

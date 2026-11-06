@@ -69,7 +69,7 @@ Package-local terms, invariants and import boundaries live in each package's `CL
 - `vp run --filter ./packages/payments-stripe generate:resources` (offline) — regenerate the Stripe resource modules from the installed `@distilled.cloud/stripe` and `scripts/resources.ts`; run it after a Distilled bump or a change to `scripts/`.
 - `vp run docgen` — every package's `@effect/docgen`: type-checks and runs each JSDoc example and README block against `dist/` (it builds first), and writes the git-ignored API reference to `packages/*/docs/`.
 - `vp run test:coverage` — every package's unit suite under one Istanbul map at `coverage/coverage-final.json`, which `fallow audit` reads for exact per-function CRAP scores.
-- `fallow dead-code` / `fallow audit --base origin/trunk` — dead code, duplication, complexity and the package boundaries (`.fallowrc.json`: core imports no provider, a provider imports only core), and the change-set gate.
+- `vp exec fallow dead-code` / `vp exec fallow audit --base origin/trunk` — dead code, duplication, complexity and the package boundaries (`.fallowrc.json`: core imports no provider, a provider imports only core), and the change-set gate.
 - `pnpm changeset` — add a changeset.
 
 Invoke everything through `vp` (`vp exec` instead of `npx`; `vp run <task>` instead of bare `pnpm`). The sanctioned non-`vp` invocations: `pnpm install` (`--frozen-lockfile` in CI), `pnpm changeset` / `pnpm publish` on the release path.
@@ -84,7 +84,7 @@ Before you report work as done, run the gates below in order and quote each comm
 4. `vp run -r build`
 5. `vp run docgen`
 6. `pnpm audit --audit-level high` (network)
-7. `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent --base origin/trunk` (the fallow gate below; not a CI step).
+7. `vp run test:coverage`, then `vp exec fallow audit --format json --quiet --explain --gate-marker agent --base origin/trunk` (the fallow gate below; not a CI step).
 
 Steps 1–6 are CI's one job, in its order ([ci.yml](.github/workflows/ci.yml)). Every workflow defaults to `permissions: {}`, pins each action to a commit SHA, checks out without persisted credentials (except the Release job, whose Changesets step pushes), sets up Node as `"*"` with `check-latest` (never `latest`, which resolves to pre-releases), and never runs the Release job for Dependabot; CI needs no secret, so Dependabot PRs run it safely. `uvx zizmor --offline .github` audits the workflows (config in `.github/zizmor.yml`). For CI parity, start from a clean tree: `rm -rf node_modules packages/*/node_modules packages/*/dist && pnpm install --frozen-lockfile`.
 
@@ -107,7 +107,7 @@ Read the installed package before writing Effect code: `node_modules/effect/dist
 
 ## Agent sessions
 
-The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `node_modules/.bin` (`vp`, `fallow`, `tsx`) on PATH. It hydrates no secrets. `.claude/settings.json` also formats every file an Edit / Write touches (`vp fmt --write`) and runs the fallow gate before every `git commit` / `git push` (`.claude/hooks/fallow-gate.sh`, which blocks on a `fail` verdict from `fallow audit --base origin/trunk` and reads the coverage map on disk, so run `vp run test:coverage` first).
+The SessionStart hook (`.claude/hooks/session-start.sh`) installs the global Vite+ CLI at the catalog's `vite-plus` pin with the official installer (npm-provenance and SHA-512 checked; the session's network must allow `vite.plus` and `viteplus.dev`), links `vp` and `vpx` into `~/.local/bin`, and runs `vp install --frozen-lockfile`. Nothing else goes on PATH: the global `vp` delegates to each checkout's own `vite-plus` (worktrees included), fallow runs as `vp exec fallow …`, and TypeScript scripts as `vpx <file>.ts`. If the installer can't run, `vp` falls back to this checkout's `node_modules` copy. It hydrates no secrets. `.claude/settings.json` also formats every file an Edit / Write touches (`vp fmt --write`) and runs the fallow gate before every `git commit` / `git push` (`.claude/hooks/fallow-gate.sh`, which blocks on a `fail` verdict from `fallow audit --base origin/trunk` run through `vp exec fallow`, and reads the coverage map on disk, so run `vp run test:coverage` first). The gate runs only in this checkout and its `.claude/worktrees/*`: from any other tree it runs none of that tree's tooling and skips the audit with a notice.
 
 ## Documentation surfaces
 
