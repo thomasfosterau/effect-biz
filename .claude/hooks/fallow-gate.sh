@@ -32,9 +32,9 @@ if ! printf '%s\n' "$CMD" | grep -Eq '(^|[[:space:];|&()])git[[:space:]]+(commit
 fi
 
 # --- Trusted checkouts and the vp runner: local deviation from the generated script ---
-# This gate audits the directory it runs in (Claude Code's working directory),
-# and everything below runs code from that checkout: fallow from its
-# node_modules. Only this project and its `.claude/worktrees/*` checkouts are
+# This gate audits the checkout it runs in (the top level of Claude Code's
+# working directory), and everything below runs code from that checkout:
+# fallow from its node_modules. Only this project and its `.claude/worktrees/*` checkouts are
 # trusted for that; a commit made from any other tree (a scratch clone, a
 # third-party checkout) is not this gate's to audit, so it says so and runs
 # nothing there rather than execute what that tree carries. Inside a trusted
@@ -45,17 +45,27 @@ fi
 # pnpm and Vite+, and never runs a fallow it did not install.
 # `fallow hooks install --target agent --agent claude` overwrites this script
 # without asking, so re-apply this block after regenerating.
+# The check is made on the checkout's top level, so a commit run from a
+# subdirectory is still audited, and a worktree is exactly one path component
+# under `.claude/worktrees/`, so a repository nested inside one is not trusted.
 GATE_PROJECT="${CLAUDE_PROJECT_DIR:-}"
 GATE_PROJECT="${GATE_PROJECT%/}"
-case "$PWD" in
-  "$GATE_PROJECT" | "$GATE_PROJECT"/.claude/worktrees/*) ;;
-  *)
-    if [ -n "$GATE_PROJECT" ]; then
-      echo "fallow-gate: $PWD is not this project or one of its worktrees; not running its tooling, skipping audit." >&2
-      exit 0
-    fi
+GATE_CHECKOUT="$(git rev-parse --show-toplevel 2>/dev/null || printf '%s' "$PWD")"
+GATE_TRUSTED=
+case "$GATE_CHECKOUT" in
+  "$GATE_PROJECT") GATE_TRUSTED=1 ;;
+  "$GATE_PROJECT"/.claude/worktrees/*)
+    case "${GATE_CHECKOUT#"$GATE_PROJECT"/.claude/worktrees/}" in
+      */* | '') ;;
+      *) GATE_TRUSTED=1 ;;
+    esac
     ;;
 esac
+if [ -n "$GATE_PROJECT" ] && [ -z "$GATE_TRUSTED" ]; then
+  echo "fallow-gate: $GATE_CHECKOUT is not this project or one of its worktrees; not running its tooling, skipping audit." >&2
+  exit 0
+fi
+cd "$GATE_CHECKOUT" || exit 0
 if command -v vp >/dev/null 2>&1 && [ -x ./node_modules/.bin/fallow ]; then
   RUNNER=(vp exec fallow)
   BIN_DESC="vp exec fallow ($PWD/node_modules/.bin/fallow)"
