@@ -1,7 +1,7 @@
 name: Release
 
 # Changesets release flow (copied from the effect-finance repository, itself from
-# the effect-web library): on every push to `main`, changesets/action
+# the effect-web library): on every push to `trunk`, changesets/action
 # either opens/updates the "Version Packages" PR (when unreleased changesets
 # exist) or, when that PR has merged and no changesets remain, publishes every
 # package to npmjs (OIDC trusted publishing — no token, no GitHub Packages)
@@ -9,7 +9,7 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    branches: [trunk]
 
 concurrency:
   group: release-${{ github.ref }}
