@@ -1,11 +1,10 @@
 /**
  * The consumer type-check cost of effect-finance#146: Distilled's generated operation
  * modules are large declaration files (`@distilled.cloud/stripe` puts every
- * Stripe operation in one of about 7.5 MB; `@distilled.cloud/paypal`'s
- * Orders module alone is about 0.8 MB), and a consumer whose declarations
- * reach one type-checks all of it. `StripePayments`, `StripeHttp`, `Webhook`
- * and `PayPalPayments` run on those operations but name only Distilled's
- * `Credentials` (each its own small subpath) in their declarations, so a
+ * Stripe operation in one of about 7.5 MB), and a consumer whose declarations
+ * reach one type-checks all of it. `StripePayments`, `StripeHttp` and
+ * `Webhook` run on those operations but name only Distilled's
+ * `Credentials` (its own small subpath) in their declarations, so a
  * program on the neutral capabilities never pays for them.
  *
  * The Stripe resource modules (`./Customer`, `./Invoice`, …) are re-exports of
@@ -57,7 +56,6 @@ const PACKAGES: ReadonlyArray<Package> = [
       entries: (entry) => !Arr.contains(STRIPE_LIGHT, entry),
     },
   },
-  { directory: "payments-paypal", light: "@distilled.cloud/paypal/Credentials" },
 ];
 
 const failures = PACKAGES.flatMap(({ directory, light, heavy }) => {

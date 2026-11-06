@@ -4,8 +4,6 @@
   "references": [
     { "path": "packages/core" },
     { "path": "packages/payments-stripe" },
-    { "path": "packages/payments-paypal" },
-    { "path": "packages/payments-airwallex" },
     { "path": "tests/dist-consumer" }
   ]
 }

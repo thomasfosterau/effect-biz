@@ -26,7 +26,7 @@ console.log(name);
 
 A vendor-neutral payments core for Effect, under `@thomasfosterau/effect-biz/Payments` (the barrel) and `@thomasfosterau/effect-biz/Payments.<Module>` (one module each).
 
-Write your payment workflows against provider-agnostic capabilities, and choose the provider at the edge of your application by the layer you provide: [`@thomasfosterau/effect-biz-payments-stripe`](https://www.npmjs.com/package/@thomasfosterau/effect-biz-payments-stripe), [`-paypal`](https://www.npmjs.com/package/@thomasfosterau/effect-biz-payments-paypal) or [`-airwallex`](https://www.npmjs.com/package/@thomasfosterau/effect-biz-payments-airwallex). It is the payments analogue of Effect's AI modules: one abstraction, one package per provider.
+Write your payment workflows against provider-agnostic capabilities, and choose the provider at the edge of your application by the layer you provide: [`@thomasfosterau/effect-biz-payments-stripe`](https://www.npmjs.com/package/@thomasfosterau/effect-biz-payments-stripe) today. It is the payments analogue of Effect's AI modules: one abstraction, one package per provider.
 
 Add a provider package to run a program.
 
@@ -53,7 +53,7 @@ const onboard = (email: string, priceId: string) =>
 
 Run it by providing a provider's layer, for example `StripePayments.layer` from `@thomasfosterau/effect-biz-payments-stripe`. Swapping providers means swapping the layer, not the program.
 
-Providers may implement only the capabilities they support: Airwallex covers customers, payment intents and refunds; PayPal covers products, prices, payment intents, subscriptions and refunds, but has no customers. The type system enforces this: a program that needs a capability the provided layer doesn't supply does not type-check. An individual operation a provider lacks (deleting an Airwallex customer, listing PayPal orders) fails with `PaymentInvalidRequestError`; each provider's README lists them.
+Providers may implement only the capabilities they support (Stripe implements every one). The type system enforces this: a program that needs a capability the provided layer doesn't supply does not type-check. An individual operation a provider lacks fails with `PaymentInvalidRequestError`; each provider's README lists them.
 
 ### Capabilities
 
@@ -160,24 +160,19 @@ const refund = (paymentIntent: string) =>
 
 The rules:
 
-- **One key per logical write**, created by the caller _before the first attempt_ (`IdempotencyKey.generate`, or your own id for the operation, such as `refund-${orderId}`) and passed unchanged on every retry. A key generated inside the retried effect is a new key per attempt and protects nothing. Never reuse a key for a different write: a provider answers the same key with different parameters with an error rather than the original outcome. Stripe's is `idempotency_error`, which surfaces as `PaymentProviderError` with code `StripeIdempotencyError` (not `PaymentInvalidRequestError`). PayPal's API specifications do not say what it answers, and Airwallex's behaviour here is unverified.
-- **Accepted on the create and confirm operations** that every provider implementing them can honour: `Customer.create`, `Product.create`, `Price.create`, `PaymentIntent.create` / `confirm`, `Subscription.create`, `Refund.create`, `CheckoutSession.create`. It is optional, and a program that passes none behaves as before. Updates are set-semantics and repeatable. `Subscription.cancel` and `PaymentIntent.cancel` do **not** take one (PayPal cannot honour a key there), and neither does `BillingPortal.create`: the option is absent from their types, so passing one does not compile.
+- **One key per logical write**, created by the caller _before the first attempt_ (`IdempotencyKey.generate`, or your own id for the operation, such as `refund-${orderId}`) and passed unchanged on every retry. A key generated inside the retried effect is a new key per attempt and protects nothing. Never reuse a key for a different write: a provider answers the same key with different parameters with an error rather than the original outcome. Stripe's is `idempotency_error`, which surfaces as `PaymentProviderError` with code `StripeIdempotencyError` (not `PaymentInvalidRequestError`).
+- **Accepted on the create and confirm operations** that every provider implementing them can honour: `Customer.create`, `Product.create`, `Price.create`, `PaymentIntent.create` / `confirm`, `Subscription.create`, `Refund.create`, `CheckoutSession.create`. It is optional, and a program that passes none behaves as before. Updates are set-semantics and repeatable. `Subscription.cancel` and `PaymentIntent.cancel` do **not** take one (not every provider can honour a key there; PayPal, a former provider, could not), and neither does `BillingPortal.create`: the option is absent from their types, so passing one does not compile.
 - **Retry only when the outcome is unknown or the write was not applied**: `PaymentNetworkError`, `PaymentProviderError` with `statusCode >= 500` (a vendor 5xx surfaces as this, not as `PaymentNetworkError`) and `PaymentRateLimitError` (back off for `retryAfter` first). Do not retry `PaymentInvalidRequestError`, `PaymentAuthenticationError`, or a `PaymentProviderError` below 500 (including Stripe's `StripeIdempotencyError`): they fail the same way again.
 - **The shape is the lowest common denominator**: 1 to 64 characters from `A-Z a-z 0-9 _ -` (a UUID is 36). `IdempotencyKey.IdempotencyKey` is the branded `Schema`; `IdempotencyKey.IdempotencyKey.make` (throws on a bad shape) or `IdempotencyKey.validate` (fails with `PaymentInvalidRequestError`) check a value of your own, and a raw string that slips past the types fails with `PaymentInvalidRequestError` before anything is sent.
-- **A window, not forever**: providers remember a key for a limited time, differing per provider and, on PayPal, per API. Treat a retry within a few hours as safe, and a later one as a new write. On PayPal a `PaymentIntent.create` / `confirm` retry is deduplicated only within 6 hours, the Orders API's default. The figures, PayPal's from its published OpenAPI specifications (pinned at commit `90e8041`):
+- **A window, not forever**: providers remember a key for a limited time, differing per provider. Treat a retry within a few hours as safe, and a later one as a new write. The figures:
 
-  | Provider and API | Key length | Kept for | Source |
+  | Provider | Key length | Kept for | Source |
   | --- | --- | --- | --- |
-  | PayPal Orders (`PaymentIntent.create` / `confirm`) | 1 to 108 characters | 6 hours (up to 72 on request to PayPal) | [`checkout_orders_v2.json`](https://raw.githubusercontent.com/paypal/paypal-rest-api-specifications/90e8041ffe02d80c452d2b476bedd59a8d219bdc/openapi/checkout_orders_v2.json) |
-  | PayPal Catalog Products (`Product.create`) | not stated | 72 hours | [`catalogs_products_v1.json`](https://raw.githubusercontent.com/paypal/paypal-rest-api-specifications/90e8041ffe02d80c452d2b476bedd59a8d219bdc/openapi/catalogs_products_v1.json) |
-  | PayPal Subscriptions (`Price.create`, `Subscription.create`) | not stated | 72 hours | [`billing_subscriptions_v1.json`](https://raw.githubusercontent.com/paypal/paypal-rest-api-specifications/90e8041ffe02d80c452d2b476bedd59a8d219bdc/openapi/billing_subscriptions_v1.json) |
-  | PayPal Payments (`Refund.create`) | 1 to 10 000 characters | not stated | [`payments_payment_v2.json`](https://raw.githubusercontent.com/paypal/paypal-rest-api-specifications/90e8041ffe02d80c452d2b476bedd59a8d219bdc/openapi/payments_payment_v2.json) |
   | Stripe | 255 characters | at least 24 hours | unverified ([effect-finance#93](https://github.com/thomasfosterau/effect-finance/issues/93)) |
-  | Airwallex | about 64 characters | unknown | unverified ([effect-finance#93](https://github.com/thomasfosterau/effect-finance/issues/93)) |
 
-  The 1 to 64 character shape fits PayPal's Orders (1 to 108) and Payments (refunds, 1 to 10 000) limits; PayPal states no limit for Catalog Products and Subscriptions. It stays within the unverified Stripe and Airwallex figures.
+  The 1 to 64 character shape stays within the unverified Stripe figure.
 
-Mapping: Stripe sends `Idempotency-Key`; PayPal sends `PayPal-Request-Id` (on the `POST`); Airwallex sends `request_id` in place of its fresh per-call id. Without a key, PayPal sends no id, Airwallex keeps a fresh per-call `request_id` and Stripe's client generates a key of its own per call (for its own internal retries); none of those deduplicates your retry.
+Mapping: Stripe sends `Idempotency-Key`. Without a key, Stripe's client generates a key of its own per call (for its own internal retries), which does not deduplicate your retry.
 
 ### Stubs
 

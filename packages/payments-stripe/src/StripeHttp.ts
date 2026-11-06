@@ -125,8 +125,8 @@ export interface RequestOptions {
    * Create it once, before the first attempt, and pass the same value on
    * every retry of that write; a fresh key per attempt defeats the
    * deduplication. It is sent on whatever method you pass it to; Stripe is
-   * understood to ignore it on a `GET` and `DELETE` (unverified, effect-finance#93), unlike
-   * the Airwallex client, which refuses a key on a non-`POST`. An
+   * understood to ignore it on a `GET` and `DELETE` (unverified,
+   * effect-finance#93). An
    * empty key, like an empty `stripeAccount` or `apiVersion`, fails with
    * `PaymentInvalidRequestError` before anything is sent. Without one, a
    * `POST` or a `/v2` `DELETE` that may be retried by the client gets a

@@ -31,15 +31,11 @@
   "boundaries": {
     "zones": [
       { "name": "core", "patterns": ["packages/core/src/**"] },
-      { "name": "stripe", "patterns": ["packages/payments-stripe/src/**"] },
-      { "name": "paypal", "patterns": ["packages/payments-paypal/src/**"] },
-      { "name": "airwallex", "patterns": ["packages/payments-airwallex/src/**"] }
+      { "name": "stripe", "patterns": ["packages/payments-stripe/src/**"] }
     ],
     "rules": [
       { "from": "core", "allow": [] },
-      { "from": "stripe", "allow": ["core"] },
-      { "from": "paypal", "allow": ["core"] },
-      { "from": "airwallex", "allow": ["core"] }
+      { "from": "stripe", "allow": ["core"] }
     ]
   },
   "health": {

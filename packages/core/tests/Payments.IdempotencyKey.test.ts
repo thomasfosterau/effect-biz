@@ -91,7 +91,8 @@ describe("where the neutral key is accepted (type level)", () => {
 
   it("is not accepted by the cancel operations", () => {
     // `Subscription.cancel` and `PaymentIntent.cancel` take the id and nothing else:
-    // PayPal cannot honour a key there, and a dropped key is worse than none.
+    // not every provider can honour a key there (PayPal, a former provider, could
+    // not), and a dropped key is worse than none.
     expectTypeOf(Subscription.cancel).parameters.toEqualTypeOf<[id: string]>();
     expectTypeOf(PaymentIntent.cancel).parameters.toEqualTypeOf<[id: string]>();
     expectTypeOf<Subscription.Subscriptions["Service"]["cancel"]>().parameters.toEqualTypeOf<

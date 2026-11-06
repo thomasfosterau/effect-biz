@@ -19,12 +19,7 @@ import { recommended } from "@effect/tsgo/oxlint-presets";
 import effect from "@enfect/oxlint";
 
 /** Every published package, in dependency order. A new package adds itself here. */
-const packages = [
-  "@thomasfosterau/effect-biz",
-  "@thomasfosterau/effect-biz-payments-stripe",
-  "@thomasfosterau/effect-biz-payments-paypal",
-  "@thomasfosterau/effect-biz-payments-airwallex",
-];
+const packages = ["@thomasfosterau/effect-biz", "@thomasfosterau/effect-biz-payments-stripe"];
 
 export default defineConfig({
   // Staged-file checks run by `vp staged` (pre-commit): format WITH fixes,
@@ -101,7 +96,7 @@ export default defineConfig({
       // (effect/require-safety-comment-for-type-assertion): a structural read
       // of a value the type system cannot narrow (a decoded wire body, a
       // Distilled operation's erased input, a test fixture).
-      "typescript/no-unsafe-type-assertion": "warn", // 24 sites (4 src, 2 scripts, 18 tests)
+      "typescript/no-unsafe-type-assertion": "warn", // 17 sites (4 src, 2 scripts, 11 tests)
       // `expect(value, message)`: vitest's second argument is the failure
       // message, which the jest-derived default (one argument) rejects.
       "vitest/valid-expect": ["error", { maxArgs: 2 }],
@@ -210,9 +205,9 @@ export default defineConfig({
         },
       },
       // Test suites ARE the runtime boundary: `Effect.runPromise` in a test
-      // body is the harness running the effect under test (270 sites), and a
+      // body is the harness running the effect under test (117 sites), and a
       // bare `new Error(…)` there is a fixture standing for what `fetch` or
-      // the Stripe SDK throws, which the code under test must map (11 sites).
+      // the Stripe SDK throws, which the code under test must map (7 sites).
       {
         files: ["**/tests/**/*.ts"],
         rules: {
@@ -224,10 +219,6 @@ export default defineConfig({
           // A helper declared inside the `it` that uses it keeps each case
           // self-contained; `src/` still hoists them.
           "unicorn/consistent-function-scoping": "off",
-          // Can't-apply (#162): a credentials effect that fails although its
-          // type rules it out, to reach Distilled's no-response path; no typed
-          // construction can produce it (SAFETY-commented).
-          "effecttsgo/unsafe-effect-type-assertion": "warn", // 1 site
           // The webhook suite exercises the `Buffer` payload the SDK-based
           // verifier accepts; the WebCrypto verifier (effect-finance#41) drops it.
           "eslint/no-restricted-globals": "warn",

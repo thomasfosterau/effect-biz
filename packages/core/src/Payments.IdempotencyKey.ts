@@ -38,16 +38,15 @@ const KEY_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
  *   key for a different write: a provider answers the same key with different
  *   parameters with an error, not the original outcome. Stripe's
  *   `idempotency_error` surfaces as `PaymentProviderError` with code
- *   `StripeIdempotencyError` (not `PaymentInvalidRequestError`). PayPal's
- *   API specifications do not say what it answers, and Airwallex's behaviour
- *   here is unverified (effect-finance#93).
+ *   `StripeIdempotencyError` (not `PaymentInvalidRequestError`).
  * - **Only on create and confirm operations** (`Customer.create`,
  *   `Product.create`, `Price.create`, `PaymentIntent.create` / `confirm`,
  *   `Subscription.create`, `Refund.create`, `CheckoutSession.create`): the
  *   operations every implementing provider can honour. Updates are set
  *   semantics and naturally repeatable. `Subscription.cancel` and
- *   `PaymentIntent.cancel` take none: PayPal cannot honour a key there, and a
- *   key a provider silently dropped would be worse than none.
+ *   `PaymentIntent.cancel` take none: not every provider can honour a key
+ *   there (PayPal, a former provider, could not), and a key a provider
+ *   silently dropped would be worse than none.
  * - **Retry only when the outcome is unknown or the write was not applied**:
  *   `PaymentNetworkError` (a timeout, a dropped connection),
  *   `PaymentProviderError` with `statusCode >= 500` (a vendor 5xx surfaces as
@@ -56,19 +55,13 @@ const KEY_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
  *   `PaymentAuthenticationError`, or a `PaymentProviderError` below 500
  *   (including `StripeIdempotencyError`): they fail the same way again.
  * - **A window, not forever.** Providers remember a key for a limited time
- *   that differs per provider (on PayPal, per API) and is not promised by the
- *   type. PayPal's Orders API keeps one for 6 hours by default, so a
- *   `PaymentIntent.create` / `confirm` retry on PayPal is deduplicated only
- *   within 6 hours; its Catalog Products and Subscriptions APIs keep one for
- *   72 hours, and its Payments API (refunds) states no window. Stripe's and
- *   Airwallex's windows are unverified (effect-finance#93). Treat a retry within a few hours
- *   as safe and a later one as a new write.
+ *   that differs per provider and is not promised by the type. Stripe's
+ *   window is unverified (effect-finance#93). Treat a retry within a few
+ *   hours as safe and a later one as a new write.
  * - **The shape is the lowest common denominator**: 1 to 64 characters from
- *   `A-Z a-z 0-9 _ -` (a UUID is 36). It fits PayPal's Orders (1 to 108
- *   characters) and Payments (refunds, 1 to 10 000) limits; PayPal states no
- *   limit for Catalog Products and Subscriptions. Stripe's (255) and
- *   Airwallex's (about 64) limits are unverified (effect-finance#93), so the shape is
- *   deliberately conservative.
+ *   `A-Z a-z 0-9 _ -` (a UUID is 36). Stripe's limit (255) is unverified
+ *   (effect-finance#93), so the shape is deliberately conservative: it
+ *   leaves room for a provider with a tighter limit.
  *
  * Create the key once per logical write and reuse it on every retry of that
  * write:

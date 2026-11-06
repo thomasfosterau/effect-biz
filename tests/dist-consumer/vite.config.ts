@@ -16,8 +16,6 @@ export default defineConfig({
         dependsOn: [
           "@thomasfosterau/effect-biz#build",
           "@thomasfosterau/effect-biz-payments-stripe#build",
-          "@thomasfosterau/effect-biz-payments-paypal#build",
-          "@thomasfosterau/effect-biz-payments-airwallex#build",
         ],
         cache: {
           input: [

@@ -44,17 +44,10 @@ catalog:
   # (`tests/distilledApiVersion.test.ts` and `tests/resources.test.ts` fail
   # until both are done).
   "@distilled.cloud/stripe": 1.0.0-rc.18
-  # Distilled's PayPal client (same repository and licence): the operations
-  # and wire encoding `PayPalPayments` runs on (effect-finance#146). A runtime dependency
-  # of @thomasfosterau/effect-biz-payments-paypal, pinned EXACTLY for the same
-  # reason, and moved together with the Stripe client and core. Its access
-  # token comes from the wrapper's own OAuth login, never from Distilled's
-  # `CredentialsFromEnv` (which reads `process.env`).
-  "@distilled.cloud/paypal": 1.0.0-rc.18
-  # Distilled's shared runtime, a direct dependency too: each wrapper pins its
+  # Distilled's shared runtime, a direct dependency too: the wrapper pins its
   # `ResponseValidation` reference to lenient. MUST equal the version
-  # @distilled.cloud/stripe and @distilled.cloud/paypal depend on (each pins
-  # core exactly), or two copies of core install.
+  # @distilled.cloud/stripe depends on (it pins core exactly), or two copies
+  # of core install.
   "@distilled.cloud/core": 1.0.0-rc.18
   # Compiles AND RUNS every JSDoc `@example` (the `docgen` task). Exact, like
   # the Effect pin: 4.0.1 and 4.0.2 depend on `effect ^4.0.1` / `^4.0.2`,
@@ -133,7 +126,7 @@ catalogs:
     # The peer-range policy: `^4.0.0` for every package, raised per package
     # only when that package's own dependencies require more (never because
     # our code wants a newer API: make it work on the floor instead). The
-    # core and Airwallex stay here; the Distilled-based providers use
+    # core stays here; the Distilled-based Stripe provider uses
     # `distilled-peers` below.
     effect: ^4.0.0
     # Optional (`peerDependenciesMeta`): only the types of the SDK-based
@@ -144,9 +137,9 @@ catalogs:
     # (23.0.0, `2026-09-30.endive`); the caret admits the later monthly endive
     # releases of the same major, and moves with the next major (effect-finance#160).
     stripe: ^23.0.0
-  # The Stripe and PayPal providers' own floor: their runtime dependencies
-  # @distilled.cloud/stripe, -paypal and -core (1.0.0-rc.16 and later; the
-  # pinned 1.0.0-rc.18) declare `effect: ^4.0.5`. Move it with Distilled's own
+  # The Stripe provider's own floor: its runtime dependencies
+  # @distilled.cloud/stripe and -core (1.0.0-rc.16 and later; the pinned
+  # 1.0.0-rc.18) declare `effect: ^4.0.5`. Move it with Distilled's own
   # peer range, and keep the other packages on `peers`.
   distilled-peers:
     effect: ^4.0.5

@@ -16,7 +16,7 @@
 #   @effect/tsgo release whose `components` table covers the new oxlint /
 #   tsgolint by hand on that branch. (@enfect/oxlint takes `@oxlint/plugins`
 #   through a `^` range, so it is not tied to the set and comes on its own.)
-# - `distilled`: the three @distilled.cloud packages pin each other exactly.
+# - `distilled`: the two @distilled.cloud packages pin each other exactly.
 #   A Distilled bump also regenerates the Stripe resource modules, which
 #   Dependabot cannot do: finish the PR by hand (AGENTS.md, Common pitfalls).
 #   The optional `stripe` SDK peer's majors and minors follow Distilled's

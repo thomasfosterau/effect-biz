@@ -12,21 +12,7 @@
       "@thomasfosterau/effect-biz-payments-stripe": [
         "../../packages/payments-stripe/dist/index.d.ts"
       ],
-      "@thomasfosterau/effect-biz-payments-stripe/*": [
-        "../../packages/payments-stripe/dist/*.d.ts"
-      ],
-      "@thomasfosterau/effect-biz-payments-paypal": [
-        "../../packages/payments-paypal/dist/index.d.ts"
-      ],
-      "@thomasfosterau/effect-biz-payments-paypal/*": [
-        "../../packages/payments-paypal/dist/*.d.ts"
-      ],
-      "@thomasfosterau/effect-biz-payments-airwallex": [
-        "../../packages/payments-airwallex/dist/index.d.ts"
-      ],
-      "@thomasfosterau/effect-biz-payments-airwallex/*": [
-        "../../packages/payments-airwallex/dist/*.d.ts"
-      ]
+      "@thomasfosterau/effect-biz-payments-stripe/*": ["../../packages/payments-stripe/dist/*.d.ts"]
     }
   },
   "include": ["src"]

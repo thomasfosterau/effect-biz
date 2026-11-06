@@ -15,9 +15,6 @@ catalogs:
     '@distilled.cloud/core':
       specifier: 1.0.0-rc.18
       version: 1.0.0-rc.18
-    '@distilled.cloud/paypal':
-      specifier: 1.0.0-rc.18
-      version: 1.0.0-rc.18
     '@distilled.cloud/stripe':
       specifier: 1.0.0-rc.18
       version: 1.0.0-rc.18
@@ -98,12 +95,6 @@ importers:
       '@thomasfosterau/effect-biz':
         specifier: workspace:*
         version: link:packages/core
-      '@thomasfosterau/effect-biz-payments-airwallex':
-        specifier: workspace:*
-        version: link:packages/payments-airwallex
-      '@thomasfosterau/effect-biz-payments-paypal':
-        specifier: workspace:*
-        version: link:packages/payments-paypal
       '@thomasfosterau/effect-biz-payments-stripe':
         specifier: workspace:*
         version: link:packages/payments-stripe
@@ -139,56 +130,6 @@ importers:
         version: 5.1.0(@types/node@26.6.6)(@vitest/browser-preview@5.1.0)(@vitest/coverage-istanbul@5.1.0)(@vitest/ui@5.1.0)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@26.6.6)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/core:
-    devDependencies:
-      '@effect/language-service':
-        specifier: 'catalog:'
-        version: 0.87.5
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      '@vitest/coverage-istanbul':
-        specifier: 'catalog:'
-        version: 5.1.0(vitest@5.1.0)
-      effect:
-        specifier: 4.1.2
-        version: 4.1.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-preview@5.1.0)(@vitest/coverage-istanbul@5.1.0)(@vitest/ui@5.1.0)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@26.6.6)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
-
-  packages/payments-airwallex:
-    dependencies:
-      '@thomasfosterau/effect-biz':
-        specifier: workspace:^
-        version: link:../core
-    devDependencies:
-      '@effect/language-service':
-        specifier: 'catalog:'
-        version: 0.87.5
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      '@vitest/coverage-istanbul':
-        specifier: 'catalog:'
-        version: 5.1.0(vitest@5.1.0)
-      effect:
-        specifier: 4.1.2
-        version: 4.1.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-preview@5.1.0)(@vitest/coverage-istanbul@5.1.0)(@vitest/ui@5.1.0)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@26.6.6)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
-
-  packages/payments-paypal:
-    dependencies:
-      '@distilled.cloud/core':
-        specifier: 'catalog:'
-        version: 1.0.0-rc.18(effect@4.1.2)
-      '@distilled.cloud/paypal':
-        specifier: 'catalog:'
-        version: 1.0.0-rc.18(effect@4.1.2)
-      '@thomasfosterau/effect-biz':
-        specifier: workspace:^
-        version: link:../core
     devDependencies:
       '@effect/language-service':
         specifier: 'catalog:'
@@ -242,9 +183,6 @@ importers:
 
   tests/dist-consumer:
     dependencies:
-      '@distilled.cloud/paypal':
-        specifier: 'catalog:'
-        version: 1.0.0-rc.18(effect@4.1.2)
       '@distilled.cloud/stripe':
         specifier: 'catalog:'
         version: 1.0.0-rc.18(effect@4.1.2)
@@ -376,11 +314,6 @@ packages:
 
   '@distilled.cloud/core@1.0.0-rc.18':
     resolution: {integrity: sha512-Iui60+sNl1CwUu7NKGLuFf3VC4H9xYzfm0Fc8ZQvd87qwf1sDMB3EAWZrq/QFgrwzSY16z2mJ0PNHaBUnGet8A==}
-    peerDependencies:
-      effect: 4.1.2
-
-  '@distilled.cloud/paypal@1.0.0-rc.18':
-    resolution: {integrity: sha512-g5Nj78Jv9S9WAqJLR/BkgE6vwzH2kuNYfskcovzgPv8fom6lKkHN33ObLoElTOJjJ+Y3VkgSf14bGqAaJAVSUQ==}
     peerDependencies:
       effect: 4.1.2
 
@@ -2449,11 +2382,6 @@ snapshots:
 
   '@distilled.cloud/core@1.0.0-rc.18(effect@4.1.2)':
     dependencies:
-      effect: 4.1.2
-
-  '@distilled.cloud/paypal@1.0.0-rc.18(effect@4.1.2)':
-    dependencies:
-      '@distilled.cloud/core': 1.0.0-rc.18(effect@4.1.2)
       effect: 4.1.2
 
   '@distilled.cloud/stripe@1.0.0-rc.18(effect@4.1.2)':
