@@ -1,5 +1,5 @@
 /**
- * A consumer's view of all four packages, imported through their EMITTED
+ * A consumer's view of both packages, imported through their EMITTED
  * declarations (`paths` in tsconfig.json points the package names at
  * `dist/*.d.ts`). Each block exercises the types a real consumer depends on,
  * so a declaration that degrades to `any` — or a subpath export whose `.d.ts`
@@ -11,7 +11,6 @@ import type * as Effect from "effect/Effect";
 import type * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import type { HttpClient } from "effect/http";
-import type { Credentials as PayPalCredentials } from "@distilled.cloud/paypal/Credentials";
 import type { Credentials } from "@distilled.cloud/stripe/Credentials";
 import type * as Distilled from "@distilled.cloud/stripe/stripe";
 import type Stripe from "stripe";
@@ -43,8 +42,6 @@ import * as BillingMeter from "@thomasfosterau/effect-biz-payments-stripe/Billin
 import * as V2CoreAccount from "@thomasfosterau/effect-biz-payments-stripe/V2.Core.Account";
 import * as Webhook from "@thomasfosterau/effect-biz-payments-stripe/Webhook";
 import * as StripeHttp from "@thomasfosterau/effect-biz-payments-stripe/StripeHttp";
-import * as PayPalPayments from "@thomasfosterau/effect-biz-payments-paypal/PayPalPayments";
-import * as AirwallexPayments from "@thomasfosterau/effect-biz-payments-airwallex/AirwallexPayments";
 
 /** A compile-time assertion: `T` must be exactly `true`. */
 type Assert<T extends true> = T;
@@ -75,15 +72,6 @@ export const stripeConfigLayer = StripePayments.layerConfig({ envVar: "BILLING_S
 export const stripeHttpConfigLayer = StripeHttp.layerConfig();
 export const unavailableLayer = Stub.unavailable("stripe");
 export const stripeHttpLayer = StripeHttp.layer({ apiKey: Redacted.make("sk_test_123") });
-export const paypalLayer = PayPalPayments.layer({
-  clientId: "id",
-  clientSecret: Redacted.make("secret"),
-});
-export const paypalEnvLayer = PayPalPayments.layerFromEnv();
-export const airwallexLayer = AirwallexPayments.layer({
-  clientId: "id",
-  apiKey: Redacted.make("key"),
-});
 export const stripeCustomer = StripeCustomer.retrieve("cus_123");
 /** A resource-module operation with every `RequestOptions` field, the per-call version included. */
 export const stripeCustomerAtVersion = StripeCustomer.retrieve(
@@ -144,15 +132,6 @@ export type Checks = [
   /** _stripeCapabilitiesRequireDistilled */ Assert<
     Equals<Layer.Services<typeof StripePayments.capabilities>, Credentials | HttpClient.HttpClient>
   >,
-  /** _paypalProvidesRefunds */ Assert<
-    Refund.Refunds extends Layer.Success<typeof paypalLayer> ? true : false
-  >,
-  /** _paypalHasNoCustomers */ Assert<
-    Customer.Customers extends Layer.Success<typeof paypalLayer> ? false : true
-  >,
-  /** _airwallexProvidesCustomers */ Assert<
-    Customer.Customers extends Layer.Success<typeof airwallexLayer> ? true : false
-  >,
   /** _checkoutSucceeds */ Assert<
     Equals<Effect.Success<typeof checkout>, CheckoutSession.CheckoutSession>
   >,
@@ -164,21 +143,6 @@ export type Checks = [
   >,
   /** _checkoutFails */ Assert<Equals<Effect.Error<typeof checkout>, PaymentsError>>,
   /** _portalFails */ Assert<Equals<Effect.Error<typeof portal>, PaymentsError>>,
-  /** _paypalHasNoCheckoutByDefault */ Assert<
-    CheckoutSession.CheckoutSessions extends Layer.Success<typeof paypalLayer> ? false : true
-  >,
-  /** _paypalCheckoutStub */ Assert<
-    Equals<
-      Layer.Success<typeof PayPalPayments.checkoutSessionsLayer>,
-      CheckoutSession.CheckoutSessions
-    >
-  >,
-  /** _airwallexPortalStub */ Assert<
-    Equals<
-      Layer.Success<typeof AirwallexPayments.billingPortalSessionsLayer>,
-      BillingPortal.BillingPortalSessions
-    >
-  >,
   /** _stripeResourceRequiresTransport */ Assert<
     Equals<Effect.Services<typeof stripeCustomer>, StripeHttp.StripeHttp>
   >,
@@ -234,26 +198,6 @@ export type Checks = [
   /** _stripeNeedsHttpClient */ Assert<
     Equals<Layer.Services<typeof stripeLayer>, HttpClient.HttpClient>
   >,
-  /** _paypalNeedsHttpClient */ Assert<
-    Equals<Layer.Services<typeof paypalLayer>, HttpClient.HttpClient>
-  >,
-  /** _airwallexNeedsHttpClient */ Assert<
-    Equals<Layer.Services<typeof airwallexLayer>, HttpClient.HttpClient>
-  >,
-  /** _paypalFailsWithConfig */ Assert<Equals<Layer.Error<typeof paypalLayer>, PaymentConfigError>>,
-  /** _paypalCapabilitiesRequireDistilled */ Assert<
-    Equals<
-      Layer.Services<typeof PayPalPayments.capabilities>,
-      PayPalCredentials | HttpClient.HttpClient
-    >
-  >,
-  /** _paypalProductsRequireDistilled */ Assert<
-    Equals<
-      Layer.Services<typeof PayPalPayments.productsLayer>,
-      PayPalCredentials | HttpClient.HttpClient
-    >
-  >,
-  /** _paypalEnvMatchesLayer */ Assert<Equals<typeof paypalEnvLayer, typeof paypalLayer>>,
   /** _unavailableIsPaymentsError */ Assert<
     PaymentsUnavailable extends PaymentsError ? true : false
   >,
