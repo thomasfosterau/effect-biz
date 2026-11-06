@@ -6,6 +6,8 @@ Architecture decisions, branch model, pre-PR gates and changeset rules: [AGENTS.
 
 ## Setup
 
+Open in a Codespace or Dev Container: `.devcontainer/` provisions it with the same hook as agent sessions.
+
 ```sh
 pnpm install   # dependencies, git hooks, and the Effect-patched tsc / oxlint
 ```
