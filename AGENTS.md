@@ -69,7 +69,7 @@ Package-local terms, invariants and import boundaries live in each package's `CL
 - `vp run --filter ./packages/payments-stripe generate:resources` (offline) — regenerate the Stripe resource modules from the installed `@distilled.cloud/stripe` and `scripts/resources.ts`; run it after a Distilled bump or a change to `scripts/`.
 - `vp run docgen` — every package's `@effect/docgen`: type-checks and runs each JSDoc example and README block against `dist/` (it builds first), and writes the git-ignored API reference to `packages/*/docs/`.
 - `vp run test:coverage` — every package's unit suite under one Istanbul map at `coverage/coverage-final.json`, which `fallow audit` reads for exact per-function CRAP scores.
-- `fallow dead-code` / `fallow audit --base origin/main` — dead code, duplication, complexity and the package boundaries (`.fallowrc.json`: core imports no provider, a provider imports only core), and the change-set gate.
+- `fallow dead-code` / `fallow audit --base origin/trunk` — dead code, duplication, complexity and the package boundaries (`.fallowrc.json`: core imports no provider, a provider imports only core), and the change-set gate.
 - `pnpm changeset` — add a changeset.
 
 Invoke everything through `vp` (`vp exec` instead of `npx`; `vp run <task>` instead of bare `pnpm`). The sanctioned non-`vp` invocations: `pnpm install` (`--frozen-lockfile` in CI), `pnpm changeset` / `pnpm publish` on the release path.
@@ -84,13 +84,13 @@ Before you report work as done, run the gates below in order and quote each comm
 4. `vp run -r build`
 5. `vp run docgen`
 6. `pnpm audit --audit-level high` (network)
-7. `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent --base origin/main` (the fallow gate below; not a CI step).
+7. `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent --base origin/trunk` (the fallow gate below; not a CI step).
 
 Steps 1–6 are CI's one job, in its order ([ci.yml](.github/workflows/ci.yml)). Every workflow defaults to `permissions: {}`, pins each action to a commit SHA, checks out without persisted credentials (except the Release job, whose Changesets step pushes), sets up Node as `"*"` with `check-latest` (never `latest`, which resolves to pre-releases), and never runs the Release job for Dependabot; CI needs no secret, so Dependabot PRs run it safely. `uvx zizmor --offline .github` audits the workflows (config in `.github/zizmor.yml`). For CI parity, start from a clean tree: `rm -rf node_modules packages/*/node_modules packages/*/dist && pnpm install --frozen-lockfile`.
 
 ## Branches and pull requests
 
-- Branch off `main`; PR against `main`; squash-merge with a conventional prefix (`feat:`, `fix:`, `docs:`, `chore:`).
+- Branch off `trunk`; PR against `trunk`; squash-merge with a conventional prefix (`feat:`, `fix:`, `docs:`, `chore:`).
 - **All packages version in lockstep** (one Changesets `fixed` group): a release bumps every package to the same version. Every change to a published package's behaviour carries a changeset (`pnpm changeset`); docs-, CI- and tooling-only changes need none. Never publish or version by hand: the Release workflow opens the "Version Packages" PR and the owner merges it ([PUBLISHING.md](PUBLISHING.md)).
 - GitHub writes go to `thomasfosterau/effect-biz` only.
 
@@ -107,7 +107,7 @@ Read the installed package before writing Effect code: `node_modules/effect/dist
 
 ## Agent sessions
 
-The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `node_modules/.bin` (`vp`, `fallow`, `tsx`) on PATH. It hydrates no secrets. `.claude/settings.json` also formats every file an Edit / Write touches (`vp fmt --write`) and runs the fallow gate before every `git commit` / `git push` (`.claude/hooks/fallow-gate.sh`, which blocks on a `fail` verdict from `fallow audit --base origin/main` and reads the coverage map on disk, so run `vp run test:coverage` first).
+The SessionStart hook (`.claude/hooks/session-start.sh`) installs dependencies against the lockfile and puts `node_modules/.bin` (`vp`, `fallow`, `tsx`) on PATH. It hydrates no secrets. `.claude/settings.json` also formats every file an Edit / Write touches (`vp fmt --write`) and runs the fallow gate before every `git commit` / `git push` (`.claude/hooks/fallow-gate.sh`, which blocks on a `fail` verdict from `fallow audit --base origin/trunk` and reads the coverage map on disk, so run `vp run test:coverage` first).
 
 ## Documentation surfaces
 
@@ -117,7 +117,7 @@ The root `README.md` is the landing page; each package `README.md` is the API re
 
 ## Fallow local gate
 
-Before any `git commit` or `git push`, run `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent --base origin/main` (the default branch here is `main`). If the verdict is `fail`, fix the reported findings before retrying. Treat JSON runtime errors like `{ "error": true, ... }` as non-blocking. Audit defaults to `gate=new-only`: only findings introduced by the current changeset affect the verdict. The config is `.fallowrc.json`: a new package adds a boundary zone and rule.
+Before any `git commit` or `git push`, run `vp run test:coverage`, then `fallow audit --format json --quiet --explain --gate-marker agent --base origin/trunk` (the default branch here is `trunk`). If the verdict is `fail`, fix the reported findings before retrying. Treat JSON runtime errors like `{ "error": true, ... }` as non-blocking. Audit defaults to `gate=new-only`: only findings introduced by the current changeset affect the verdict. The config is `.fallowrc.json`: a new package adds a boundary zone and rule.
 
 ## Fallow task map
 
@@ -125,6 +125,6 @@ Before any `git commit` or `git push`, run `vp run test:coverage`, then `fallow 
 | --- | --- |
 | delete an "unused" export or file | `fallow dead-code --trace <file>:<export>` |
 | delete an "unused" dependency | `fallow dead-code --trace-dependency <name>` |
-| commit or open a PR | `fallow audit --base origin/main` |
+| commit or open a PR | `fallow audit --base origin/trunk` |
 | check which architecture rules apply to a file before changing it | `fallow guard <files>` |
 | understand a finding | `fallow explain <issue-type>` |

@@ -11,7 +11,7 @@
   "fixed": [["@thomasfosterau/effect-biz*"]],
   "linked": [],
   "access": "public",
-  "baseBranch": "main",
+  "baseBranch": "trunk",
   "updateInternalDependencies": "patch",
   "ignore": ["@effect-biz/dist-consumer"],
   "privatePackages": {
