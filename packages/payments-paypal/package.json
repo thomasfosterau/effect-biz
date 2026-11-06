@@ -55,7 +55,7 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "effect": "catalog:peers"
+    "effect": "catalog:distilled-peers"
   },
   "engines": {
     "node": ">=22"

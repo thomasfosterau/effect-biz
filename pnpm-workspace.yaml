@@ -130,14 +130,12 @@ catalog:
 # replaces `catalog:peers` with these ranges in the published manifest.
 catalogs:
   peers:
-    # The peer-range policy: `^4.0.0`, raised only when a dependency requires
-    # more. One is: @distilled.cloud/stripe, -paypal and -core 1.0.0-rc.18
-    # (rc.16 and later) declare `effect: ^4.0.5`, and they are the runtime
-    # dependencies of the Stripe and PayPal providers. All packages version in
-    # lockstep under one range, so it is `^4.0.5` for every package; move it
-    # with Distilled's own peer range, never because our own code wants a
-    # newer API (make that code work on the floor instead).
-    effect: ^4.0.5
+    # The peer-range policy: `^4.0.0` for every package, raised per package
+    # only when that package's own dependencies require more (never because
+    # our code wants a newer API: make it work on the floor instead). The
+    # core and Airwallex stay here; the Distilled-based providers use
+    # `distilled-peers` below.
+    effect: ^4.0.0
     # Optional (`peerDependenciesMeta`): only the types of the SDK-based
     # `./Webhook` verifier (`constructEvent*`, which runs on an SDK client the
     # program builds) name it; no module loads it (effect-finance#146). Caret, not `>=`:
@@ -146,6 +144,12 @@ catalogs:
     # (23.0.0, `2026-09-30.endive`); the caret admits the later monthly endive
     # releases of the same major, and moves with the next major (effect-finance#160).
     stripe: ^23.0.0
+  # The Stripe and PayPal providers' own floor: their runtime dependencies
+  # @distilled.cloud/stripe, -paypal and -core (1.0.0-rc.16 and later; the
+  # pinned 1.0.0-rc.18) declare `effect: ^4.0.5`. Move it with Distilled's own
+  # peer range, and keep the other packages on `peers`.
+  distilled-peers:
+    effect: ^4.0.5
 
 overrides:
   # undici <8.12.2 — GHSA-xjj6-f33q-929c (high): an unhandled error on a
