@@ -268,9 +268,9 @@ const judge = (outcome: Outcome, observed: Option.Option<Observed>): Outcome =>
   Option.match(observed, {
     onNone: () => outcome,
     onSome: (response) => {
-      const decides = Outcome.$is("Success")(outcome)
-        ? !isOk(response.status) || Option.isNone(response.body)
-        : !isOk(response.status);
+      // A 2xx without a JSON body decides it whether Distilled succeeded or,
+      // from 1.0.0-rc.18, failed with its own `StripeParseError`.
+      const decides = !isOk(response.status) || Option.isNone(response.body);
       return decides ? Outcome.Response(response) : outcome;
     },
   });
@@ -425,7 +425,17 @@ const makeWith = (
 export const layerFromContext: Layer.Layer<StripeHttp, never, Credentials | HttpClient.HttpClient> =
   /* @__PURE__ */ Layer.effect(
     StripeHttp,
-    /* @__PURE__ */ Effect.flatMap(Credentials, (credentials) => makeWith({ credentials })),
+    /* @__PURE__ */ Effect.flatMap(Credentials, (credentials) =>
+      makeWith({
+        // Distilled's `Credentials` may fail with its own `ConfigError`
+        // (from `@distilled.cloud/stripe` 1.0.0-rc.18): at call time, an
+        // unconfigured key, which the neutral channel calls unavailable.
+        credentials: Effect.mapError(
+          credentials,
+          (error) => new PaymentsUnavailable({ message: error.message, provider: PROVIDER }),
+        ),
+      }),
+    ),
   );
 
 /** The credentials a configuration names. */

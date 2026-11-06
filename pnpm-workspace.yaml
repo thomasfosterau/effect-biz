@@ -43,19 +43,19 @@ catalog:
   # resource modules (`generate:resources`) and updates the followed version
   # (`tests/distilledApiVersion.test.ts` and `tests/resources.test.ts` fail
   # until both are done).
-  "@distilled.cloud/stripe": 1.0.0-rc.15
+  "@distilled.cloud/stripe": 1.0.0-rc.18
   # Distilled's PayPal client (same repository and licence): the operations
   # and wire encoding `PayPalPayments` runs on (effect-finance#146). A runtime dependency
   # of @thomasfosterau/effect-biz-payments-paypal, pinned EXACTLY for the same
   # reason, and moved together with the Stripe client and core. Its access
   # token comes from the wrapper's own OAuth login, never from Distilled's
   # `CredentialsFromEnv` (which reads `process.env`).
-  "@distilled.cloud/paypal": 1.0.0-rc.15
+  "@distilled.cloud/paypal": 1.0.0-rc.18
   # Distilled's shared runtime, a direct dependency too: each wrapper pins its
   # `ResponseValidation` reference to lenient. MUST equal the version
   # @distilled.cloud/stripe and @distilled.cloud/paypal depend on (each pins
   # core exactly), or two copies of core install.
-  "@distilled.cloud/core": 1.0.0-rc.15
+  "@distilled.cloud/core": 1.0.0-rc.18
   # Compiles AND RUNS every JSDoc `@example` (the `docgen` task). Exact, like
   # the Effect pin: 4.0.1 and 4.0.2 depend on `effect ^4.0.1` / `^4.0.2`,
   # which the `effect` singleton override below would contradict. Needs `tsx`
@@ -104,7 +104,7 @@ catalog:
   # DISTILLED_API_VERSION on a Distilled bump, never on its own:
   # `tests/distilledApiVersion.test.ts` fails when the SDK's API_VERSION
   # differs.
-  stripe: 23.0.0
+  stripe: 23.0.1
   # TypeScript 6/7 side-by-side: TS7 (the native Go compiler) ships no JS API
   # until 7.1, so JS-API consumers (@effect/language-service, tsdown's
   # declaration bundler, @effect/docgen's peer) stay on TS6 while native `tsc`
@@ -130,12 +130,14 @@ catalog:
 # replaces `catalog:peers` with these ranges in the published manifest.
 catalogs:
   peers:
-    # Effect 4: rc.118 moved every `effect/unstable/<x>` module to `effect/<x>`
-    # (and `httpapi` to `http-api`); the packages are built against 4.0.x.
-    # Also the floor of @distilled.cloud/stripe, -paypal and -core (rc.15
-    # declares `effect: ^4.0.0`), the hard dependencies of the Stripe and
-    # PayPal providers: raise it with Distilled's own peer range.
-    effect: ^4.0.0
+    # The peer-range policy: `^4.0.0`, raised only when a dependency requires
+    # more. One is: @distilled.cloud/stripe, -paypal and -core 1.0.0-rc.18
+    # (rc.16 and later) declare `effect: ^4.0.5`, and they are the runtime
+    # dependencies of the Stripe and PayPal providers. All packages version in
+    # lockstep under one range, so it is `^4.0.5` for every package; move it
+    # with Distilled's own peer range, never because our own code wants a
+    # newer API (make that code work on the floor instead).
+    effect: ^4.0.5
     # Optional (`peerDependenciesMeta`): only the types of the SDK-based
     # `./Webhook` verifier (`constructEvent*`, which runs on an SDK client the
     # program builds) name it; no module loads it (effect-finance#146). Caret, not `>=`:
