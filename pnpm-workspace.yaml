@@ -75,20 +75,20 @@ catalog:
   # on any other component version, failing `pnpm install` itself. Read the
   # `components` table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs
   # before bumping any of the three.
-  "@effect/tsgo": 0.63.0
+  "@effect/tsgo": 0.67.1
   # The Effect lint rules (`effect/*`, anti-slop included), registered as an
   # oxlint JS plugin through `configs.recommended` in vite.config.ts. It
   # depends on `effect` 4.1.0 exactly, but the `effect` override below forces
   # it onto the workspace singleton, which it lints fine against. In the
   # `toolchain` Dependabot group: a release can add rules at `error`, so it
   # lands with a `vp check` run.
-  "@enfect/oxlint": ^0.9.0
+  "@enfect/oxlint": ^0.10.0
   "@types/node": ^26.6.6
-  "@vitest/coverage-istanbul": 5.0.5
+  "@vitest/coverage-istanbul": 5.1.0
   effect: 4.0.6
   # Dead code, duplication, complexity and the change-set audit (`fallow
   # audit`, the agent commit gate in .claude/hooks/fallow-gate.sh). Dev-only.
-  fallow: 3.37.0
+  fallow: 3.39.0
   # Exists only for docgen: @effect/docgen requires it as a peer and spawns
   # the `tsx` binary itself to run the compiled examples. Scripts and tasks
   # never invoke it; they run TypeScript with `node` or `vpx <file>.ts`.
@@ -122,9 +122,9 @@ catalog:
   # `@vitest/coverage-istanbul`, whose peer is exact) must match vite-plus's
   # exact pin (1.4.0 → 5.0.5) because the `vitest: "catalog:"` override forces
   # every resolution to the catalog singleton.
-  vite-plus: 1.4.0
+  vite-plus: 1.5.0
   vite: npm:@voidzero-dev/vite-plus-core@1.4.0
-  vitest: 5.0.5
+  vitest: 5.1.0
 
 # Peer ranges the PUBLISHED packages declare. Kept as a named catalog so the
 # strict catalog mode still governs them while they stay ranges. `pnpm publish`
