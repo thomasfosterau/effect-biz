@@ -596,7 +596,7 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "effect": "catalog:peers",
+    "effect": "catalog:distilled-peers",
     "stripe": "catalog:peers"
   },
   "peerDependenciesMeta": {
