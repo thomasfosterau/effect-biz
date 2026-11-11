@@ -67,7 +67,7 @@ catalog:
   # on any other component version, failing `pnpm install` itself. Read the
   # `components` table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs
   # before bumping any of the three.
-  "@effect/tsgo": 0.67.3
+  "@effect/tsgo": 0.67.5
   # The Effect lint rules (`effect/*`, anti-slop included), registered as an
   # oxlint JS plugin through `configs.recommended` in vite.config.ts. It
   # depends on `effect` 4.1.0 exactly, but the `effect` override below forces
