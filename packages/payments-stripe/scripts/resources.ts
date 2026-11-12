@@ -38,7 +38,7 @@ import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import type * as AST from "effect/SchemaAST";
@@ -758,7 +758,7 @@ export const runtimeOperations = (
       const value = distilled[name];
       // An operation carries its schemas as `input` / `output`: an own getter
       // up to 1.0.0-rc.15, inherited from 1.0.0-rc.18 (`OperationSchemas`).
-      return Predicate.isFunction(value) && "input" in value && "output" in value;
+      return P.isFunction(value) && "input" in value && "output" in value;
     }),
     Order.String,
   );
@@ -958,10 +958,13 @@ const renderModule = (
 };
 
 /** A generated module the formatter refused. */
-class FormatError extends Schema.TaggedError<FormatError>()("FormatError", {
-  file: Schema.String,
-  messages: Schema.Array(Schema.String),
-}) {}
+class FormatError extends Schema.TaggedError<FormatError, { readonly brand: unique symbol }>()(
+  "FormatError",
+  {
+    file: Schema.String,
+    messages: Schema.Array(Schema.String),
+  },
+) {}
 
 /** Every generated resource module, by its path under the package (`src/Customer.ts`), formatted. */
 export const render = (

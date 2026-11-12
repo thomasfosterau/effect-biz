@@ -54,6 +54,8 @@ updates:
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
+    assignees:
+      - "thomasfosterau"
     commit-message:
       prefix: "chore"
       prefix-development: "chore"
@@ -108,6 +110,8 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
+    assignees:
+      - "thomasfosterau"
     commit-message:
       prefix: "chore"
     cooldown:
@@ -123,6 +127,8 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
+    assignees:
+      - "thomasfosterau"
     commit-message:
       prefix: "chore"
     cooldown:

@@ -49,7 +49,7 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
@@ -517,7 +517,7 @@ export const checkId = (
   resource: string,
   id: string,
 ): Effect.Effect<void, PaymentInvalidRequestError> =>
-  Predicate.isString(id) && id !== ""
+  P.isString(id) && id !== ""
     ? Effect.void
     : Effect.fail(
         new PaymentInvalidRequestError({
@@ -532,9 +532,7 @@ export const checkId = (
  * Internal, and exempt from semver: see the module documentation.
  */
 export const stringField = (value: unknown, field: string): string | undefined =>
-  Predicate.hasProperty(value, field) && Predicate.isString(value[field])
-    ? value[field]
-    : undefined;
+  P.hasProperty(value, field) && P.isString(value[field]) ? value[field] : undefined;
 
 /**
  * What a client saw of a response before anything else read it.

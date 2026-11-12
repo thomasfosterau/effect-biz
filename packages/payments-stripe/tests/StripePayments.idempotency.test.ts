@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import type * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import type { HttpClient } from "effect/http";
 import type { Credentials } from "@distilled.cloud/stripe/Credentials";
@@ -187,7 +187,7 @@ describe("a retried write after a lost response is one logical write (effect-fin
   const createWithRetry = (key: IdempotencyKey.IdempotencyKey | undefined) =>
     Customer.create({ email: "a@example.com", idempotencyKey: key }).pipe(
       Effect.retry({
-        while: (error) => Predicate.isTagged(error, "PaymentNetworkError"),
+        while: (error) => P.isTagged(error, "PaymentNetworkError"),
         times: 1,
       }),
     );
@@ -222,7 +222,7 @@ describe("a retried write after a lost response is one logical write (effect-fin
       Customer.create({ email: "a@example.com", idempotencyKey: key }).pipe(
         Effect.retry({
           while: (error) =>
-            Predicate.isTagged(error, "PaymentProviderError") && (error.statusCode ?? 0) >= 500,
+            P.isTagged(error, "PaymentProviderError") && (error.statusCode ?? 0) >= 500,
           times: 1,
         }),
         Effect.provide(

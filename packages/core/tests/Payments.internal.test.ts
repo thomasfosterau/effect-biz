@@ -54,9 +54,12 @@ import {
   withTestClock,
 } from "../../../tests/stubs.ts";
 
-class LoginFailed extends Schema.TaggedError<LoginFailed>()("LoginFailed", {
-  attempt: Schema.Number,
-}) {}
+class LoginFailed extends Schema.TaggedError<LoginFailed, { readonly brand: unique symbol }>()(
+  "LoginFailed",
+  {
+    attempt: Schema.Number,
+  },
+) {}
 
 const ok = (token: string) => () => Exit.succeed(token);
 const refused = (attempt: number) => Exit.fail(new LoginFailed({ attempt }));

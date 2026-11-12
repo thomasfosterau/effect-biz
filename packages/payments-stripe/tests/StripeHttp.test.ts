@@ -3,7 +3,7 @@ import * as Arr from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Rec from "effect/Record";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import { strict as strictValidation } from "@distilled.cloud/core/response-validation";
 import {
@@ -97,7 +97,7 @@ describe("resource modules over StripeHttp", () => {
     await result;
     expect(calls[0]?.method).toBe("GET");
     expect(calls[0]?.url.pathname).toBe("/v1/customers");
-    expect(Rec.fromEntries(calls[0]?.url.searchParams ?? [])).toEqual({
+    expect(R.fromEntries(calls[0]?.url.searchParams ?? [])).toEqual({
       limit: "3",
       email: "a@example.com",
     });
