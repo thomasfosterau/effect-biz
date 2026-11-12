@@ -1,5 +1,5 @@
 import { describe, expect, expectTypeOf } from "vite-plus/test";
-import { it } from "@effect/vitest";
+import { it, layer } from "@effect/vitest";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
@@ -18,12 +18,12 @@ type SalesOrderId = typeof SalesOrderId.Type;
 
 const V7 = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
-/** `count` ids from {@link Id.layer} under a `TestClock` set to `millis` and a seeded `Random`. */
+/** `count` ids from the ambient generator under a `TestClock` set to `millis` and a seeded `Random`. */
 const generated = (count: number, millis: number, seed: string) =>
   Effect.gen(function* () {
     yield* TestClock.setTime(millis);
     return yield* Effect.all(Arr.replicate(Id.generate(PartyId), count), { concurrency: 1 });
-  }).pipe(Random.withSeed(seed), Effect.provide(Layer.merge(Id.layer, TestClock.layer())));
+  }).pipe(Random.withSeed(seed));
 
 describe("Id.make", () => {
   it("brands each kind so ids of different kinds are not assignable", () => {
@@ -55,7 +55,8 @@ describe("Id.make", () => {
   );
 });
 
-describe("Id.layer", () => {
+// The generator keeps its last millisecond and counter, so each case builds its own.
+layer(Id.layer, { buildPerTest: true })("Id.layer", (it) => {
   it.effect("generates valid ids that increase within one millisecond", () =>
     Effect.gen(function* () {
       const ids = yield* generated(5000, 1_730_000_000_000, "monotonic");
@@ -71,24 +72,34 @@ describe("Id.layer", () => {
       expect(id?.slice(0, 13)).toBe("0190a6e4-1c2d");
     }),
   );
+});
+
+describe("Id.layer determinism", () => {
+  /** `generated` from a generator built just for this run: the subject here is what a fresh `Id.layer` yields. */
+  const fromFreshLayer = (count: number, millis: number, seed: string) =>
+    Layer.build(Id.layer).pipe(
+      Effect.flatMap((context) =>
+        generated(count, millis, seed).pipe(Effect.provideContext(context)),
+      ),
+    );
 
   it.effect("is deterministic under TestClock and a seeded Random", () =>
     Effect.gen(function* () {
-      const first = yield* generated(10, 1_730_000_000_000, "seed");
-      const second = yield* generated(10, 1_730_000_000_000, "seed");
-      const other = yield* generated(10, 1_730_000_000_000, "other");
+      const first = yield* fromFreshLayer(10, 1_730_000_000_000, "seed");
+      const second = yield* fromFreshLayer(10, 1_730_000_000_000, "seed");
+      const other = yield* fromFreshLayer(10, 1_730_000_000_000, "other");
       expect(second).toEqual(first);
       expect(other).not.toEqual(first);
     }),
   );
 });
 
-describe("Id.layerSequential", () => {
+layer(Id.layerSequential)("Id.layerSequential", (it) => {
   it.effect("counts from one in valid UUIDv7s", () =>
     Effect.gen(function* () {
       const ids = yield* Effect.all([Id.generate(PartyId), Id.generate(PartyId)], {
         concurrency: 1,
-      }).pipe(Effect.provide(Id.layerSequential));
+      });
       expect(ids).toEqual([
         "00000000-0000-7000-8000-000000000001",
         "00000000-0000-7000-8000-000000000002",

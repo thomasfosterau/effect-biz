@@ -5,7 +5,8 @@
  * contract, not a consumer-facing promise. Never executed; type-checked only.
  */
 
-import type { Duration, Effect, HashSet, Option, Schema } from "effect";
+import { Option } from "effect";
+import type { Duration, Effect, HashSet, Schema } from "effect";
 import type { HttpClient, HttpClientError, HttpClientRequest } from "effect/http";
 import type {
   Page,
@@ -52,10 +53,10 @@ declare const login: Effect.Effect<string, "denied">;
 export const getToken: Effect.Effect<Effect.Effect<string, "denied">> = shareLogin(cached, login);
 
 /** The money core's declared shapes. */
-export const parsed: number | undefined = parseDecimal("10.00", 2);
-export const formatted: string | undefined = formatDecimal(1000, 2);
+export const parsed: Option.Option<number> = parseDecimal("10.00", 2);
+export const formatted: Option.Option<string> = formatDecimal(1000, 2);
 export const text: string = decimalText(false, 1000n, 2);
-export const scaled: bigint | undefined = scaleToMinor(1000n, 2, 2);
+export const scaled: Option.Option<bigint> = scaleToMinor(1000n, 2, 2);
 export const checked: Effect.Effect<void, PaymentInvalidRequestError> = checkMinorUnits(
   1,
   "amount",
@@ -87,7 +88,7 @@ export const reply: Effect.Effect<Reply, PaymentNetworkError> = send(http, reque
 declare const answered: Reply;
 export const replyStatus: number = answered.status;
 export const replyJson: unknown = answered.json;
-export const replyHeaders: Readonly<Record<string, string | undefined>> = answered.headers;
+export const replyHeaders: Readonly<Record<string, string>> = answered.headers;
 export const cache: Effect.Effect<TokenCache> = tokenCache;
 declare const cacheValue: TokenCache;
 export const cachedToken: Effect.Effect<Option.Option<string>> = cacheValue.cached;
@@ -104,14 +105,14 @@ export const omittedName: OmitUndefined<typeof optionals> = { id: "c", name: und
 
 /** The Distilled-wrapper request helpers' declared shapes. */
 export const idChecked: Effect.Effect<void, PaymentInvalidRequestError> = checkId("customer", "c");
-export const field: string | undefined = stringField({ message: "m" }, "message");
+export const field: Option.Option<string> = stringField({ message: "m" }, "message");
 export const observed: Effect.Effect<{
   readonly client: HttpClient.HttpClient;
   readonly last: Effect.Effect<Option.Option<ObservedResponse>>;
 }> = observeResponses(http);
 declare const response: ObservedResponse;
 export const responseStatus: number = response.status;
-export const responseHeaders: Readonly<Record<string, string | undefined>> = response.headers;
+export const responseHeaders: Readonly<Record<string, string>> = response.headers;
 export const responseBody: Option.Option<Schema.Json> = response.body;
 export const rejected: PaymentProviderError = rejectedError(new Error("boom"), "Provider", {
   message: "fallback",
@@ -126,16 +127,14 @@ export const decodeThing: (body: Schema.Json) => Effect.Effect<number, PaymentPr
     thingSchema,
     (thing) => thing.id.length,
   );
-export const seconds: number = epochSecondsOf(null);
+export const seconds: number = epochSecondsOf(Option.none());
 export const classified: PaymentsError = errorFromStatus(500, {
   provider: "provider",
   message: "m",
-  code: undefined,
-  param: undefined,
-  retryAfter: undefined,
+  code: "c",
 });
 
-declare const listOne: (page: number | undefined) => Effect.Effect<Page<string>, "boom">;
+declare const listOne: (page?: number) => Effect.Effect<Page<string>, "boom">;
 export const numbered: Effect.Effect<
   Page<string>,
   "boom" | PaymentInvalidRequestError

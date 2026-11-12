@@ -141,14 +141,6 @@ export default defineConfig({
       // rule takes no config (`RuleNoConfig` in `@effect/tsgo`'s
       // oxlint-schema.json), so there is no allowlist.
       "effecttsgo/unstable-api-usage": "off",
-
-      // ---- Effect preset: rules this workspace's conventions cut across ----
-      // `prefer-option-over-null` fires on `?: T | undefined`, which is the
-      // ONLY spelling of an optional member `exactOptionalPropertyTypes` lets
-      // a caller forward an optional of its own into — the spelling AGENTS.md
-      // mandates — and on the `NullOr` columns a SQL row decodes to.
-      "effect/prefer-option-over-null": "off",
-      "effect/no-unknown-returns": "warn",
       "vite-plus/prefer-vite-plus-imports": "error",
     },
     overrides: [
@@ -167,9 +159,6 @@ export default defineConfig({
           "effect/use-console-service": "off",
           "effect/use-filesystem-service": "off",
           "effect/use-path-service": "off",
-          // `...(process.env.X ? { x } : {})` is how a vitest option is left
-          // unset under `exactOptionalPropertyTypes`.
-          "effect/no-conditional-empty-object-spread": "off",
         },
       },
       // The assertions no typing removes (10 sites, each with a `// SAFETY:`
@@ -286,9 +275,9 @@ export default defineConfig({
               ],
             },
           ],
-          // A test is an application entry point: each case provides its own
-          // stub layers, which is exactly where `Effect.provide` belongs.
-          "effecttsgo/strict-effect-provide": "off",
+          // `layer(L)(name, (it) => …)` hands its cases the layer-aware `it`,
+          // which shadows the file's own (`@effect/vitest`'s documented form).
+          "eslint/no-shadow": ["error", { allow: ["it"] }],
           // A helper declared inside the `it` that uses it keeps each case
           // self-contained; `src/` still hoists them.
           "unicorn/consistent-function-scoping": "off",

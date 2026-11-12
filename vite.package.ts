@@ -25,7 +25,7 @@ export interface PackageConfigOptions {
    * package's `docgen` task. Set on the one package whose dependencies
    * resolve every import those blocks make.
    */
-  readonly rootReadme?: boolean | undefined;
+  readonly rootReadme?: boolean;
 }
 
 /**
@@ -101,7 +101,6 @@ const checkProjectOf = (url: string): string =>
 export const packageConfig = ({ url, rootReadme = false }: PackageConfigOptions) => {
   const manifest = decodeManifest(readFileSync(new URL("./package.json", url), "utf8"));
   const srcDir = new URL("./src/", url).pathname;
-  const maxWorkers = process.env.VITEST_MAX_WORKERS;
   // The README, the root README where asked, and the package's guides
   // (`docs/<directory name>/*.md` at the workspace root, committed).
   const guides = `docs/${packageDirName(url)}`;
@@ -206,7 +205,8 @@ export const packageConfig = ({ url, rootReadme = false }: PackageConfigOptions)
     test: {
       include: ["tests/**/*.test.ts"],
       testTimeout: 30_000,
-      ...(maxWorkers === undefined ? {} : { maxWorkers: Number(maxWorkers) }),
+      // `maxWorkers` is unset here: vitest reads `VITEST_MAX_WORKERS` (set in
+      // CI) itself, and the tasks list it in their cache `env`.
       coverage: {
         provider: "istanbul",
         // `json` writes coverage-final.json, the per-file Istanbul map.

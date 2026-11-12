@@ -25,10 +25,10 @@ export class Customer extends Schema.Class<Customer, { readonly brand: unique sy
   "@effect-biz/payments/Customer",
 )({
   id: Schema.String,
-  email: Schema.NullOr(Schema.String),
-  name: Schema.NullOr(Schema.String),
-  phone: Schema.NullOr(Schema.String),
-  description: Schema.NullOr(Schema.String),
+  email: Schema.OptionFromNullOr(Schema.String),
+  name: Schema.OptionFromNullOr(Schema.String),
+  phone: Schema.OptionFromNullOr(Schema.String),
+  description: Schema.OptionFromNullOr(Schema.String),
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
   created: Schema.Int,
@@ -38,37 +38,37 @@ export class Customer extends Schema.Class<Customer, { readonly brand: unique sy
 
 /** Parameters for creating a customer. */
 export interface CreateParams {
-  readonly email?: string | undefined;
-  readonly name?: string | undefined;
-  readonly phone?: string | undefined;
-  readonly description?: string | undefined;
-  readonly metadata?: Record<string, string> | undefined;
+  readonly email?: string;
+  readonly name?: string;
+  readonly phone?: string;
+  readonly description?: string;
+  readonly metadata?: Record<string, string>;
   /**
    * Makes this write safe to repeat: create one with `IdempotencyKey.generate`
    * before the first attempt and pass the same key on every retry (see
    * `IdempotencyKey` for the contract).
    */
-  readonly idempotencyKey?: IdempotencyKey | undefined;
+  readonly idempotencyKey?: IdempotencyKey;
 }
 
 /** Parameters for updating a customer. */
 export interface UpdateParams {
-  readonly email?: string | undefined;
-  readonly name?: string | undefined;
-  readonly phone?: string | undefined;
-  readonly description?: string | undefined;
-  readonly metadata?: Record<string, string> | undefined;
+  readonly email?: string;
+  readonly name?: string;
+  readonly phone?: string;
+  readonly description?: string;
+  readonly metadata?: Record<string, string>;
 }
 
 /** Parameters for listing customers. */
 export interface ListParams {
-  readonly limit?: number | undefined;
-  readonly email?: string | undefined;
+  readonly limit?: number;
+  readonly email?: string;
   /**
    * The previous page's `nextCursor`, to list the page after it. A provider
    * whose cursor is an item id also takes any item id here.
    */
-  readonly startingAfter?: string | undefined;
+  readonly startingAfter?: string;
 }
 
 /**

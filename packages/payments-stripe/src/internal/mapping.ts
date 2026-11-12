@@ -54,7 +54,7 @@ export const malformed = (what: string, cause?: unknown): PaymentProviderError =
   new PaymentProviderError({
     message: `Stripe returned a malformed ${what} response`,
     provider: PROVIDER,
-    cause,
+    cause: Option.fromNullishOr(cause),
   });
 
 /** The vendor data was decoded just before construction. */
@@ -88,10 +88,8 @@ const Secret = /* @__PURE__ */ Schema.Union([
 ]);
 
 /** The string a {@link Secret} holds. */
-const revealed = (secret: typeof Secret.Type | null | undefined): string | null => {
-  if (secret == null) return null;
-  return Redacted.isRedacted(secret) ? Redacted.value(secret) : secret;
-};
+const revealed = (secret: Option.Option<typeof Secret.Type>): Option.Option<string> =>
+  Option.map(secret, (value) => (Redacted.isRedacted(value) ? Redacted.value(value) : value));
 
 /** `{ id, deleted: true }` — Stripe's answer to a delete, and to reading a deleted object. */
 const StripeDeleted = /* @__PURE__ */ Schema.Struct({
@@ -213,10 +211,14 @@ const StripeList = <S extends Schema.Top>(item: S) =>
 // ---------------------------------------------------------------------------
 
 /** The id of a possibly-expanded reference. */
-const idOf = (value: typeof Ref.Type | null | undefined): string | null => {
-  if (value == null) return null;
-  return P.isString(value) ? value : value.id;
-};
+const refId = (ref: typeof Ref.Type): string => (P.isString(ref) ? ref : ref.id);
+
+/** The id of a possibly-expanded reference that may be absent. */
+const idOf = (value: Option.Option<typeof Ref.Type>): Option.Option<string> =>
+  Option.map(value, refId);
+
+/** A wire member that may be absent or `null`, as an `Option`. */
+const optionOf = Option.fromNullishOr;
 
 const metadataOf = (metadata: typeof Metadata.Type) => ({
   ...metadata,
@@ -227,10 +229,10 @@ const toCustomer = (customer: typeof StripeCustomerOrDeleted.Type): CustomerNS.C
     return new CustomerNS.Customer(
       {
         id: customer.id,
-        email: null,
-        name: null,
-        phone: null,
-        description: null,
+        email: Option.none(),
+        name: Option.none(),
+        phone: Option.none(),
+        description: Option.none(),
         metadata: {},
         created: 0,
         livemode: false,
@@ -241,10 +243,10 @@ const toCustomer = (customer: typeof StripeCustomerOrDeleted.Type): CustomerNS.C
   return new CustomerNS.Customer(
     {
       id: customer.id,
-      email: customer.email ?? null,
-      name: customer.name ?? null,
-      phone: customer.phone ?? null,
-      description: customer.description ?? null,
+      email: optionOf(customer.email),
+      name: optionOf(customer.name),
+      phone: optionOf(customer.phone),
+      description: optionOf(customer.description),
       metadata: metadataOf(customer.metadata),
       created: customer.created,
       livemode: customer.livemode,
@@ -258,7 +260,7 @@ const toProduct = (product: typeof StripeProduct.Type): ProductNS.Product =>
     {
       id: product.id,
       name: product.name,
-      description: product.description ?? null,
+      description: optionOf(product.description),
       active: product.active,
       metadata: metadataOf(product.metadata),
       created: product.created,
@@ -270,20 +272,19 @@ const toPrice = (price: typeof StripePrice.Type): PriceNS.Price =>
   new PriceNS.Price(
     {
       id: price.id,
-      productId: idOf(price.product),
+      productId: idOf(optionOf(price.product)),
       active: price.active,
       currency: price.currency,
-      unitAmount: price.unit_amount ?? null,
+      unitAmount: optionOf(price.unit_amount),
       type: price.type,
-      recurring: price.recurring
-        ? new PriceNS.Recurring(
-            {
-              interval: price.recurring.interval,
-              intervalCount: price.recurring.interval_count,
-            },
+      recurring: Option.map(
+        optionOf(price.recurring),
+        (recurring) =>
+          new PriceNS.Recurring(
+            { interval: recurring.interval, intervalCount: recurring.interval_count },
             TRUSTED,
-          )
-        : null,
+          ),
+      ),
       metadata: metadataOf(price.metadata),
       created: price.created,
     },
@@ -297,10 +298,10 @@ const toPaymentIntent = (intent: typeof StripePaymentIntent.Type): PaymentIntent
       amount: intent.amount,
       currency: intent.currency,
       status: intent.status,
-      customerId: idOf(intent.customer),
-      paymentMethodId: idOf(intent.payment_method),
-      clientSecret: revealed(intent.client_secret),
-      description: intent.description ?? null,
+      customerId: idOf(optionOf(intent.customer)),
+      paymentMethodId: idOf(optionOf(intent.payment_method)),
+      clientSecret: revealed(optionOf(intent.client_secret)),
+      description: optionOf(intent.description),
       metadata: metadataOf(intent.metadata),
       created: intent.created,
     },
@@ -308,35 +309,37 @@ const toPaymentIntent = (intent: typeof StripePaymentIntent.Type): PaymentIntent
   );
 
 /**
- * A subscription's entity, or `undefined` when it carries no billing period
+ * A subscription's entity, or `None` when it carries no billing period
  * on its first item or on itself — a shape no API version produces.
  */
 const toSubscription = (
   subscription: typeof StripeSubscription.Type,
-): SubscriptionNS.Subscription | undefined => {
+): Option.Option<SubscriptionNS.Subscription> => {
   const first = subscription.items.data[0];
   const start = first?.current_period_start ?? subscription.current_period_start;
   const end = first?.current_period_end ?? subscription.current_period_end;
-  if (start == null || end == null) return undefined;
-  return new SubscriptionNS.Subscription(
-    {
-      id: subscription.id,
-      customerId: idOf(subscription.customer) ?? "",
-      status: subscription.status,
-      items: subscription.items.data.map(
-        (item) =>
-          new SubscriptionNS.SubscriptionItem(
-            { id: item.id, priceId: item.price.id, quantity: item.quantity ?? null },
-            TRUSTED,
-          ),
-      ),
-      currentPeriodStart: start,
-      currentPeriodEnd: end,
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
-      metadata: metadataOf(subscription.metadata),
-      created: subscription.created,
-    },
-    TRUSTED,
+  if (start == null || end == null) return Option.none();
+  return Option.some(
+    new SubscriptionNS.Subscription(
+      {
+        id: subscription.id,
+        customerId: refId(subscription.customer),
+        status: subscription.status,
+        items: subscription.items.data.map(
+          (item) =>
+            new SubscriptionNS.SubscriptionItem(
+              { id: item.id, priceId: item.price.id, quantity: optionOf(item.quantity) },
+              TRUSTED,
+            ),
+        ),
+        currentPeriodStart: start,
+        currentPeriodEnd: end,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        metadata: metadataOf(subscription.metadata),
+        created: subscription.created,
+      },
+      TRUSTED,
+    ),
   );
 };
 
@@ -347,9 +350,9 @@ const toRefund = (refund: typeof StripeRefund.Type): RefundNS.Refund =>
       amount: refund.amount,
       currency: refund.currency,
       status: refund.status ?? "pending",
-      paymentIntentId: idOf(refund.payment_intent),
-      chargeId: idOf(refund.charge),
-      reason: refund.reason ?? null,
+      paymentIntentId: idOf(optionOf(refund.payment_intent)),
+      chargeId: idOf(optionOf(refund.charge)),
+      reason: optionOf(refund.reason),
       metadata: metadataOf(refund.metadata),
       created: refund.created,
     },
@@ -372,40 +375,55 @@ const toBillingPortalSession = (
 
 /**
  * Decode a response body with `schema` and map it, failing with
- * {@link PaymentProviderError} when it does not decode or does not map.
+ * {@link PaymentProviderError} when it does not decode or when `map` answers
+ * `None`.
  */
-const decoder =
+const partialDecoder =
   <S extends Schema.Codec<unknown, unknown>, A>(
     what: string,
     schema: S,
-    map: (value: S["Type"]) => A | undefined,
+    map: (value: S["Type"]) => Option.Option<A>,
   ) =>
   (body: Schema.Json): Effect.Effect<A, PaymentProviderError> =>
     Schema.decodeEffect(schema)(body).pipe(
       Effect.mapError((cause) => malformed(what, cause)),
-      Effect.flatMap((value) => {
-        const mapped = map(value);
-        return mapped === undefined ? Effect.fail(malformed(what)) : Effect.succeed(mapped);
-      }),
+      Effect.flatMap((value) => Effect.fromOption(map(value), () => malformed(what))),
     );
 
+/** {@link partialDecoder} for a mapping that always yields a value. */
+const decoder = <S extends Schema.Codec<unknown, unknown>, A>(
+  what: string,
+  schema: S,
+  map: (value: S["Type"]) => A,
+) => partialDecoder(what, schema, (value) => Option.some(map(value)));
+
 /**
- * Decode a list page and map every item, as a neutral page. Its `nextCursor`
- * is the last item's id, Stripe's `starting_after` for the page after it.
+ * Decode a list page and map every item, as a neutral page; one item `map`
+ * answers `None` for fails the page. Its `nextCursor` is the last item's id,
+ * Stripe's `starting_after` for the page after it.
  */
+const partialPageDecoder = <
+  S extends Schema.Codec<unknown, unknown>,
+  A extends { readonly id: string },
+>(
+  what: string,
+  item: S,
+  map: (value: S["Type"]) => Option.Option<A>,
+) =>
+  partialDecoder(`${what} list`, StripeList(item), (list): Option.Option<Page<A>> =>
+    Option.map(Option.all(list.data.map(map)), (data) => ({
+      data,
+      hasMore: list.has_more,
+      nextCursor: list.has_more ? Option.map(Arr.last(data), (last) => last.id) : Option.none(),
+    })),
+  );
+
+/** {@link partialPageDecoder} for a mapping that always yields an item. */
 const pageDecoder = <S extends Schema.Codec<unknown, unknown>, A extends { readonly id: string }>(
   what: string,
   item: S,
-  map: (value: S["Type"]) => A | undefined,
-) =>
-  decoder(`${what} list`, StripeList(item), (list): Page<A> | undefined => {
-    const data = list.data.map(map);
-    if (!data.every((value): value is A => value !== undefined)) return undefined;
-    const last = Arr.last(data);
-    return list.has_more && Option.isSome(last)
-      ? { data, hasMore: true, nextCursor: last.value.id }
-      : { data, hasMore: list.has_more };
-  });
+  map: (value: S["Type"]) => A,
+) => partialPageDecoder(what, item, (value) => Option.some(map(value)));
 
 /** A customer (or the deleted stub, read back). */
 export const decodeCustomer = /* @__PURE__ */ decoder(
@@ -445,13 +463,13 @@ export const decodePaymentIntentPage = /* @__PURE__ */ pageDecoder(
   toPaymentIntent,
 );
 /** A subscription. */
-export const decodeSubscription = /* @__PURE__ */ decoder(
+export const decodeSubscription = /* @__PURE__ */ partialDecoder(
   "subscription",
   StripeSubscription,
   toSubscription,
 );
 /** A page of subscriptions. */
-export const decodeSubscriptionPage = /* @__PURE__ */ pageDecoder(
+export const decodeSubscriptionPage = /* @__PURE__ */ partialPageDecoder(
   "subscription",
   StripeSubscription,
   toSubscription,

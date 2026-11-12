@@ -16,6 +16,7 @@
  */
 
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { PaymentInvalidRequestError } from "./Payments.PaymentsError.js";
 
@@ -68,7 +69,7 @@ const KEY_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
  *
  * @example
  * ```typescript
- * import { Effect, Schedule } from "effect";
+ * import { Effect, Option, Schedule } from "effect";
  * import * as IdempotencyKey from "@thomasfosterau/effect-biz/Payments.IdempotencyKey";
  * import * as Refund from "@thomasfosterau/effect-biz/Payments.Refund";
  *
@@ -81,7 +82,7 @@ const KEY_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
  *         while: (error) =>
  *           error._tag === "PaymentNetworkError" ||
  *           error._tag === "PaymentRateLimitError" ||
- *           (error._tag === "PaymentProviderError" && (error.statusCode ?? 0) >= 500),
+ *           (error._tag === "PaymentProviderError" && Option.exists(error.statusCode, (status) => status >= 500)),
  *         schedule: Schedule.exponential("200 millis"),
  *         times: 3,
  *       }),
@@ -110,20 +111,21 @@ export const generate: Effect.Effect<IdempotencyKey> = Effect.sync(() =>
  * Check a key at runtime. The branded type already guarantees the shape for
  * typed code; providers call this to refuse a raw string from untyped code
  * with `PaymentInvalidRequestError` before anything is sent, instead of
- * passing a key a vendor might reject or truncate. `undefined` (no key)
- * succeeds as `undefined`.
+ * passing a key a vendor might reject or truncate. No key succeeds as
+ * `None`.
  */
 export const validate = (
-  key: string | undefined,
-): Effect.Effect<IdempotencyKey | undefined, PaymentInvalidRequestError> =>
+  key?: string,
+): Effect.Effect<Option.Option<IdempotencyKey>, PaymentInvalidRequestError> =>
   key === undefined
-    ? Effect.undefined
+    ? Effect.succeedNone
     : Schema.decodeEffect(IdempotencyKey)(key).pipe(
+        Effect.asSome,
         Effect.mapError(
           () =>
             new PaymentInvalidRequestError({
               message: "idempotencyKey must be 1 to 64 characters from A-Z, a-z, 0-9, _ and -",
-              param: "idempotencyKey",
+              param: Option.some("idempotencyKey"),
             }),
         ),
       );

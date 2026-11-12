@@ -117,11 +117,12 @@ export const makeWebhookHandler = Effect.fn("makeWebhookHandler")(function* () {
           catch: () => new UnreadableBodyError(),
         }),
       );
-      const event = yield* Webhook.verify({
-        payload,
-        header: request.headers.get(Webhook.SIGNATURE_HEADER),
-        secret,
-      });
+      // `Headers.get` answers `null` for an absent header, which `verify`
+      // takes as the key left out.
+      const signature = request.headers.get(Webhook.SIGNATURE_HEADER);
+      const event = yield* signature === null
+        ? Webhook.verify({ payload, secret })
+        : Webhook.verify({ payload, secret, header: signature });
 
       const handled = yield* Webhook.decodeHandledEvent(event).pipe(
         Effect.mapError(() => new UndecodableEventError({ id: event.id, type: event.type })),
@@ -164,7 +165,7 @@ export const makeWebhookHandler = Effect.fn("makeWebhookHandler")(function* () {
 // ---------------------------------------------------------------------------
 
 /** A delivery as Stripe would POST it. */
-const delivery = (body: string, header: string | undefined) =>
+const delivery = (body: string, header?: string) =>
   new Request("https://example.com/webhooks/stripe", {
     method: "POST",
     body,
@@ -215,7 +216,9 @@ const demo = Effect.fn("demo")(function* () {
   // `signatureHeader` signs exactly as Stripe does. It is for tests and
   // tooling only: a server that signs can forge its own deliveries.
   const sign = (payload: string, timestamp?: number) =>
-    Webhook.signatureHeader({ payload, secret, timestamp });
+    timestamp === undefined
+      ? Webhook.signatureHeader({ payload, secret })
+      : Webhook.signatureHeader({ payload, secret, timestamp });
 
   const run = Effect.fn("run")(function* (label: string, request: Request) {
     const response = yield* handle(request);

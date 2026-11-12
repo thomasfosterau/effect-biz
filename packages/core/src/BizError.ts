@@ -186,7 +186,7 @@ export class Forbidden extends Schema.TaggedError<Forbidden, { readonly brand: u
 /**
  * Raised when a command breaks a business rule that no more specific error
  * covers. `code` is namespaced by module (`"sales.credit-limit-exceeded"`) so
- * a caller can branch on it; `details` carries the rule's figures as strings.
+ * a caller can branch on it; `details` carries the rule's figures as strings (`None` when it has none; an omitted key on the wire).
  */
 export class BusinessRuleViolation extends Schema.TaggedError<
   BusinessRuleViolation,
@@ -197,7 +197,9 @@ export class BusinessRuleViolation extends Schema.TaggedError<
   /** A human-readable explanation, free of personal data. */
   reason: Schema.String,
   /** The figures behind the decision, e.g. `{ limit: "5000.00" }`. */
-  details: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+  details: Schema.OptionFromOptionalKey(Schema.Record(Schema.String, Schema.String)).pipe(
+    Schema.withConstructorDefault(Effect.succeedNone),
+  ),
 }) {
   /** A message built from the code and reason. */
   override get message(): string {
