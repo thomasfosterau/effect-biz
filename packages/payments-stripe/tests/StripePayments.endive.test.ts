@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
@@ -222,10 +223,10 @@ describe("the default layer decodes endive responses", () => {
       amount: endivePaymentIntent.amount,
       currency: endivePaymentIntent.currency,
       status: "succeeded",
-      customerId: endivePaymentIntent.customer,
-      paymentMethodId: endivePaymentIntent.payment_method,
-      clientSecret: endivePaymentIntent.client_secret,
-      description: endivePaymentIntent.description,
+      customerId: Option.fromNullishOr(endivePaymentIntent.customer),
+      paymentMethodId: Option.fromNullishOr(endivePaymentIntent.payment_method),
+      clientSecret: Option.fromNullishOr(endivePaymentIntent.client_secret),
+      description: Option.fromNullishOr(endivePaymentIntent.description),
       metadata: endivePaymentIntent.metadata,
       created: endivePaymentIntent.created,
     });
@@ -241,7 +242,7 @@ describe("the default layer decodes endive responses", () => {
     expect(product).toMatchObject({
       id: endiveProduct.id,
       name: endiveProduct.name,
-      description: endiveProduct.description,
+      description: Option.fromNullishOr(endiveProduct.description),
       active: true,
       metadata: endiveProduct.metadata,
       created: endiveProduct.created,

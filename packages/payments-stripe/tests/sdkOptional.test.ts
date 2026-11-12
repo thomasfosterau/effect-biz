@@ -51,7 +51,7 @@ interface Walk {
   readonly seen: HashSet.HashSet<string>;
 }
 
-const reaches = (entry: string, target: string): ReadonlyArray<string> | undefined => {
+const reaches = (entry: string, target: string): Option.Option<ReadonlyArray<string>> => {
   const walk = (
     file: string,
     trail: ReadonlyArray<string>,
@@ -68,7 +68,7 @@ const reaches = (entry: string, target: string): ReadonlyArray<string> | undefin
       return walk(next, [...trail, next], state.seen);
     });
   };
-  return Option.getOrUndefined(walk(entry, [entry], HashSet.empty()).path);
+  return walk(entry, [entry], HashSet.empty()).path;
 };
 
 // oxlint-disable-next-line effect/avoid-sync-fs -- see the import
@@ -84,7 +84,7 @@ describe("the stripe SDK is optional", () => {
 
   it("follows runtime imports, and skips type-only ones", () => {
     // The walk reaches a package a module loads (Distilled's operations)…
-    expect(reaches("Customer.ts", "@distilled.cloud/stripe/stripe")).toBeDefined();
+    expect(Option.isSome(reaches("Customer.ts", "@distilled.cloud/stripe/stripe"))).toBe(true);
     // …and not one it imports for types alone: the webhook verifier's `stripe`.
     // oxlint-disable-next-line effect/avoid-sync-fs -- see the import
     expect(readFileSync(new URL("Webhook.ts", SRC), "utf8")).toContain(
@@ -93,6 +93,6 @@ describe("the stripe SDK is optional", () => {
   });
 
   it.each(entries)("is never loaded at runtime from %s", (entry) => {
-    expect(reaches(entry, "stripe")).toBeUndefined();
+    expect(reaches(entry, "stripe")).toEqual(Option.none());
   });
 });

@@ -3,6 +3,7 @@ import * as Clock from "effect/Clock";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Webhook from "../src/Webhook.ts";
 import { StripeService } from "../src/Webhook.ts";
@@ -305,20 +306,28 @@ describe("Webhook", () => {
       readonly [
         string,
         Effect.Effect<unknown, SignatureVerificationError, StripeService>,
-        string | undefined,
+        Option.Option<string>,
       ]
     > = [
-      ["constructEvent", Webhook.constructEvent(payload, "t=1,v1=x", "whsec_s"), "t=1,v1=x"],
+      [
+        "constructEvent",
+        Webhook.constructEvent(payload, "t=1,v1=x", "whsec_s"),
+        Option.some("t=1,v1=x"),
+      ],
       [
         "constructEventAsync",
         Webhook.constructEventAsync(payload, "t=1,v1=x", "whsec_s"),
-        "t=1,v1=x",
+        Option.some("t=1,v1=x"),
       ],
-      ["generateTestHeaderString", Webhook.generateTestHeaderString(payload, "whsec_s"), undefined],
+      [
+        "generateTestHeaderString",
+        Webhook.generateTestHeaderString(payload, "whsec_s"),
+        Option.none(),
+      ],
       [
         "generateTestHeaderStringAsync",
         Webhook.generateTestHeaderStringAsync(payload, "whsec_s"),
-        undefined,
+        Option.none(),
       ],
     ];
 
@@ -331,7 +340,7 @@ describe("Webhook", () => {
         );
         expect(error).toBeInstanceOf(SignatureVerificationError);
         expect(error.message).toBe("sdk refused");
-        expect(error.header).toBe(header);
+        expect(error.header).toBe(Option.getOrUndefined(header));
         expect(error.payload).toBe('{"id":"evt_1"}');
       });
 

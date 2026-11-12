@@ -20,6 +20,7 @@ import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { TestClock } from "effect/testing";
 import { SignatureVerificationError } from "@thomasfosterau/effect-biz/Payments";
+import { omitUndefined } from "@thomasfosterau/effect-biz/Payments.internal";
 import * as Webhook from "../src/Webhook.ts";
 
 const SECRET = "whsec_test_do_not_use_anywhere_real";
@@ -57,24 +58,30 @@ const at = <A, E>(nowSeconds: number, effect: Effect.Effect<A, E>): Promise<A> =
 
 type Options = Partial<Webhook.VerifyOptions>;
 
-const verifySignature = (payload: string | Uint8Array, header: string | null, options?: Options) =>
+const verifySignature = (payload: string | Uint8Array, header?: string, options?: Options) =>
   at(
     NOW,
     Effect.result(
-      Webhook.verifySignature({ payload, header, secret: Redacted.make(SECRET), ...options }),
+      Webhook.verifySignature({
+        payload,
+        secret: Redacted.make(SECRET),
+        // A missing header is the member left out.
+        ...omitUndefined({ header }),
+        ...options,
+      }),
     ),
   );
 
-/** `undefined` when the signature verified, else the refusal's message. */
+/** `None` when the signature verified, else the refusal's message. */
 const refusal = async (
   payload: string | Uint8Array,
-  header: string | null,
+  header?: string,
   options?: Options,
-): Promise<string | undefined> => {
+): Promise<Option.Option<string>> => {
   const result = await verifySignature(payload, header, options);
-  if (Result.isSuccess(result)) return undefined;
+  if (Result.isSuccess(result)) return Option.none();
   expect(result.failure).toBeInstanceOf(SignatureVerificationError);
-  return result.failure.message;
+  return Option.some(result.failure.message);
 };
 
 /** A test event's body: the event serialised as `JSON.stringify` does. */
@@ -88,58 +95,60 @@ const BODY = toJson({
 
 describe("Webhook.verifySignature", () => {
   it("accepts a genuine signature", async () => {
-    expect(await refusal(BODY, await sign(BODY, NOW))).toBeUndefined();
+    expect(await refusal(BODY, await sign(BODY, NOW))).toEqual(Option.none());
   });
 
   it("accepts a signature within the tolerance window on either side", async () => {
-    expect(await refusal(BODY, await sign(BODY, NOW - TOLERANCE + 1))).toBeUndefined();
-    expect(await refusal(BODY, await sign(BODY, NOW + TOLERANCE - 1))).toBeUndefined();
+    expect(await refusal(BODY, await sign(BODY, NOW - TOLERANCE + 1))).toEqual(Option.none());
+    expect(await refusal(BODY, await sign(BODY, NOW + TOLERANCE - 1))).toEqual(Option.none());
     // The window is inclusive at its edges.
-    expect(await refusal(BODY, await sign(BODY, NOW - TOLERANCE))).toBeUndefined();
+    expect(await refusal(BODY, await sign(BODY, NOW - TOLERANCE))).toEqual(Option.none());
   });
 
   it("refuses a body tampered with after signing", async () => {
     const header = await sign(BODY, NOW);
     const tampered = BODY.replace("updated", "deleted");
-    expect(await refusal(tampered, header)).toBe(Webhook.SIGNATURE_MISMATCH_MESSAGE);
+    expect(await refusal(tampered, header)).toEqual(
+      Option.some(Webhook.SIGNATURE_MISMATCH_MESSAGE),
+    );
   });
 
   it("refuses a signature made with a different secret", async () => {
     const header = await sign(BODY, NOW, "whsec_some_other_endpoints_secret");
-    expect(await refusal(BODY, header)).toBe(Webhook.SIGNATURE_MISMATCH_MESSAGE);
+    expect(await refusal(BODY, header)).toEqual(Option.some(Webhook.SIGNATURE_MISMATCH_MESSAGE));
   });
 
   it("refuses a timestamp changed after signing", async () => {
     const genuine = await digest(BODY, NOW);
-    expect(await refusal(BODY, `t=${NOW - 1},v1=${genuine}`)).toBe(
-      Webhook.SIGNATURE_MISMATCH_MESSAGE,
+    expect(await refusal(BODY, `t=${NOW - 1},v1=${genuine}`)).toEqual(
+      Option.some(Webhook.SIGNATURE_MISMATCH_MESSAGE),
     );
   });
 
   it("refuses a replay from outside the tolerance window", async () => {
     const header = await sign(BODY, NOW - TOLERANCE - 1);
-    expect(await refusal(BODY, header)).toBe(Webhook.OUTSIDE_TOLERANCE_MESSAGE);
+    expect(await refusal(BODY, header)).toEqual(Option.some(Webhook.OUTSIDE_TOLERANCE_MESSAGE));
   });
 
   it("refuses a future-dated timestamp just as firmly", async () => {
     const header = await sign(BODY, NOW + TOLERANCE + 1);
-    expect(await refusal(BODY, header)).toBe(Webhook.OUTSIDE_TOLERANCE_MESSAGE);
+    expect(await refusal(BODY, header)).toEqual(Option.some(Webhook.OUTSIDE_TOLERANCE_MESSAGE));
   });
 
   it("honours a configured tolerance", async () => {
     const header = await sign(BODY, NOW - 3600);
-    expect(await refusal(BODY, header)).toBe(Webhook.OUTSIDE_TOLERANCE_MESSAGE);
-    expect(await refusal(BODY, header, { tolerance: 7200 })).toBeUndefined();
-    expect(await refusal(BODY, await sign(BODY, NOW - 11), { tolerance: 10 })).toBe(
-      Webhook.OUTSIDE_TOLERANCE_MESSAGE,
+    expect(await refusal(BODY, header)).toEqual(Option.some(Webhook.OUTSIDE_TOLERANCE_MESSAGE));
+    expect(await refusal(BODY, header, { tolerance: 7200 })).toEqual(Option.none());
+    expect(await refusal(BODY, await sign(BODY, NOW - 11), { tolerance: 10 })).toEqual(
+      Option.some(Webhook.OUTSIDE_TOLERANCE_MESSAGE),
     );
   });
 
   it.each([Number.NaN, Number.POSITIVE_INFINITY, -1])(
     "fails closed on an unusable tolerance (%s)",
     async (tolerance) => {
-      expect(await refusal(BODY, await sign(BODY, NOW), { tolerance })).toBe(
-        Webhook.INVALID_TOLERANCE_MESSAGE,
+      expect(await refusal(BODY, await sign(BODY, NOW), { tolerance })).toEqual(
+        Option.some(Webhook.INVALID_TOLERANCE_MESSAGE),
       );
     },
   );
@@ -156,7 +165,7 @@ describe("Webhook.verifySignature", () => {
   });
 
   it.each([
-    ["missing (null)", null],
+    ["missing (omitted)", undefined],
     ["empty", ""],
     ["no v1 part", `t=${NOW}`],
     ["an empty v1", `t=${NOW},v1=`],
@@ -167,19 +176,13 @@ describe("Webhook.verifySignature", () => {
     ["only a v0 scheme", `t=${NOW},v0=deadbeef`],
     ["not the scheme at all", "Bearer something"],
   ])("refuses a malformed header (%s)", async (_label, header) => {
-    expect(await refusal(BODY, header)).toBe(Webhook.MALFORMED_HEADER_MESSAGE);
+    expect(await refusal(BODY, header)).toEqual(Option.some(Webhook.MALFORMED_HEADER_MESSAGE));
   });
 
-  it("refuses a missing header passed as undefined", async () => {
+  it("refuses a missing header", async () => {
     const error = await at(
       NOW,
-      Effect.flip(
-        Webhook.verifySignature({
-          payload: BODY,
-          header: undefined,
-          secret: Redacted.make(SECRET),
-        }),
-      ),
+      Effect.flip(Webhook.verifySignature({ payload: BODY, secret: Redacted.make(SECRET) })),
     );
     expect(error.message).toBe(Webhook.MALFORMED_HEADER_MESSAGE);
     expect(error.header).toBeUndefined();
@@ -188,47 +191,47 @@ describe("Webhook.verifySignature", () => {
   it("accepts when any one of several v1 candidates matches (secret rotation)", async () => {
     const genuine = await digest(BODY, NOW);
     const zeros = "0".repeat(64);
-    expect(await refusal(BODY, `t=${NOW},v1=${zeros},v1=${genuine}`)).toBeUndefined();
-    expect(await refusal(BODY, `t=${NOW},v1=${genuine},v1=${zeros}`)).toBeUndefined();
+    expect(await refusal(BODY, `t=${NOW},v1=${zeros},v1=${genuine}`)).toEqual(Option.none());
+    expect(await refusal(BODY, `t=${NOW},v1=${genuine},v1=${zeros}`)).toEqual(Option.none());
     // Unknown schemes, extra whitespace and order do not matter.
-    expect(await refusal(BODY, ` v0=abc , v1=${genuine} , t=${NOW} `)).toBeUndefined();
+    expect(await refusal(BODY, ` v0=abc , v1=${genuine} , t=${NOW} `)).toEqual(Option.none());
   });
 
   it("refuses when none of several v1 candidates matches", async () => {
     const other = await digest(BODY, NOW, "whsec_other");
-    expect(await refusal(BODY, `t=${NOW},v1=${"0".repeat(64)},v1=${other}`)).toBe(
-      Webhook.SIGNATURE_MISMATCH_MESSAGE,
+    expect(await refusal(BODY, `t=${NOW},v1=${"0".repeat(64)},v1=${other}`)).toEqual(
+      Option.some(Webhook.SIGNATURE_MISMATCH_MESSAGE),
     );
   });
 
   it("verifies the raw bytes of a payload", async () => {
     const bytes = new TextEncoder().encode(BODY);
-    expect(await refusal(bytes, await sign(BODY, NOW))).toBeUndefined();
+    expect(await refusal(bytes, await sign(BODY, NOW))).toEqual(Option.none());
     // Multi-byte UTF-8 must be signed as bytes, not UTF-16 code units.
     const unicode = toJson({ id: "evt_ü", type: "x", data: { object: {} } });
-    expect(
-      await refusal(new TextEncoder().encode(unicode), await sign(unicode, NOW)),
-    ).toBeUndefined();
+    expect(await refusal(new TextEncoder().encode(unicode), await sign(unicode, NOW))).toEqual(
+      Option.none(),
+    );
   });
 
   it("takes the last t when the header repeats it", async () => {
     // Signed at NOW, but a second `t` wins, so the MAC no longer matches.
     const genuine = await digest(BODY, NOW);
-    expect(await refusal(BODY, `t=${NOW},t=${NOW - 1},v1=${genuine}`)).toBe(
-      Webhook.SIGNATURE_MISMATCH_MESSAGE,
+    expect(await refusal(BODY, `t=${NOW},t=${NOW - 1},v1=${genuine}`)).toEqual(
+      Option.some(Webhook.SIGNATURE_MISMATCH_MESSAGE),
     );
   });
 
   it("refuses an uppercase-hex v1 (Stripe sends lowercase)", async () => {
     const genuine = await digest(BODY, NOW);
-    expect(await refusal(BODY, `t=${NOW},v1=${genuine.toUpperCase()}`)).toBe(
-      Webhook.SIGNATURE_MISMATCH_MESSAGE,
+    expect(await refusal(BODY, `t=${NOW},v1=${genuine.toUpperCase()}`)).toEqual(
+      Option.some(Webhook.SIGNATURE_MISMATCH_MESSAGE),
     );
   });
 
   it("refuses an absurdly long timestamp as outside the window", async () => {
-    expect(await refusal(BODY, `t=${"9".repeat(400)},v1=${"0".repeat(64)}`)).toBe(
-      Webhook.OUTSIDE_TOLERANCE_MESSAGE,
+    expect(await refusal(BODY, `t=${"9".repeat(400)},v1=${"0".repeat(64)}`)).toEqual(
+      Option.some(Webhook.OUTSIDE_TOLERANCE_MESSAGE),
     );
   });
 

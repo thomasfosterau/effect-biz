@@ -202,7 +202,7 @@ const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);
 /**
  * Scale the decimal `mantissa × 10^-scale` to minor units for a currency with
  * `digits` fraction digits, using integer (`BigInt`) arithmetic only. Returns
- * the magnitude, or `undefined` when the value has more fraction digits than
+ * the magnitude, or `None` when the value has more fraction digits than
  * the currency allows (`scale > digits`, so nothing is rounded) or exceeds the
  * safe-integer range as minor units.
  *
@@ -212,10 +212,10 @@ export const scaleToMinor = (
   mantissa: bigint,
   scale: number,
   digits: number,
-): bigint | undefined => {
-  if (scale > digits) return undefined;
+): Option.Option<bigint> => {
+  if (scale > digits) return Option.none();
   const magnitude = mantissa * 10n ** BigInt(digits - scale);
-  return magnitude > MAX_SAFE ? undefined : magnitude;
+  return magnitude > MAX_SAFE ? Option.none() : Option.some(magnitude);
 };
 
 /** An optionally negative decimal: whole digits and an optional fraction. */
@@ -223,20 +223,21 @@ const DECIMAL = /^(-?)(\d+)(?:\.(\d+))?$/;
 
 /**
  * Parse a major-unit decimal string into minor units for a currency with
- * `digits` fraction digits, or `undefined` when it is malformed, has more
+ * `digits` fraction digits, or `None` when it is malformed, has more
  * fraction digits than `digits`, or is outside the safe-integer range as minor
  * units. Never produces `-0`.
  *
  * Internal, and exempt from semver: see the module documentation.
  */
-export const parseDecimal = (text: string, digits: number): number | undefined => {
+export const parseDecimal = (text: string, digits: number): Option.Option<number> => {
   const match = DECIMAL.exec(text);
-  if (match === null) return undefined;
+  if (match === null) return Option.none();
   const [, sign, whole, fraction = ""] = match;
-  const magnitude = scaleToMinor(BigInt(`${whole}${fraction}`), fraction.length, digits);
-  if (magnitude === undefined) return undefined;
-  // `magnitude` is 0 for "-0.00"; never produce -0.
-  return sign === "-" && magnitude !== 0n ? -Number(magnitude) : Number(magnitude);
+  return Option.map(
+    scaleToMinor(BigInt(`${whole}${fraction}`), fraction.length, digits),
+    // `magnitude` is 0 for "-0.00"; never produce -0.
+    (magnitude) => (sign === "-" && magnitude !== 0n ? -Number(magnitude) : Number(magnitude)),
+  );
 };
 
 /**
@@ -253,14 +254,16 @@ export const decimalText = (negative: boolean, magnitude: bigint, digits: number
 
 /**
  * Format minor units as a major-unit decimal string with `digits` fraction
- * digits, or `undefined` when `minor` is not a safe integer (such an amount has
+ * digits, or `None` when `minor` is not a safe integer (such an amount has
  * no exact decimal form, and sending a rounded one would charge a different
  * amount).
  *
  * Internal, and exempt from semver: see the module documentation.
  */
-export const formatDecimal = (minor: number, digits: number): string | undefined =>
-  Number.isSafeInteger(minor) ? decimalText(minor < 0, BigInt(Math.abs(minor)), digits) : undefined;
+export const formatDecimal = (minor: number, digits: number): Option.Option<string> =>
+  Number.isSafeInteger(minor)
+    ? Option.some(decimalText(minor < 0, BigInt(Math.abs(minor)), digits))
+    : Option.none();
 
 /**
  * Check a request amount without needing its currency, failing with
@@ -370,7 +373,7 @@ export const timedOut = (
 export interface Reply {
   readonly status: number;
   /** The response headers, keyed in lower case. */
-  readonly headers: Readonly<Record<string, string | undefined>>;
+  readonly headers: Readonly<Record<string, string>>;
   /** The JSON body, or `{}` when it is empty or not JSON. */
   readonly json: unknown;
 }
@@ -532,8 +535,10 @@ export const checkId = (
  *
  * Internal, and exempt from semver: see the module documentation.
  */
-export const stringField = (cause: unknown, field: string): string | undefined =>
-  P.hasProperty(cause, field) && P.isString(cause[field]) ? cause[field] : undefined;
+export const stringField = (cause: unknown, field: string): Option.Option<string> =>
+  P.hasProperty(cause, field) && P.isString(cause[field])
+    ? Option.some(cause[field])
+    : Option.none();
 
 /**
  * What a client saw of a response before anything else read it.
@@ -542,7 +547,7 @@ export const stringField = (cause: unknown, field: string): string | undefined =
  */
 export interface ObservedResponse {
   readonly status: number;
-  readonly headers: Readonly<Record<string, string | undefined>>;
+  readonly headers: Readonly<Record<string, string>>;
   /** The JSON body, or `None` for an empty body or one that is not JSON. */
   readonly body: Option.Option<Schema.Json>;
 }
@@ -600,9 +605,9 @@ export const rejectedError = (
   fallback: { readonly message: string; readonly code: string },
 ): PaymentProviderError =>
   new PaymentProviderError({
-    message: stringField(cause, "message") ?? fallback.message,
+    message: Option.getOrElse(stringField(cause, "message"), () => fallback.message),
     provider,
-    code: stringField(cause, "_tag") ?? fallback.code,
+    code: Option.getOrElse(stringField(cause, "_tag"), () => fallback.code),
     cause,
   });
 
@@ -652,8 +657,8 @@ export const responseDecoder =
  *
  * Internal, and exempt from semver: see the module documentation.
  */
-export const epochSecondsOf = (value: string | null | undefined): number =>
-  Option.fromNullishOr(value).pipe(
+export const epochSecondsOf = (value: Option.Option<string>): number =>
+  value.pipe(
     Option.filter((text) => text !== ""),
     Option.flatMap(DateTime.make),
     Option.match({
@@ -662,11 +667,11 @@ export const epochSecondsOf = (value: string | null | undefined): number =>
     }),
   );
 
-/** A `Retry-After` header given in whole seconds, or `undefined`. */
-const retryAfterSeconds = (header: string | undefined): number | undefined =>
+/** A `Retry-After` header given in whole seconds, or `None`. */
+const retryAfterSeconds = (header?: string): Option.Option<number> =>
   header !== undefined && /^\d+$/.test(header.trim())
-    ? Number.parseInt(header.trim(), 10)
-    : undefined;
+    ? Option.some(Number.parseInt(header.trim(), 10))
+    : Option.none();
 
 /**
  * Classify a provider's HTTP error `status` onto the neutral error channel.
@@ -691,15 +696,15 @@ export const errorFromStatus = (
     readonly provider: string;
     readonly message: string;
     /** The vendor's error code, for a {@link PaymentProviderError}. */
-    readonly code?: string | undefined;
+    readonly code?: string;
     /** The offending parameter, for a {@link PaymentInvalidRequestError}. */
-    readonly param?: string | undefined;
+    readonly param?: string;
     /**
      * The response's `Retry-After` header, for a {@link PaymentRateLimitError}:
      * read as whole seconds, and left out when it is absent or not a number
      * of seconds (an HTTP date, say).
      */
-    readonly retryAfter?: string | undefined;
+    readonly retryAfter?: string;
   },
 ): PaymentsError => {
   const { message } = details;
@@ -709,7 +714,7 @@ export const errorFromStatus = (
   if (status === 429) {
     return new PaymentRateLimitError({
       message,
-      retryAfter: retryAfterSeconds(details.retryAfter),
+      retryAfter: Option.getOrUndefined(retryAfterSeconds(details.retryAfter)),
     });
   }
   if (status === 400 || status === 404 || status === 422) {
@@ -739,13 +744,10 @@ const refuseCursor = (message: string) =>
  * {@link pageNumberedList}) names, or `firstPage` without one.
  */
 const readPageCursor = (
-  startingAfter: string | undefined,
-  options: {
-    readonly provider: string;
-    readonly firstPage: number;
-    readonly limit: number | undefined;
-  },
+  options: { readonly provider: string; readonly firstPage: number },
+  params: { readonly limit?: number; readonly startingAfter?: string },
 ): Effect.Effect<number, PaymentInvalidRequestError> => {
+  const { startingAfter } = params;
   if (startingAfter === undefined) return Effect.succeed(options.firstPage);
   const match = PAGE_CURSOR.exec(startingAfter);
   const page = match === null ? Number.NaN : Number(match[1]);
@@ -755,7 +757,7 @@ const readPageCursor = (
     );
   }
   const size = match[2];
-  const limit = options.limit === undefined ? undefined : String(options.limit);
+  const limit = params.limit === undefined ? undefined : String(params.limit);
   return size === limit
     ? Effect.succeed(page)
     : refuseCursor(
@@ -766,21 +768,22 @@ const readPageCursor = (
 };
 
 /** `page`, vendor page `pageNumber`, with the cursor of the next one when it has more. */
-const withPageCursor = <A>(page: Page<A>, pageNumber: number, limit: number | undefined): Page<A> =>
+const withPageCursor = <A>(page: Page<A>, pageNumber: number, limit?: number): Page<A> =>
   page.hasMore
     ? {
         ...page,
-        nextCursor:
+        nextCursor: Option.some(
           limit === undefined ? `page=${pageNumber + 1}` : `page=${pageNumber + 1}&size=${limit}`,
+        ),
       }
-    : { data: page.data, hasMore: false };
+    : { data: page.data, hasMore: false, nextCursor: Option.none() };
 
 /**
  * One page of a vendor list that pages by page number, as a neutral page
  * whose `nextCursor` encodes the next page number and the explicit `limit`.
  *
  * `startingAfter` must be such a cursor: it names the vendor page `list`
- * requests. Without one, `list` gets `undefined` and requests the vendor's
+ * requests. Without one, `list` gets no page number and requests the vendor's
  * first page (`firstPage`) by default. An item id, a malformed cursor, one
  * below `firstPage`, or one made for a different `limit` fails with
  * {@link PaymentInvalidRequestError} (`param: "startingAfter"`) before `list`
@@ -789,21 +792,17 @@ const withPageCursor = <A>(page: Page<A>, pageNumber: number, limit: number | un
  * Internal, and exempt from semver: see the module documentation.
  */
 export const pageNumberedList = <A, E>(
-  params:
-    | { readonly limit?: number | undefined; readonly startingAfter?: string | undefined }
-    | undefined,
+  params: { readonly limit?: number; readonly startingAfter?: string },
   options: {
     /** The provider's name, for the message: `"Acme"`. */
     readonly provider: string;
     /** The vendor's first page number: `0` or `1`. */
     readonly firstPage: number;
   },
-  list: (page: number | undefined) => Effect.Effect<Page<A>, E>,
+  list: (page?: number) => Effect.Effect<Page<A>, E>,
 ): Effect.Effect<Page<A>, E | PaymentInvalidRequestError> =>
-  Effect.flatMap(
-    readPageCursor(params?.startingAfter, { ...options, limit: params?.limit }),
-    (page) =>
-      Effect.map(list(params?.startingAfter === undefined ? undefined : page), (result) =>
-        withPageCursor(result, page, params?.limit),
-      ),
+  Effect.flatMap(readPageCursor(options, params), (page) =>
+    Effect.map(params.startingAfter === undefined ? list() : list(page), (result) =>
+      withPageCursor(result, page, params.limit),
+    ),
   );

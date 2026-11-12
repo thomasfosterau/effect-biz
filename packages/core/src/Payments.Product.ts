@@ -20,7 +20,7 @@ export class Product extends Schema.Class<Product, { readonly brand: unique symb
 )({
   id: Schema.String,
   name: Schema.String,
-  description: Schema.NullOr(Schema.String),
+  description: Schema.OptionFromNullOr(Schema.String),
   active: Schema.Boolean,
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
@@ -30,34 +30,34 @@ export class Product extends Schema.Class<Product, { readonly brand: unique symb
 /** Parameters for creating a product. */
 export interface CreateParams {
   readonly name: string;
-  readonly description?: string | undefined;
-  readonly active?: boolean | undefined;
-  readonly metadata?: Record<string, string> | undefined;
+  readonly description?: string;
+  readonly active?: boolean;
+  readonly metadata?: Record<string, string>;
   /**
    * Makes this write safe to repeat: create one with `IdempotencyKey.generate`
    * before the first attempt and pass the same key on every retry (see
    * `IdempotencyKey` for the contract).
    */
-  readonly idempotencyKey?: IdempotencyKey | undefined;
+  readonly idempotencyKey?: IdempotencyKey;
 }
 
 /** Parameters for updating a product. */
 export interface UpdateParams {
-  readonly name?: string | undefined;
-  readonly description?: string | undefined;
-  readonly active?: boolean | undefined;
-  readonly metadata?: Record<string, string> | undefined;
+  readonly name?: string;
+  readonly description?: string;
+  readonly active?: boolean;
+  readonly metadata?: Record<string, string>;
 }
 
 /** Parameters for listing products. */
 export interface ListParams {
-  readonly limit?: number | undefined;
-  readonly active?: boolean | undefined;
+  readonly limit?: number;
+  readonly active?: boolean;
   /**
    * The previous page's `nextCursor`, to list the page after it. A provider
    * whose cursor is an item id also takes any item id here.
    */
-  readonly startingAfter?: string | undefined;
+  readonly startingAfter?: string;
 }
 
 /**

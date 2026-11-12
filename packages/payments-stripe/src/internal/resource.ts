@@ -20,6 +20,7 @@ import {
   PaymentInvalidRequestError,
   type PaymentsError,
 } from "@thomasfosterau/effect-biz/Payments";
+import { omitUndefined } from "@thomasfosterau/effect-biz/Payments.internal";
 import { type Method, type Operation, type RequestOptions, StripeHttp } from "../StripeHttp.js";
 
 /** What an operation's call needs to know of its Distilled operation. */
@@ -33,18 +34,19 @@ export interface Route {
   /** Whether the operation takes input beyond its path ids (`params`). */
   readonly params: boolean;
   /** Whether the request goes to the file-uploads origin (`POST /v1/files`). */
-  readonly upload?: boolean | undefined;
+  readonly upload?: boolean;
 }
 
 /**
  * The fields of a caller's {@link RequestOptions}, and nothing else: an
  * options object from untyped code must not be able to set `upload`.
  */
-const pickOptions = (options: RequestOptions | undefined): RequestOptions => ({
-  idempotencyKey: options?.idempotencyKey,
-  stripeAccount: options?.stripeAccount,
-  apiVersion: options?.apiVersion,
-});
+const pickOptions = (options: RequestOptions): RequestOptions =>
+  omitUndefined({
+    idempotencyKey: options.idempotencyKey,
+    stripeAccount: options.stripeAccount,
+    apiVersion: options.apiVersion,
+  });
 
 /**
  * Refuse a path id that is not a non-empty string before anything is sent:
@@ -72,7 +74,6 @@ const checkIds = (
  */
 type Param =
   | Schema.Json
-  | undefined
   | Blob
   | Uint8Array
   | ArrayBuffer
@@ -80,7 +81,7 @@ type Param =
   | { readonly [key: string]: Param };
 
 /** The params argument as an object to spread: absent, or anything but an object, is none. */
-const paramsOf = (value: Param): Readonly<Record<string, Param>> =>
+const paramsOf = (value?: Param): Readonly<Record<string, Param>> =>
   P.isObject(value) && !isFile(value) && !Array.isArray(value) ? value : {};
 
 /** A file part of an upload: sent as itself, never flattened. */
@@ -118,9 +119,10 @@ export const operation = <F>(distilled: Operation<never, unknown, unknown>, rout
   ): Effect.Effect<unknown, PaymentsError, StripeHttp> => {
     const ids = args.slice(0, route.ids.length);
     const params = route.params ? args[route.ids.length] : undefined;
+    const last = args[route.ids.length + (route.params ? 1 : 0)];
     // SAFETY: the trailing argument is `RequestOptions` by the generated
-    // signature; `pickOptions` reads only its three fields.
-    const options = args[route.ids.length + (route.params ? 1 : 0)] as RequestOptions | undefined;
+    // signature, or absent; `pickOptions` reads only its three fields.
+    const options = P.isObject(last) ? (last as RequestOptions) : {};
     const given = paramsOf(params);
     const input = R.fromEntries([
       ...R.toEntries(route.upload ? flattenUpload(given) : given),
@@ -133,7 +135,7 @@ export const operation = <F>(distilled: Operation<never, unknown, unknown>, rout
         // generated signature's ids and params; `call` passes it on unread.
         http.call(route.method, distilled, input as never, {
           ...pickOptions(options),
-          upload: route.upload,
+          ...omitUndefined({ upload: route.upload }),
         }),
       ),
     );

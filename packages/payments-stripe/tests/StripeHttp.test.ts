@@ -122,7 +122,7 @@ describe("resource modules over StripeHttp", () => {
         "&expand[0]=latest_invoice&invoice_now=true&prorate=false",
     );
     expect(calls[0]?.body).toBeUndefined();
-    expect(calls[0]?.init?.body).toBeUndefined();
+    expect(calls[0]?.init.body).toBeUndefined();
     expect(calls[0]?.headers.get("content-type")).toBeNull();
   });
 
@@ -133,7 +133,7 @@ describe("resource modules over StripeHttp", () => {
     expect(calls[0]?.url.toString()).toBe(
       "https://api.stripe.com/v1/customers/cus_1/sources/card_1?expand[0]=customer",
     );
-    expect(calls[0]?.init?.body).toBeUndefined();
+    expect(calls[0]?.init.body).toBeUndefined();
     expect(calls[0]?.headers.get("content-type")).toBeNull();
   });
 
@@ -141,7 +141,7 @@ describe("resource modules over StripeHttp", () => {
     const { result, calls } = over(Subscription.cancel("sub_1"));
     await result;
     expect(calls[0]?.url.toString()).toBe("https://api.stripe.com/v1/subscriptions/sub_1");
-    expect(calls[0]?.init?.body).toBeUndefined();
+    expect(calls[0]?.init.body).toBeUndefined();
     expect(calls[0]?.headers.get("content-type")).toBeNull();
   });
 

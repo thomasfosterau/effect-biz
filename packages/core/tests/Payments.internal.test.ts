@@ -222,50 +222,54 @@ describe("shareLogin", () => {
 
 describe("scaleToMinor", () => {
   it("scales a mantissa to minor units with integer arithmetic", () => {
-    expect(scaleToMinor(1234n, 2, 2)).toBe(1234n);
-    expect(scaleToMinor(12n, 0, 2)).toBe(1200n);
-    expect(scaleToMinor(5n, 1, 3)).toBe(500n);
-    expect(scaleToMinor(7n, 0, 0)).toBe(7n);
-    expect(scaleToMinor(0n, 5, 5)).toBe(0n);
+    expect(scaleToMinor(1234n, 2, 2)).toEqual(Option.some(1234n));
+    expect(scaleToMinor(12n, 0, 2)).toEqual(Option.some(1200n));
+    expect(scaleToMinor(5n, 1, 3)).toEqual(Option.some(500n));
+    expect(scaleToMinor(7n, 0, 0)).toEqual(Option.some(7n));
+    expect(scaleToMinor(0n, 5, 5)).toEqual(Option.some(0n));
   });
 
   it("refuses more fraction digits than the currency allows rather than rounding", () => {
-    expect(scaleToMinor(1001n, 3, 2)).toBeUndefined();
-    expect(scaleToMinor(1n, 1, 0)).toBeUndefined();
+    expect(scaleToMinor(1001n, 3, 2)).toEqual(Option.none());
+    expect(scaleToMinor(1n, 1, 0)).toEqual(Option.none());
   });
 
   it("refuses a magnitude beyond the safe-integer range, and allows the limit itself", () => {
-    expect(scaleToMinor(BigInt(Number.MAX_SAFE_INTEGER), 0, 0)).toBe(
-      BigInt(Number.MAX_SAFE_INTEGER),
+    expect(scaleToMinor(BigInt(Number.MAX_SAFE_INTEGER), 0, 0)).toEqual(
+      Option.some(BigInt(Number.MAX_SAFE_INTEGER)),
     );
-    expect(scaleToMinor(BigInt(Number.MAX_SAFE_INTEGER) + 1n, 0, 0)).toBeUndefined();
-    expect(scaleToMinor(BigInt(Number.MAX_SAFE_INTEGER), 0, 2)).toBeUndefined();
+    expect(scaleToMinor(BigInt(Number.MAX_SAFE_INTEGER) + 1n, 0, 0)).toEqual(Option.none());
+    expect(scaleToMinor(BigInt(Number.MAX_SAFE_INTEGER), 0, 2)).toEqual(Option.none());
   });
 });
 
 describe("parseDecimal", () => {
   it("parses a decimal string for the given number of fraction digits", () => {
-    expect(parseDecimal("10.00", 2)).toBe(1000);
-    expect(parseDecimal("10", 2)).toBe(1000);
-    expect(parseDecimal("0.5", 2)).toBe(50);
-    expect(parseDecimal("1.234", 3)).toBe(1234);
-    expect(parseDecimal("1500", 0)).toBe(1500);
-    expect(parseDecimal("-12.34", 2)).toBe(-1234);
+    expect(parseDecimal("10.00", 2)).toEqual(Option.some(1000));
+    expect(parseDecimal("10", 2)).toEqual(Option.some(1000));
+    expect(parseDecimal("0.5", 2)).toEqual(Option.some(50));
+    expect(parseDecimal("1.234", 3)).toEqual(Option.some(1234));
+    expect(parseDecimal("1500", 0)).toEqual(Option.some(1500));
+    expect(parseDecimal("-12.34", 2)).toEqual(Option.some(-1234));
   });
 
   it("never produces -0", () => {
-    expect(Object.is(parseDecimal("-0.00", 2), 0)).toBe(true);
-    expect(Object.is(parseDecimal("-0", 0), 0)).toBe(true);
+    expect(Option.map(parseDecimal("-0.00", 2), (minor) => Object.is(minor, 0))).toEqual(
+      Option.some(true),
+    );
+    expect(Option.map(parseDecimal("-0", 0), (minor) => Object.is(minor, 0))).toEqual(
+      Option.some(true),
+    );
   });
 
   it("rejects malformed text, excess fraction digits and unsafe magnitudes", () => {
     Arr.forEach(["", "abc", "1.", ".5", "+1", "1e3", " 1", "1.2.3", "--1"], (text) => {
-      expect(parseDecimal(text, 2)).toBeUndefined();
+      expect(parseDecimal(text, 2)).toEqual(Option.none());
     });
-    expect(parseDecimal("1.001", 2)).toBeUndefined();
-    expect(parseDecimal("1.5", 0)).toBeUndefined();
-    expect(parseDecimal("90071992547409.92", 2)).toBeUndefined();
-    expect(parseDecimal("90071992547409.91", 2)).toBe(Number.MAX_SAFE_INTEGER);
+    expect(parseDecimal("1.001", 2)).toEqual(Option.none());
+    expect(parseDecimal("1.5", 0)).toEqual(Option.none());
+    expect(parseDecimal("90071992547409.92", 2)).toEqual(Option.none());
+    expect(parseDecimal("90071992547409.91", 2)).toEqual(Option.some(Number.MAX_SAFE_INTEGER));
   });
 });
 
@@ -279,22 +283,22 @@ describe("decimalText and formatDecimal", () => {
   });
 
   it("formats safe-integer minor units and refuses anything else", () => {
-    expect(formatDecimal(1000, 2)).toBe("10.00");
-    expect(formatDecimal(-5, 2)).toBe("-0.05");
-    expect(formatDecimal(0, 0)).toBe("0");
-    expect(formatDecimal(1234, 3)).toBe("1.234");
-    expect(formatDecimal(Number.MAX_SAFE_INTEGER, 2)).toBe("90071992547409.91");
+    expect(formatDecimal(1000, 2)).toEqual(Option.some("10.00"));
+    expect(formatDecimal(-5, 2)).toEqual(Option.some("-0.05"));
+    expect(formatDecimal(0, 0)).toEqual(Option.some("0"));
+    expect(formatDecimal(1234, 3)).toEqual(Option.some("1.234"));
+    expect(formatDecimal(Number.MAX_SAFE_INTEGER, 2)).toEqual(Option.some("90071992547409.91"));
     Arr.forEach([10.5, 2 ** 53, Number.NaN, Number.POSITIVE_INFINITY], (minor) => {
-      expect(formatDecimal(minor, 2)).toBeUndefined();
+      expect(formatDecimal(minor, 2)).toEqual(Option.none());
     });
   });
 
   it("round-trips through parseDecimal", () => {
     Arr.forEach([0, 2, 3], (digits) => {
       Arr.forEach([0, 1, 99, 100, 123456789, -1, -250, Number.MAX_SAFE_INTEGER], (minor) => {
-        const text = formatDecimal(minor, digits);
-        assert.isDefined(text);
-        expect(parseDecimal(text, digits)).toBe(minor);
+        expect(
+          Option.flatMap(formatDecimal(minor, digits), (text) => parseDecimal(text, digits)),
+        ).toEqual(Option.some(minor));
       });
     });
   });
@@ -535,11 +539,11 @@ describe("checkId", () => {
 
 describe("stringField", () => {
   it("reads a string field, and nothing else", () => {
-    expect(stringField({ message: "boom" }, "message")).toBe("boom");
-    expect(stringField({ message: 42 }, "message")).toBeUndefined();
-    expect(stringField({}, "message")).toBeUndefined();
-    expect(stringField(null, "message")).toBeUndefined();
-    expect(stringField("message", "length")).toBeUndefined();
+    expect(stringField({ message: "boom" }, "message")).toEqual(Option.some("boom"));
+    expect(stringField({ message: 42 }, "message")).toEqual(Option.none());
+    expect(stringField({}, "message")).toEqual(Option.none());
+    expect(stringField(null, "message")).toEqual(Option.none());
+    expect(stringField("message", "length")).toEqual(Option.none());
   });
 });
 
@@ -626,13 +630,13 @@ describe("responseDecoder", () => {
 
 describe("epochSecondsOf", () => {
   it("reads an ISO-8601 timestamp as whole Unix seconds", () => {
-    expect(epochSecondsOf("2024-01-02T03:04:05Z")).toBe(1_704_164_645);
-    expect(epochSecondsOf("2024-01-02T03:04:05.999Z")).toBe(1_704_164_645);
-    expect(epochSecondsOf("2026-01-01T10:00:00.900+10:00")).toBe(1_767_225_600);
+    expect(epochSecondsOf(Option.some("2024-01-02T03:04:05Z"))).toBe(1_704_164_645);
+    expect(epochSecondsOf(Option.some("2024-01-02T03:04:05.999Z"))).toBe(1_704_164_645);
+    expect(epochSecondsOf(Option.some("2026-01-01T10:00:00.900+10:00"))).toBe(1_767_225_600);
   });
 
   it("is 0 for an absent, empty or unparseable timestamp", () => {
-    Arr.forEach([undefined, null, "", "not a date"], (value) => {
+    Arr.forEach([Option.none(), Option.some(""), Option.some("not a date")], (value) => {
       expect(epochSecondsOf(value)).toBe(0);
     });
   });
@@ -706,28 +710,32 @@ describe("errorFromStatus", () => {
 describe("pageNumberedList", () => {
   /** List one page of `data` through `pageNumberedList`, recording the page asked for. */
   const listed = (
-    params: { readonly limit?: number | undefined; readonly startingAfter?: string | undefined },
+    params: { readonly limit?: number; readonly startingAfter?: string },
     hasMore: boolean,
     firstPage = 1,
   ) => {
-    const asked: Array<number | undefined> = [];
+    const asked: Array<Option.Option<number>> = [];
     const result = Effect.runPromise(
       pageNumberedList(params, { provider: "Acme", firstPage }, (page) => {
-        asked.push(page);
-        return Effect.succeed({ data: ["x"], hasMore });
+        asked.push(Option.fromNullishOr(page));
+        return Effect.succeed({ data: ["x"], hasMore, nextCursor: Option.none() });
       }),
     );
     return { result, asked };
   };
   /** The failure of listing from `startingAfter`, and whether the list ran. */
   const failure = async (startingAfter: string, limit?: number) => {
-    const asked: Array<number | undefined> = [];
+    const asked: Array<Option.Option<number>> = [];
     const error = await Effect.runPromise(
       Effect.flip(
-        pageNumberedList({ startingAfter, limit }, { provider: "Acme", firstPage: 1 }, (page) => {
-          asked.push(page);
-          return Effect.succeed({ data: [], hasMore: false });
-        }),
+        pageNumberedList(
+          omitUndefined({ startingAfter, limit }),
+          { provider: "Acme", firstPage: 1 },
+          (page) => {
+            asked.push(Option.fromNullishOr(page));
+            return Effect.succeed({ data: [], hasMore: false, nextCursor: Option.none() });
+          },
+        ),
       ),
     );
     return { error, asked };
@@ -735,22 +743,25 @@ describe("pageNumberedList", () => {
 
   it("lists the vendor's first page by default, with the next page's cursor", async () => {
     const { result, asked } = listed({ limit: 2 }, true);
-    expect(await result).toEqual({ data: ["x"], hasMore: true, nextCursor: "page=2&size=2" });
-    expect(asked).toEqual([undefined]);
+    expect(await result).toEqual({
+      data: ["x"],
+      hasMore: true,
+      nextCursor: Option.some("page=2&size=2"),
+    });
+    expect(asked).toEqual([Option.none()]);
     const zeroBased = listed({}, true, 0);
-    expect((await zeroBased.result).nextCursor).toBe("page=1");
+    expect((await zeroBased.result).nextCursor).toEqual(Option.some("page=1"));
   });
 
   it("lists the page a cursor names, for the same limit", async () => {
     const { result, asked } = listed({ limit: 2, startingAfter: "page=2&size=2" }, true);
-    expect((await result).nextCursor).toBe("page=3&size=2");
-    expect(asked).toEqual([2]);
+    expect((await result).nextCursor).toEqual(Option.some("page=3&size=2"));
+    expect(asked).toEqual([Option.some(2)]);
   });
 
   it("gives the last page no cursor", async () => {
     const page = await listed({ startingAfter: "page=3" }, false).result;
-    expect(page).toEqual({ data: ["x"], hasMore: false });
-    expect(page).not.toHaveProperty("nextCursor");
+    expect(page).toEqual({ data: ["x"], hasMore: false, nextCursor: Option.none() });
   });
 
   it.each(["cus_123", "page=", "page=x", "page=2&size=", "page=0", ""])(

@@ -16,6 +16,7 @@
  */
 
 import * as Effect from "effect/Effect";
+import type * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { PaymentInvalidRequestError } from "./Payments.PaymentsError.js";
 
@@ -110,15 +111,16 @@ export const generate: Effect.Effect<IdempotencyKey> = Effect.sync(() =>
  * Check a key at runtime. The branded type already guarantees the shape for
  * typed code; providers call this to refuse a raw string from untyped code
  * with `PaymentInvalidRequestError` before anything is sent, instead of
- * passing a key a vendor might reject or truncate. `undefined` (no key)
- * succeeds as `undefined`.
+ * passing a key a vendor might reject or truncate. No key succeeds as
+ * `None`.
  */
 export const validate = (
-  key: string | undefined,
-): Effect.Effect<IdempotencyKey | undefined, PaymentInvalidRequestError> =>
+  key?: string,
+): Effect.Effect<Option.Option<IdempotencyKey>, PaymentInvalidRequestError> =>
   key === undefined
-    ? Effect.undefined
+    ? Effect.succeedNone
     : Schema.decodeUnknownEffect(IdempotencyKey)(key).pipe(
+        Effect.asSome,
         Effect.mapError(
           () =>
             new PaymentInvalidRequestError({

@@ -59,6 +59,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as R from "effect/Record";
 import * as Random from "effect/Random";
 import * as Redacted from "effect/Redacted";
 import type * as Schema from "effect/Schema";
@@ -76,11 +77,18 @@ import {
   isOk,
   type ObservedResponse,
   observeResponses,
+  omitUndefined,
   rejectedError,
   stringField,
 } from "@thomasfosterau/effect-biz/Payments.internal";
 import { DISTILLED_API_VERSION } from "./internal/apiVersion.js";
-import { classifyResponse, PROVIDER, retryAfterOf, toPaymentsError } from "./internal/error.js";
+import {
+  bareFailure,
+  classifyResponse,
+  PROVIDER,
+  retryAfterOf,
+  toPaymentsError,
+} from "./internal/error.js";
 import { deleteParamsToQuery } from "./internal/deleteQuery.js";
 import { checkOptions } from "./internal/options.js";
 import { v2RequestPolicy } from "./internal/v2Request.js";
@@ -102,17 +110,17 @@ export interface StripeHttpConfig {
   /** The secret (or restricted) API key, `sk_…` / `rk_…`. */
   readonly apiKey: Redacted.Redacted;
   /** The `Stripe-Version` to pin. Defaults to {@link DISTILLED_API_VERSION}. */
-  readonly apiVersion?: string | undefined;
+  readonly apiVersion?: string;
   /** Retries after a retryable failure. Defaults to 2, as in the SDK. */
-  readonly maxNetworkRetries?: number | undefined;
+  readonly maxNetworkRetries?: number;
   /** Per-attempt timeout in milliseconds. Defaults to 80 000, as in the SDK. */
-  readonly timeout?: number | undefined;
+  readonly timeout?: number;
   /** A connected account to act as on every call (`Stripe-Account`). */
-  readonly stripeAccount?: string | undefined;
+  readonly stripeAccount?: string;
   /** Override the API origin (e.g. a `stripe-mock` server). */
-  readonly baseUrl?: string | undefined;
+  readonly baseUrl?: string;
   /** Override the file-uploads origin (`File.create`). Defaults to `https://files.stripe.com`. */
-  readonly uploadsBaseUrl?: string | undefined;
+  readonly uploadsBaseUrl?: string;
 }
 
 /**
@@ -136,21 +144,21 @@ export interface RequestOptions {
    * characters (unverified, effect-finance#93) and rejects the same key reused with
    * different parameters.
    */
-  readonly idempotencyKey?: string | undefined;
+  readonly idempotencyKey?: string;
   /** A connected account to act as (`Stripe-Account`), overriding the configured one. */
-  readonly stripeAccount?: string | undefined;
+  readonly stripeAccount?: string;
   /**
    * The `Stripe-Version` of this one call, overriding the configured one (and
    * {@link DISTILLED_API_VERSION}). Distilled's types describe the default
    * version: a response at another is typed, but not shaped, by them.
    */
-  readonly apiVersion?: string | undefined;
+  readonly apiVersion?: string;
 }
 
 /** What {@link StripeHttp.call} takes beside the operation: {@link RequestOptions}, and the origin. */
 export interface CallOptions extends RequestOptions {
   /** Send the request to the file-uploads origin (`POST /v1/files`). */
-  readonly upload?: boolean | undefined;
+  readonly upload?: boolean;
 }
 
 /**
@@ -227,22 +235,27 @@ const isRetryable: (outcome: Outcome) => boolean = /* @__PURE__ */ Outcome.$matc
 });
 
 /** The `Retry-After` an outcome's response asked for, in seconds. */
-const retryAfterOfOutcome = (outcome: Outcome): number | undefined =>
-  Outcome.$is("Response")(outcome) ? retryAfterOf(outcome.headers["retry-after"]) : undefined;
+const retryAfterOfOutcome = (outcome: Outcome): Option.Option<number> =>
+  Outcome.$is("Response")(outcome)
+    ? retryAfterOf(R.get(outcome.headers, "retry-after"))
+    : Option.none();
 
 /**
  * The SDK's backoff before retry `retries + 1`: exponential from 0.5 s,
  * capped at 5 s, jittered into its upper half, never below 0.5 s, and never
  * shorter than a reasonable (≤ 60 s) `Retry-After`.
  */
-const backoff = (retries: number, retryAfter: number | undefined): Effect.Effect<void> =>
+const backoff = (retries: number, retryAfter: Option.Option<number>): Effect.Effect<void> =>
   Effect.flatMap(Random.next, (jitter) => {
     const exponential = Math.min(INITIAL_RETRY_DELAY_S * 2 ** (retries - 1), MAX_RETRY_DELAY_S);
     const jittered = Math.max(INITIAL_RETRY_DELAY_S, exponential * 0.5 * (1 + jitter));
-    const seconds =
-      retryAfter !== undefined && retryAfter <= MAX_RETRY_AFTER_S
-        ? Math.max(jittered, retryAfter)
-        : jittered;
+    const seconds = Option.match(
+      Option.filter(retryAfter, (asked) => asked <= MAX_RETRY_AFTER_S),
+      {
+        onNone: () => jittered,
+        onSome: (asked) => Math.max(jittered, asked),
+      },
+    );
     return Effect.sleep(Duration.millis(seconds * 1000));
   });
 
@@ -255,8 +268,10 @@ const failureOf = (cause: unknown): Outcome => {
   const { reason } = cause;
   const reasonCause = "cause" in reason ? reason.cause : undefined;
   return Outcome.Transport({
-    message:
-      stringField(reason, "description") ?? stringField(reasonCause, "message") ?? reason._tag,
+    message: stringField(reason, "description").pipe(
+      Option.orElse(() => stringField(reasonCause, "message")),
+      Option.getOrElse(() => reason._tag),
+    ),
     cause: reasonCause,
   });
 };
@@ -289,13 +304,10 @@ const judge = (failure: Option.Option<Outcome>, observed: Option.Option<Observed
 const responseError = ({ status, headers, body }: Observed): PaymentsError =>
   isOk(status)
     ? toPaymentsError({
-        kind: "StripeAPIError",
-        message: "Invalid JSON received from the Stripe API",
-        statusCode: status,
+        ...bareFailure("StripeAPIError", "Invalid JSON received from the Stripe API"),
+        statusCode: Option.some(status),
       })
-    : toPaymentsError(
-        classifyResponse(status, headers["retry-after"], Option.getOrUndefined(body)),
-      );
+    : toPaymentsError(classifyResponse(status, R.get(headers, "retry-after"), body));
 
 /**
  * The message and code of a Distilled failure with no response behind it
@@ -312,10 +324,12 @@ const settle = (outcome: Outcome, retries: number): Effect.Effect<Schema.Json, P
     Transport: ({ message, cause }) =>
       Effect.fail(
         toPaymentsError({
-          kind: "StripeConnectionError",
-          message: `An error occurred with our connection to Stripe (${message}).${
-            retries > 0 ? ` Request was retried ${retries} times.` : ""
-          }`,
+          ...bareFailure(
+            "StripeConnectionError",
+            `An error occurred with our connection to Stripe (${message}).${
+              retries > 0 ? ` Request was retried ${retries} times.` : ""
+            }`,
+          ),
           raw: cause,
         }),
       ),
@@ -351,7 +365,7 @@ const makeWith = (
       input: I,
       requestOptions: StripeRequestOptions,
       credentials: StripeCredentials,
-      generatedKey: string | undefined,
+      generatedKey?: string,
     ): Effect.Effect<Outcome> =>
       Effect.gen(function* () {
         const v2 = v2RequestPolicy(credentials.apiBaseUrl, generatedKey);
@@ -400,11 +414,13 @@ const makeWith = (
       callOptions: CallOptions = {},
     ) {
       const stripeAccount = callOptions.stripeAccount ?? options.stripeAccount;
-      yield* checkOptions({
-        idempotencyKey: callOptions.idempotencyKey,
-        stripeAccount,
-        apiVersion: callOptions.apiVersion,
-      });
+      yield* checkOptions(
+        omitUndefined({
+          idempotencyKey: callOptions.idempotencyKey,
+          stripeAccount,
+          apiVersion: callOptions.apiVersion,
+        }),
+      );
       const resolved = yield* options.credentials;
       const credentials = callOptions.upload
         ? { ...resolved, apiBaseUrl: uploadsBaseUrl }
@@ -450,10 +466,10 @@ export const layerFromContext: Layer.Layer<StripeHttp, never, Credentials | Http
   );
 
 /** The credentials a configuration names. */
-const credentialsOf = (
-  apiKey: Redacted.Redacted,
-  baseUrl: string | undefined,
-): StripeCredentials => ({ apiKey, apiBaseUrl: baseUrl ?? DEFAULT_BASE_URL });
+const credentialsOf = (apiKey: Redacted.Redacted, baseUrl?: string): StripeCredentials => ({
+  apiKey,
+  apiBaseUrl: baseUrl ?? DEFAULT_BASE_URL,
+});
 
 /**
  * Build the client from configuration. Fails with {@link PaymentConfigError}
@@ -511,7 +527,7 @@ export interface LayerConfigOptions extends Omit<StripeHttpConfig, "apiKey"> {
    * The configuration variable the key is read from, at call time. Defaults
    * to `STRIPE_API_KEY`, as in {@link layerFromEnv}.
    */
-  readonly envVar?: string | undefined;
+  readonly envVar?: string;
 }
 
 /**

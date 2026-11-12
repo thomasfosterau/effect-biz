@@ -172,7 +172,7 @@ Each module is a thin wrapper of **every** `@distilled.cloud/stripe` operation o
 Gaps in Distilled's typing that the modules inherit (`@distilled.cloud/stripe` `1.0.0-rc.18`):
 
 - **`Transfer.create` / `retrieve` / `update` resolve to `unknown`, and `Transfer.list`'s `data` to `Array<unknown>`**: Distilled declares no Transfer schema. Decode the result yourself.
-- **Input types declare optional members as bare `?: T`**, as Distilled generates them. Under `exactOptionalPropertyTypes`, a caller forwarding an optional of its own (`Customer.create({ email })` with `email: string | undefined`) fails to type-check: omit an absent member rather than pass `undefined`. The neutral capabilities are unaffected; their params take `?: T | undefined`.
+- **Input types declare optional members as bare `?: T`**, as Distilled generates them. Under `exactOptionalPropertyTypes`, a caller forwarding an optional of its own (`Customer.create({ email })` with `email: string | undefined`) fails to type-check: omit an absent member rather than pass `undefined`. The neutral capabilities' params follow the same rule: bare `?: T`, omitted when absent.
 - **`File.create`'s `file` is retyped `string | Blob`** (a `File` is a `Blob`): Distilled declares it `string`, but sends a `Blob` as the multipart file part, which is how a file is uploaded. No cast is needed.
 
 The names follow the path (`create` / `retrieve` / `update` / `del` / `list`, an action by its name, a sub-resource's operation by its singular, `testHelpers…` for a test helper), keeping every name a module had before it re-exported Distilled; `del` because `delete` is reserved, and likewise `Invoice.voidInvoice`. A raw module is also the full-fidelity alternative where a neutral capability exists: the raw `CheckoutSession` module takes every Stripe Checkout parameter where `StripePayments.checkoutSessionsLayer` takes only the neutral ones. Some raw modules share a name with a neutral core module (`Customer`, `CheckoutSession`, …), so alias one of them when a program imports both.
@@ -219,11 +219,12 @@ const handle = Effect.fn("handleStripeWebhook")(
         catch: () => new UnreadableBodyError(),
       }),
     );
-    const event = yield* Webhook.verify({
-      payload,
-      header: request.headers.get(Webhook.SIGNATURE_HEADER),
-      secret,
-    });
+    // `Headers.get` answers `null` for an absent header; `verify` takes a
+    // missing header as the member left out.
+    const signature = request.headers.get(Webhook.SIGNATURE_HEADER);
+    const event = yield* signature === null
+      ? Webhook.verify({ payload, secret })
+      : Webhook.verify({ payload, secret, header: signature });
     return yield* Webhook.decodeHandledEvent(event).pipe(
       Effect.flatMap((handled) => {
         if (Option.isSome(handled)) {

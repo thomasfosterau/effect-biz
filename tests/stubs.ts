@@ -14,9 +14,11 @@ import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { FetchHttpClient } from "effect/http";
+import { omitUndefined } from "@thomasfosterau/effect-biz/Payments.internal";
 import { TestClock } from "effect/testing";
 
 /** A request as the stubbed `fetch` saw it. */
@@ -24,15 +26,20 @@ export interface CapturedRequest {
   readonly url: URL;
   readonly method: string;
   readonly headers: Headers;
-  readonly init: RequestInit | undefined;
-  /** A text or bytes body, decoded; `undefined` for none or for multipart. */
-  readonly body: string | undefined;
-  /** A multipart body, as sent. */
-  readonly form: FormData | undefined;
+  /** The `RequestInit` the request was made with (empty when it had none). */
+  readonly init: RequestInit;
+  /** A text or bytes body, decoded; absent for none or for multipart. */
+  readonly body?: string;
+  /** A multipart body, as sent; absent for any other body. */
+  readonly form?: FormData;
 }
 
-const textOf = (raw: BodyInit | null | undefined): string | undefined =>
-  P.isString(raw) ? raw : raw instanceof Uint8Array ? new TextDecoder().decode(raw) : undefined;
+const textOf = (raw: BodyInit): Option.Option<string> =>
+  P.isString(raw)
+    ? Option.some(raw)
+    : raw instanceof Uint8Array
+      ? Option.some(new TextDecoder().decode(raw))
+      : Option.none();
 
 /** Encode a value as JSON text, as `JSON.stringify` would. */
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Json));
@@ -40,7 +47,7 @@ const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Json));
 /** A JSON response with `status`, plus any extra headers. */
 export const jsonResponse = (
   status: number,
-  body: Schema.Json | undefined,
+  body?: Schema.Json,
   headers: Record<string, string> = {},
 ): Response =>
   // An `undefined` body has no JSON text: the response is sent without one.
@@ -65,9 +72,11 @@ export const stubFetch = (
       url: new URL(input instanceof Request ? input.url : input),
       method: init?.method ?? "GET",
       headers: new Headers(init?.headers),
-      init,
-      body: textOf(init?.body),
-      form: init?.body instanceof FormData ? init.body : undefined,
+      init: init ?? {},
+      ...omitUndefined({
+        body: Option.getOrUndefined(Option.flatMap(Option.fromNullishOr(init?.body), textOf)),
+        form: init?.body instanceof FormData ? init.body : undefined,
+      }),
     };
     calls.push(captured);
     return handler(captured, calls.length);
@@ -87,7 +96,7 @@ export const stubFetch = (
  */
 export const stubApi = <Call>(
   read: (request: CapturedRequest) => Call,
-  answer: (call: Call, attempt: number) => Schema.Json | undefined | Response,
+  answer: (call: Call, attempt: number) => Schema.Json | Response,
 ) => {
   const calls: Array<Call> = [];
   const stub = stubFetch((request, attempt) => {

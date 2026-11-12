@@ -157,8 +157,8 @@ describe("StripePayments request policy", () => {
         Effect.provideService(FetchHttpClient.RequestInit, { credentials: "omit" }),
       ),
     );
-    expect(calls[0]?.init?.redirect).toBe("error");
-    expect(calls[0]?.init?.credentials).toBe("omit");
+    expect(calls[0]?.init.redirect).toBe("error");
+    expect(calls[0]?.init.credentials).toBe("omit");
   });
 
   it("sends the configured connected account", async () => {
@@ -313,7 +313,7 @@ describe("StripePayments request policy", () => {
       Effect.flip(Customer.retrieve("cus_1")),
       (request) =>
         new Promise<Response>((_resolve, reject) => {
-          request.init?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+          request.init.signal?.addEventListener("abort", () => reject(new Error("aborted")));
         }),
       { maxNetworkRetries: 0, timeout: 5_000 },
     );
@@ -498,7 +498,7 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
       Effect.flip(Customer.retrieve("cus_1")),
       (request) =>
         new Promise<Response>((_resolve, reject) => {
-          request.init?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+          request.init.signal?.addEventListener("abort", () => reject(new Error("aborted")));
         }),
       { maxNetworkRetries: 0, timeout: 5_000 },
     ).result;

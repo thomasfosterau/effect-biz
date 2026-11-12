@@ -12,9 +12,9 @@ import { PaymentInvalidRequestError } from "@thomasfosterau/effect-biz/Payments"
  * treating any of them as absent.
  */
 export const checkOptions = (options: {
-  readonly idempotencyKey?: string | undefined;
-  readonly stripeAccount?: string | undefined;
-  readonly apiVersion?: string | undefined;
+  readonly idempotencyKey?: string;
+  readonly stripeAccount?: string;
+  readonly apiVersion?: string;
 }): Effect.Effect<void, PaymentInvalidRequestError> =>
   Option.match(
     Arr.findFirst(

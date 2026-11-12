@@ -1,6 +1,7 @@
 import type * as Schema from "effect/Schema";
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import type * as Layer from "effect/Layer";
 import * as Customer from "@thomasfosterau/effect-biz/Payments.Customer";
 import * as Product from "@thomasfosterau/effect-biz/Payments.Product";
@@ -137,7 +138,7 @@ describe("StripePayments capabilities", () => {
     const customer = await result;
     expect(customer).toBeInstanceOf(Customer.Customer);
     expect(customer.id).toBe("cus_1");
-    expect(customer.email).toBe("jane@example.com");
+    expect(customer.email).toEqual(Option.some("jane@example.com"));
     expect(customer.metadata.tier).toBe("pro");
     // Neutral params translated to Stripe's snake_case shape.
     expect(calls[0]).toMatchObject({
@@ -159,7 +160,7 @@ describe("StripePayments capabilities", () => {
     });
     const customer = await result;
     expect(customer.id).toBe("cus_1");
-    expect(customer.email).toBeNull();
+    expect(customer.email).toEqual(Option.none());
     expect(customer.created).toBe(0);
   });
 
@@ -175,7 +176,7 @@ describe("StripePayments capabilities", () => {
       params: formOf({ limit: 1, starting_after: "cus_0" }),
     });
     // The next page's cursor is the last item's id.
-    expect(page.nextCursor).toBe("cus_2");
+    expect(page.nextCursor).toEqual(Option.some("cus_2"));
   });
 
   it("gives the last page of a list no cursor", async () => {
@@ -183,8 +184,7 @@ describe("StripePayments capabilities", () => {
       "GET /v1/customers": { object: "list", data: [], has_more: false },
     });
     const page = await result;
-    expect(page).toEqual({ data: [], hasMore: false });
-    expect(page).not.toHaveProperty("nextCursor");
+    expect(page).toEqual({ data: [], hasMore: false, nextCursor: Option.none() });
   });
 
   it("maps a product", async () => {
@@ -203,10 +203,14 @@ describe("StripePayments capabilities", () => {
       }),
     );
     const price = await result;
-    expect(price.unitAmount).toBe(1999);
+    expect(price.unitAmount).toEqual(Option.some(1999));
     expect(price.type).toBe("recurring");
-    expect(price.recurring?.interval).toBe("month");
-    expect(price.recurring?.intervalCount).toBe(3);
+    expect(Option.map(price.recurring, (recurring) => recurring.interval)).toEqual(
+      Option.some("month"),
+    );
+    expect(Option.map(price.recurring, (recurring) => recurring.intervalCount)).toEqual(
+      Option.some(3),
+    );
     expect(calls[0]?.params).toMatchObject(
       formOf({
         product: "prod_1",
@@ -216,10 +220,9 @@ describe("StripePayments capabilities", () => {
     );
   });
 
-  it("sends no schedule for a forwarded `recurring: undefined`", async () => {
-    const recurring: Price.CreateParams["recurring"] = undefined;
+  it("sends no schedule for a price created without `recurring`", async () => {
     const { result, calls } = run(
-      Price.create({ product: "prod_1", currency: "usd", unitAmount: 1999, recurring }),
+      Price.create({ product: "prod_1", currency: "usd", unitAmount: 1999 }),
     );
     await result;
     expect(calls[0]?.params).toEqual(
@@ -230,9 +233,9 @@ describe("StripePayments capabilities", () => {
   it("maps a payment intent and resolves expanded references to ids", async () => {
     const intent = await run(PaymentIntent.create({ amount: 2000, currency: "usd" })).result;
     expect(intent.status).toBe("requires_confirmation");
-    expect(intent.customerId).toBe("cus_1");
-    expect(intent.paymentMethodId).toBe("pm_1");
-    expect(intent.clientSecret).toBe("pi_1_secret");
+    expect(intent.customerId).toEqual(Option.some("cus_1"));
+    expect(intent.paymentMethodId).toEqual(Option.some("pm_1"));
+    expect(intent.clientSecret).toEqual(Option.some("pi_1_secret"));
   });
 
   it("confirms and cancels a payment intent on their action paths", async () => {
@@ -266,7 +269,7 @@ describe("StripePayments capabilities", () => {
     expect(subscription.status).toBe("active");
     expect(subscription.items).toHaveLength(1);
     expect(subscription.items[0].priceId).toBe("price_1");
-    expect(subscription.items[0].quantity).toBe(2);
+    expect(subscription.items[0].quantity).toEqual(Option.some(2));
     expect(subscription.currentPeriodStart).toBe(100);
     expect(subscription.currentPeriodEnd).toBe(200);
     expect(calls[0]?.params).toMatchObject(formOf({ items: [{ price: "price_1", quantity: 2 }] }));
@@ -297,7 +300,7 @@ describe("StripePayments capabilities", () => {
     expect(subscription.currentPeriodStart).toBe(1_750_000_000);
     expect(subscription.currentPeriodEnd).toBe(1_760_000_000);
     expect(subscription.cancelAtPeriodEnd).toBe(true);
-    expect(subscription.items[0].quantity).toBeNull();
+    expect(subscription.items[0].quantity).toEqual(Option.none());
   });
 
   it("cancels a subscription with a DELETE", async () => {
@@ -343,7 +346,9 @@ describe("StripePayments capabilities", () => {
       Price.list({ limit: 2, product: "prod_1", active: false, startingAfter: "price_0" }),
       answers,
     );
-    expect((await prices.result).data[0].recurring?.intervalCount).toBe(3);
+    expect(
+      Option.map((await prices.result).data[0].recurring, (recurring) => recurring.intervalCount),
+    ).toEqual(Option.some(3));
     expect(prices.calls[0]?.params).toEqual(
       formOf({
         limit: 2,
@@ -406,8 +411,8 @@ describe("StripePayments capabilities", () => {
   it("maps a refund", async () => {
     const refund = await run(Refund.create({ paymentIntent: "pi_1", amount: 500 })).result;
     expect(refund.status).toBe("succeeded");
-    expect(refund.paymentIntentId).toBe("pi_1");
-    expect(refund.chargeId).toBeNull();
+    expect(refund.paymentIntentId).toEqual(Option.some("pi_1"));
+    expect(refund.chargeId).toEqual(Option.none());
   });
 
   it("passes a transport failure through the neutral channel", async () => {

@@ -1,6 +1,7 @@
 import type * as Schema from "effect/Schema";
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import type * as Layer from "effect/Layer";
 import * as Price from "@thomasfosterau/effect-biz/Payments.Price";
 import * as PaymentIntent from "@thomasfosterau/effect-biz/Payments.PaymentIntent";
@@ -91,7 +92,9 @@ describe("StripePayments lenient enumerations", () => {
   it("decodes an unknown price type and recurring interval to Other", async () => {
     const result = await run(Price.retrieve("price_1"), price("price_1", "metered", "decade"));
     expect(result.type).toEqual(other("metered"));
-    expect(result.recurring?.interval).toEqual(other("decade"));
+    expect(Option.map(result.recurring, (recurring) => recurring.interval)).toEqual(
+      Option.some(other("decade")),
+    );
   });
 
   it("leaves the rest of a payment intent page decoding around an unknown status", async () => {
@@ -135,7 +138,9 @@ describe("StripePayments lenient enumerations", () => {
       page(price("price_1", "one_time", "month"), price("price_2", "metered", "decade")),
     );
     expect(result.data.map((item) => item.type)).toEqual(["one_time", other("metered")]);
-    expect(result.data[1]?.recurring?.interval).toEqual(other("decade"));
+    expect(
+      Option.map(result.data[1]?.recurring ?? Option.none(), (recurring) => recurring.interval),
+    ).toEqual(Option.some(other("decade")));
   });
 
   it("keeps every known value unchanged", async () => {
@@ -192,12 +197,9 @@ describe("StripePayments lenient enumerations", () => {
       "recurring",
       "recurring",
     ]);
-    expect(prices.data.map((item) => item.recurring?.interval)).toEqual([
-      "day",
-      "week",
-      "month",
-      "year",
-    ]);
+    expect(
+      prices.data.map((item) => Option.map(item.recurring, (recurring) => recurring.interval)),
+    ).toEqual([Option.some("day"), Option.some("week"), Option.some("month"), Option.some("year")]);
   });
 
   it("still fails a status that is not a string", async () => {

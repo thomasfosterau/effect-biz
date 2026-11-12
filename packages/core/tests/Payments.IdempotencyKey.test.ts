@@ -1,6 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vite-plus/test";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as HashSet from "effect/HashSet";
 import * as Schema from "effect/Schema";
 import * as IdempotencyKey from "@thomasfosterau/effect-biz/Payments.IdempotencyKey";
@@ -42,8 +43,10 @@ describe("IdempotencyKey", () => {
   });
 
   it("validate passes none through, passes a good key, and refuses a bad one", async () => {
-    expect(await Effect.runPromise(IdempotencyKey.validate(undefined))).toBeUndefined();
-    expect(await Effect.runPromise(IdempotencyKey.validate("order-42"))).toBe("order-42");
+    expect(await Effect.runPromise(IdempotencyKey.validate())).toEqual(Option.none());
+    expect(await Effect.runPromise(IdempotencyKey.validate("order-42"))).toEqual(
+      Option.some("order-42"),
+    );
     const bads = ["", "x".repeat(65), "bad key"];
     const errors = await Effect.runPromise(
       Effect.forEach(bads, (bad) => Effect.flip(IdempotencyKey.validate(bad)), {
@@ -68,17 +71,17 @@ describe("IdempotencyKey", () => {
 });
 
 describe("where the neutral key is accepted (type level)", () => {
-  type Key = IdempotencyKey.IdempotencyKey | undefined;
+  type Key = IdempotencyKey.IdempotencyKey;
 
   it("is an optional branded key on every create and confirm operation", () => {
-    expectTypeOf<Customer.CreateParams["idempotencyKey"]>().toEqualTypeOf<Key>();
-    expectTypeOf<Product.CreateParams["idempotencyKey"]>().toEqualTypeOf<Key>();
-    expectTypeOf<Price.CreateParams["idempotencyKey"]>().toEqualTypeOf<Key>();
-    expectTypeOf<PaymentIntent.CreateParams["idempotencyKey"]>().toEqualTypeOf<Key>();
-    expectTypeOf<PaymentIntent.ConfirmParams["idempotencyKey"]>().toEqualTypeOf<Key>();
-    expectTypeOf<Subscription.CreateParams["idempotencyKey"]>().toEqualTypeOf<Key>();
-    expectTypeOf<Refund.CreateParams["idempotencyKey"]>().toEqualTypeOf<Key>();
-    expectTypeOf<CheckoutSession.CreateParams["idempotencyKey"]>().toEqualTypeOf<Key>();
+    expectTypeOf<Required<Customer.CreateParams>["idempotencyKey"]>().toEqualTypeOf<Key>();
+    expectTypeOf<Required<Product.CreateParams>["idempotencyKey"]>().toEqualTypeOf<Key>();
+    expectTypeOf<Required<Price.CreateParams>["idempotencyKey"]>().toEqualTypeOf<Key>();
+    expectTypeOf<Required<PaymentIntent.CreateParams>["idempotencyKey"]>().toEqualTypeOf<Key>();
+    expectTypeOf<Required<PaymentIntent.ConfirmParams>["idempotencyKey"]>().toEqualTypeOf<Key>();
+    expectTypeOf<Required<Subscription.CreateParams>["idempotencyKey"]>().toEqualTypeOf<Key>();
+    expectTypeOf<Required<Refund.CreateParams>["idempotencyKey"]>().toEqualTypeOf<Key>();
+    expectTypeOf<Required<CheckoutSession.CreateParams>["idempotencyKey"]>().toEqualTypeOf<Key>();
     // Optional: a call without a key compiles.
     expectTypeOf<{ email: string }>().toExtend<Customer.CreateParams>();
     expectTypeOf<Record<string, never>>().toExtend<PaymentIntent.ConfirmParams>();

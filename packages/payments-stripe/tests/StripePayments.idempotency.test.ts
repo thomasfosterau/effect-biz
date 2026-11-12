@@ -15,6 +15,7 @@ import * as Subscription from "@thomasfosterau/effect-biz/Payments.Subscription"
 import * as Refund from "@thomasfosterau/effect-biz/Payments.Refund";
 import * as CheckoutSession from "@thomasfosterau/effect-biz/Payments.CheckoutSession";
 import * as IdempotencyKey from "@thomasfosterau/effect-biz/Payments.IdempotencyKey";
+import { omitUndefined } from "@thomasfosterau/effect-biz/Payments.internal";
 import {
   type PaymentConfigError,
   PaymentInvalidRequestError,
@@ -49,61 +50,67 @@ const requestOf = async (
     PaymentConfigError,
     HttpClient.HttpClient | Credentials
   > = noRetries,
-): Promise<{ readonly idempotencyKey: string | undefined; readonly count: number }> => {
+): Promise<{ readonly idempotencyKey: Option.Option<string>; readonly count: number }> => {
   const stub = stubStripe(() => ({}));
   // The empty answer fails the decode; the request was recorded before that.
   await Effect.runPromiseExit(
     operation.pipe(Effect.provide(capabilities), Effect.provide(stub.layer)),
   );
   return {
-    idempotencyKey: stub.calls[0]?.headers.get("idempotency-key") ?? undefined,
+    idempotencyKey: Option.fromNullishOr(stub.calls[0]?.headers.get("idempotency-key")),
     count: stub.calls.length,
   };
 };
 type Capabilities = Layer.Success<typeof StripePayments.capabilities>;
 
 const operations = (
-  idempotencyKey: IdempotencyKey.IdempotencyKey | undefined,
-): ReadonlyArray<readonly [string, Effect.Effect<unknown, PaymentsError, Capabilities>]> => [
-  ["Customer.create", Customer.create({ email: "a@example.com", idempotencyKey })],
-  ["Product.create", Product.create({ name: "P", idempotencyKey })],
-  [
-    "Price.create",
-    Price.create({ product: "prod_1", currency: "usd", unitAmount: 100, idempotencyKey }),
-  ],
-  ["PaymentIntent.create", PaymentIntent.create({ amount: 100, currency: "usd", idempotencyKey })],
-  ["PaymentIntent.confirm", PaymentIntent.confirm("pi_1", { idempotencyKey })],
-  [
-    "Subscription.create",
-    Subscription.create({ customer: "cus_1", items: [{ price: "price_1" }], idempotencyKey }),
-  ],
-  ["Refund.create", Refund.create({ paymentIntent: "pi_1", idempotencyKey })],
-  [
-    "CheckoutSession.create",
-    CheckoutSession.create({
-      mode: "payment",
-      lineItems: [{ price: "price_1" }],
-      successUrl: "https://example.com/ok",
-      cancelUrl: "https://example.com/no",
-      idempotencyKey,
-    }),
-  ],
-];
+  key?: IdempotencyKey.IdempotencyKey,
+): ReadonlyArray<readonly [string, Effect.Effect<unknown, PaymentsError, Capabilities>]> => {
+  // A caller without a key omits the member.
+  const keyed = omitUndefined({ idempotencyKey: key });
+  return [
+    ["Customer.create", Customer.create({ email: "a@example.com", ...keyed })],
+    ["Product.create", Product.create({ name: "P", ...keyed })],
+    [
+      "Price.create",
+      Price.create({ product: "prod_1", currency: "usd", unitAmount: 100, ...keyed }),
+    ],
+    ["PaymentIntent.create", PaymentIntent.create({ amount: 100, currency: "usd", ...keyed })],
+    ["PaymentIntent.confirm", PaymentIntent.confirm("pi_1", keyed)],
+    [
+      "Subscription.create",
+      Subscription.create({ customer: "cus_1", items: [{ price: "price_1" }], ...keyed }),
+    ],
+    ["Refund.create", Refund.create({ paymentIntent: "pi_1", ...keyed })],
+    [
+      "CheckoutSession.create",
+      CheckoutSession.create({
+        mode: "payment",
+        lineItems: [{ price: "price_1" }],
+        successUrl: "https://example.com/ok",
+        cancelUrl: "https://example.com/no",
+        ...keyed,
+      }),
+    ],
+  ];
+};
 
 describe("Stripe maps the neutral idempotencyKey to Idempotency-Key", () => {
   it.each(operations(KEY))("%s", async (_name, op) => {
-    expect(await requestOf(op)).toEqual({ idempotencyKey: KEY, count: 1 });
+    expect(await requestOf(op)).toEqual({ idempotencyKey: Option.some(KEY), count: 1 });
   });
 
-  it.each(operations(undefined))("%s sends none without a key", async (_name, op) => {
-    expect(await requestOf(op)).toEqual({ idempotencyKey: undefined, count: 1 });
+  it.each(operations())("%s sends none without a key", async (_name, op) => {
+    expect(await requestOf(op)).toEqual({ idempotencyKey: Option.none(), count: 1 });
   });
 
-  it.each(operations(undefined))(
+  it.each(operations())(
     "%s sends a generated retry key without a caller's key, when it may be retried",
     async (_name, op) => {
       const { idempotencyKey } = await requestOf(op, StripePayments.capabilities);
-      expect(idempotencyKey).toMatch(/^effect-payments-retry-[0-9a-f-]{36}$/);
+      expect(Option.getOrElse(idempotencyKey, () => "")).toMatch(
+        /^effect-payments-retry-[0-9a-f-]{36}$/,
+      );
     },
   );
 
@@ -182,8 +189,8 @@ describe("a retried write after a lost response is one logical write (effect-fin
   };
 
   /** Create a customer, retrying once on a network error, with `key` for every attempt. */
-  const createWithRetry = (key: IdempotencyKey.IdempotencyKey | undefined) =>
-    Customer.create({ email: "a@example.com", idempotencyKey: key }).pipe(
+  const createWithRetry = (key?: IdempotencyKey.IdempotencyKey) =>
+    Customer.create({ email: "a@example.com", ...omitUndefined({ idempotencyKey: key }) }).pipe(
       Effect.retry({
         while: (error) => P.isTagged(error, "PaymentNetworkError"),
         times: 1,
@@ -239,7 +246,7 @@ describe("a retried write after a lost response is one logical write (effect-fin
   it("without a key, the same retry creates a duplicate (the hazard being fixed)", async () => {
     const fake = dedupingStripe(true);
     const created = await Effect.runPromise(
-      createWithRetry(undefined).pipe(
+      createWithRetry().pipe(
         Effect.provide(
           StripePayments.layer({
             apiKey: Redacted.make("sk_test_not_a_real_key"),
