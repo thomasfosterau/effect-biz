@@ -3,7 +3,7 @@ import * as Arr from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClientError, HttpClientRequest } from "effect/http";
@@ -83,7 +83,7 @@ const failure = (status: number, body: unknown, headers: Record<string, string> 
   over(
     Effect.flip(Customer.create({ email: "a@example.com" })),
     () =>
-      Predicate.isString(body)
+      P.isString(body)
         ? new Response(body, { status, headers })
         : jsonResponse(status, body, headers),
     { maxNetworkRetries: 0 },

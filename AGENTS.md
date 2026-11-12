@@ -55,6 +55,7 @@ Package-local terms, invariants and import boundaries live in each package's `CL
 - **Entities are `Schema.Class`es** with branded ids (`PartyId`, `SalesOrderId`); state machines are explicit (a document's status changes only through its service's commands).
 - **Optional members are declared `?: T | undefined`, never bare `?: T`.** The workspace compiles with `exactOptionalPropertyTypes`.
 - **Relative imports in `src/` carry `.js`** (`./Party.js`); tests import the module under test as `../src/<Module>.ts`.
+- **Effect modules are imported as namespaces by subpath, under the `effect/prefer-namespace-imports` aliases** (enforced at `error`): `import * as P from "effect/Predicate"`, `R` for `effect/Record`, `Arr` for `effect/Array`, `Str` for `effect/String`, `Eq` for `effect/Equal`, `Bool` for `effect/Boolean`; every other module keeps its own name (`Option`, `Schema`, `Effect`, `Layer`). Never a named import from `effect` or a subpath. Mind that `R` and `P` are also common generic parameter names: do not shadow the namespace.
 - **Tests import from `vite-plus/test`**, never `vitest`, and live in `packages/<name>/tests/`. Unit tests run against the in-memory layers; SQL adapter tests run against SQLite in-process (Postgres suites are opt-in).
 - **Every export is documented** with a doc comment whose first sentence says what it is for. Put an `@example` on the module's primary export, never on the module doc (the bundled `.d.ts` drops a file-level comment); the module doc points at it (`See {@link create} for an example.`).
 

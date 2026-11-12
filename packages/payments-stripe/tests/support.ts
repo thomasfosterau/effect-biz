@@ -9,8 +9,8 @@
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Predicate from "effect/Predicate";
-import * as Rec from "effect/Record";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import { Credentials } from "@distilled.cloud/stripe/Credentials";
 import { jsonResponse, stubApi } from "../../../tests/stubs.ts";
@@ -46,9 +46,9 @@ const fieldsOf = (key: string, value: unknown): ReadonlyArray<readonly [string, 
     ? []
     : Array.isArray(value)
       ? value.flatMap((item, index) => fieldsOf(`${key}[${index}]`, item))
-      : Predicate.isObject(value)
-        ? Arr.flatMap(Rec.toEntries(value), ([name, item]) => fieldsOf(`${key}[${name}]`, item))
-        : Predicate.isString(value) || Predicate.isNumber(value) || Predicate.isBoolean(value)
+      : P.isObject(value)
+        ? Arr.flatMap(R.toEntries(value), ([name, item]) => fieldsOf(`${key}[${name}]`, item))
+        : P.isString(value) || P.isNumber(value) || P.isBoolean(value)
           ? [[key, String(value)]]
           : [];
 
@@ -59,7 +59,7 @@ const fieldsOf = (key: string, value: unknown): ReadonlyArray<readonly [string, 
  * becomes `"items[0][price]"`.
  */
 export const formOf = (params: Readonly<Record<string, unknown>>): Record<string, string> =>
-  Rec.fromEntries(Arr.flatMap(Rec.toEntries(params), ([key, value]) => fieldsOf(key, value)));
+  R.fromEntries(Arr.flatMap(R.toEntries(params), ([key, value]) => fieldsOf(key, value)));
 
 /**
  * A stubbed Stripe API for the capability layers: `answer` maps each call to a
@@ -74,7 +74,7 @@ export const stubStripe = (answer: (call: StripeCall, attempt: number) => unknow
     (request): StripeCall => ({
       method: request.method,
       path: request.url.pathname,
-      params: Rec.fromEntries(
+      params: R.fromEntries(
         request.method === "POST"
           ? new URLSearchParams(request.body ?? "")
           : request.url.searchParams,

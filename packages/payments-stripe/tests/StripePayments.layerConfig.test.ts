@@ -2,7 +2,7 @@ import { describe, it, expect } from "vite-plus/test";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Rec from "effect/Record";
+import * as R from "effect/Record";
 import * as BillingPortal from "@thomasfosterau/effect-biz/Payments.BillingPortal";
 import * as CheckoutSession from "@thomasfosterau/effect-biz/Payments.CheckoutSession";
 import * as Customer from "@thomasfosterau/effect-biz/Payments.Customer";
@@ -93,7 +93,7 @@ describe("StripePayments.layerConfig", () => {
     expect(calls).toHaveLength(0);
   });
 
-  it.each(Rec.toEntries<string, Effect.Effect<unknown, PaymentsError, Capabilities>>(everyCall))(
+  it.each(R.toEntries<string, Effect.Effect<unknown, PaymentsError, Capabilities>>(everyCall))(
     "fails %s with PaymentsUnavailable while the key is absent",
     async (_, call) => {
       const { http, calls } = stubFetch(customer);
