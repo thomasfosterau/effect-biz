@@ -2,7 +2,7 @@
 
 **Disclaimer:** This is an experiment. Don't use it in production.
 
-The foundation of the effect-biz package family: the identifiers, error channel, tenancy context and exact numbers (decimals, rounding, quantities, rates, money) every effect-biz domain package builds on, and the vendor-neutral payments core (`@thomasfosterau/effect-biz/Payments`). More foundation modules (repositories, events) land as the roadmap does.
+The foundation of the effect-biz package family: the identifiers, error channel, tenancy context, repository conventions and exact numbers (decimals, rounding, quantities, rates, money) every effect-biz domain package builds on, and the vendor-neutral payments core (`@thomasfosterau/effect-biz/Payments`). More foundation modules (domain events) land as the roadmap does.
 
 ## Install
 
@@ -38,6 +38,12 @@ Each module is its own subpath. Guides are in [`docs/core`](https://github.com/t
 | `./Tenancy` | The tenant and company a call acts for: `TenantContext`, `CompanyContext`, `withTenant`, `withCompany`. | [Tenancy](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/tenancy.md) |
 | `./Company` | Companies (legal entities) and their tenant-scoped repository port. | [Tenancy](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/tenancy.md) |
 | `./Actor` | Who is acting: the `CurrentActor` a command records. | [Tenancy](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/tenancy.md) |
+| `./Repository` | The repository conventions: the tenant-scoped, version-guarded `Port` every domain repository has. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
+| `./Audit` | `AuditFields` (created / updated at and by, `version`, `archivedAt`), stamped from `Clock` and the `CurrentActor`. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
+| `./Query` | A typed filter and sort spec (`eq`, `in`, `range`, `search`, `archived`, `sort`) and its pure interpreter. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
+| `./Page` | Cursor paging: `Page<A>`, opaque keyset cursors and the `limit` bounds. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
+| `./Memory` | The tenant-partitioned in-memory store in-memory repository layers are built on. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
+| `./testing` | The repository contract suite every implementation runs, runner-agnostic. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
 | `./Decimal` | Exact decimals (`BigDecimal`) and their canonical string codec. | [Exact numbers](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/exact-numbers.md) |
 | `./Rounding` | Rounding policies, required wherever a value is rounded. | [Exact numbers](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/exact-numbers.md) |
 | `./Quantity` | Exact quantities. | [Exact numbers](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/exact-numbers.md) |

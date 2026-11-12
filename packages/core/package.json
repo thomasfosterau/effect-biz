@@ -38,6 +38,10 @@
       "types": "./dist/Actor.d.ts",
       "default": "./dist/Actor.js"
     },
+    "./Audit": {
+      "types": "./dist/Audit.d.ts",
+      "default": "./dist/Audit.js"
+    },
     "./BizError": {
       "types": "./dist/BizError.d.ts",
       "default": "./dist/BizError.js"
@@ -58,9 +62,17 @@
       "types": "./dist/Id.d.ts",
       "default": "./dist/Id.js"
     },
+    "./Memory": {
+      "types": "./dist/Memory.d.ts",
+      "default": "./dist/Memory.js"
+    },
     "./Money": {
       "types": "./dist/Money.d.ts",
       "default": "./dist/Money.js"
+    },
+    "./Page": {
+      "types": "./dist/Page.d.ts",
+      "default": "./dist/Page.js"
     },
     "./Percentage": {
       "types": "./dist/Percentage.d.ts",
@@ -70,9 +82,17 @@
       "types": "./dist/Quantity.d.ts",
       "default": "./dist/Quantity.js"
     },
+    "./Query": {
+      "types": "./dist/Query.d.ts",
+      "default": "./dist/Query.js"
+    },
     "./Rate": {
       "types": "./dist/Rate.d.ts",
       "default": "./dist/Rate.js"
+    },
+    "./Repository": {
+      "types": "./dist/Repository.d.ts",
+      "default": "./dist/Repository.js"
     },
     "./Rounding": {
       "types": "./dist/Rounding.d.ts",
@@ -81,6 +101,10 @@
     "./Tenancy": {
       "types": "./dist/Tenancy.d.ts",
       "default": "./dist/Tenancy.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
     },
     "./Payments": {
       "types": "./dist/Payments.d.ts",
