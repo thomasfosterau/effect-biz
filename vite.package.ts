@@ -92,7 +92,6 @@ const checkProjectOf = (url: string): string =>
 export const packageConfig = ({ url, rootReadme = false }: PackageConfigOptions) => {
   const manifest = decodeManifest(readFileSync(new URL("./package.json", url), "utf8"));
   const srcDir = new URL("./src/", url).pathname;
-  const maxWorkers = process.env.VITEST_MAX_WORKERS;
   const readmes = rootReadme ? "README.md ../../README.md" : "README.md";
   const checkProject = checkProjectOf(url);
   return defineConfig({
@@ -192,7 +191,8 @@ export const packageConfig = ({ url, rootReadme = false }: PackageConfigOptions)
     test: {
       include: ["tests/**/*.test.ts"],
       testTimeout: 30_000,
-      ...(maxWorkers === undefined ? {} : { maxWorkers: Number(maxWorkers) }),
+      // `maxWorkers` is unset here: vitest reads `VITEST_MAX_WORKERS` (set in
+      // CI) itself, and the tasks list it in their cache `env`.
       coverage: {
         provider: "istanbul",
         // `json` writes coverage-final.json, the per-file Istanbul map.
