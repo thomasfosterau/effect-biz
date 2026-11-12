@@ -85,6 +85,10 @@ export default defineConfig({
       ],
       "eslint/prefer-const": "warn",
 
+      // Chained `Effect.provide(a), Effect.provide(b)` becomes one provide of a
+      // composed layer (`Layer.provideMerge`, `Layer.mergeAll`).
+      "effecttsgo/multiple-effect-provide": "error",
+
       // ---- `suspicious` / `perf` / plugin and type-aware rules ----
       // `_tag` is Effect's discriminant, read and written on every tagged
       // value; any other leading underscore is still a finding.

@@ -44,7 +44,7 @@ const run = <A, E>(
     calls: stub.calls,
     result: Effect.runPromise(
       withTestClock(
-        effect.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer)),
+        effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
       ),
     ),
   };

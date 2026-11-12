@@ -69,7 +69,7 @@ const over = <A, E>(
   const { http, calls } = stubFetch(handler);
   const result = Effect.runPromise(
     withTestClock(
-      effect.pipe(Effect.provide(StripePayments.layer(config(options))), Effect.provide(http)),
+      effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.layer(config(options)), http))),
     ),
   );
   return { result, calls };
@@ -111,7 +111,7 @@ describe("StripePayments pins the API version", () => {
     const stub = stubStripe(() => ({}));
     await Effect.runPromise(
       Effect.exit(
-        call.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer)),
+        call.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
       ),
     );
     expect(stub.calls).toHaveLength(1);
@@ -154,8 +154,7 @@ describe("StripePayments request policy", () => {
     const { http, calls } = stubFetch(() => jsonResponse(200, customer));
     await Effect.runPromise(
       Customer.retrieve("cus_1").pipe(
-        Effect.provide(StripePayments.layer(config())),
-        Effect.provide(http),
+        Effect.provide(Layer.provideMerge(StripePayments.layer(config()), http)),
         Effect.provideService(FetchHttpClient.RequestInit, { credentials: "omit" }),
       ),
     );
@@ -332,9 +331,15 @@ describe("StripePayments request policy", () => {
     const { http, calls } = stubFetch(() => jsonResponse(200, basilSubscription));
     const subscription = await Effect.runPromise(
       Subscription.retrieve(basilSubscription.id).pipe(
-        Effect.provide(StripePayments.layer(config({ apiVersion: "2025-08-27.basil" }))),
-        Effect.provide(http),
-        Effect.provide(strictValidation),
+        Effect.provide(
+          Layer.provideMerge(
+            Layer.provideMerge(
+              StripePayments.layer(config({ apiVersion: "2025-08-27.basil" })),
+              http,
+            ),
+            strictValidation,
+          ),
+        ),
       ),
     );
     expect(subscription.id).toBe(basilSubscription.id);
@@ -539,8 +544,7 @@ describe("StripePayments configuration", () => {
       Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(values)));
     await Effect.runPromise(
       Customer.retrieve("cus_1").pipe(
-        Effect.provide(StripePayments.layerFromEnv("BILLING_KEY")),
-        Effect.provide(http),
+        Effect.provide(Layer.provideMerge(StripePayments.layerFromEnv("BILLING_KEY"), http)),
         withKey({ BILLING_KEY: TEST_KEY }),
       ),
     );
@@ -551,8 +555,7 @@ describe("StripePayments configuration", () => {
         (values) =>
           Effect.flip(
             Customer.retrieve("cus_1").pipe(
-              Effect.provide(StripePayments.layerFromEnv()),
-              Effect.provide(http),
+              Effect.provide(Layer.provideMerge(StripePayments.layerFromEnv(), http)),
               withKey(values),
             ),
           ),
@@ -570,10 +573,16 @@ describe("StripePayments configuration", () => {
     const error = await Effect.runPromise(
       Effect.flip(
         Customer.retrieve("cus_1").pipe(
-          Effect.provide(StripePayments.layerFromEnv()),
-          Effect.provide(stubFetch(() => jsonResponse(200, customer)).http),
           Effect.provide(
-            ConfigProvider.layer(ConfigProvider.fromUnknown({ STRIPE_API_KEY: { nested: true } })),
+            Layer.provideMerge(
+              Layer.provideMerge(
+                StripePayments.layerFromEnv(),
+                stubFetch(() => jsonResponse(200, customer)).http,
+              ),
+              ConfigProvider.layer(
+                ConfigProvider.fromUnknown({ STRIPE_API_KEY: { nested: true } }),
+              ),
+            ),
           ),
         ),
       ),
