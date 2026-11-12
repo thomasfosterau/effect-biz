@@ -368,10 +368,10 @@ describe("RequestOptions on a resource-module operation", () => {
 
   it.effect("passes on only the documented fields", () =>
     Effect.gen(function* () {
-      const { result, calls } = over(
-        // SAFETY: untyped code handing an options object with an extra field.
-        Customer.create({}, { idempotencyKey: "k-2", upload: true } as RequestOptions),
-      );
+      // Untyped code handing an options object with an extra field: a variable
+      // is not excess-property checked.
+      const loose = { idempotencyKey: "k-2", upload: true };
+      const { result, calls } = over(Customer.create({}, loose));
       yield* result;
       expect(calls[0]?.url.origin).toBe("https://api.stripe.com");
       expect(calls[0]?.headers.get("idempotency-key")).toBe("k-2");
