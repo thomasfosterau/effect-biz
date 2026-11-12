@@ -1,30 +1,37 @@
 name: CI
 
-# ONE job, ONE required check: the pipeline's task graph lives in
-# vite.config.ts (the root `check` and `docgen` tasks and every package's
-# `test:unit` / `build`), not in GitHub Actions `needs:`. Copied in shape from
-# the effect-finance repository.
+# One workflow, one command: `vp run ci`, the root task in vite.config.ts that
+# runs every gate in order (format + lint, the type gates, the unit tests, the
+# build, the docs examples, the dependency audit), so a local `vp run ci` is
+# the CI run. It runs on the newest LTS and the latest Current Node.js; a
+# ruleset requires each leg by name: `ci (node lts)` and `ci (node latest)`.
 
 on:
   pull_request:
-    branches: [trunk]
-    types: [opened, reopened, synchronize, ready_for_review]
   push:
     branches: [trunk]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/trunk' }}
 
-# No permissions by default; the single job grants only read access.
+# No permissions by default; each job grants only read access.
 permissions: {}
 
 jobs:
   ci:
+    name: ci (node ${{ matrix.node }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # `lts` and `latest` are resolved by `vp env use` (setup-vp's
+        # `node-version`); both satisfy `engines.node` (>=22).
+        node: [lts, latest]
     env:
       # A modest ceiling for every Node process in the pipeline. NODE_OPTIONS
       # is inherited by every child, including each vitest fork.
@@ -36,13 +43,13 @@ jobs:
           persist-credentials: false
           # Changesets compares against the base branch.
           fetch-depth: 0
-      # Vite+ at the catalog's pin, the Node.js it manages (the newest LTS),
-      # pnpm from package.json's `packageManager`, the pnpm store cache, and
-      # `vp install --frozen-lockfile` (`vp` resolves the lockfile flag from CI).
+      # Vite+ at the catalog's pin, the matrix's Node.js, pnpm from
+      # package.json's `packageManager`, the pnpm store cache, and
+      # `vp install --frozen-lockfile`.
       - uses: voidzero-dev/setup-vp@cab1ab9eaff52d4857875f4f2c016e36af8f2c76 # v1.22.0
         with:
           version-file: pnpm-workspace.yaml
-          node-version: lts
+          node-version: ${{ matrix.node }}
           cache: true
           run-install: |
             - args: ["--frozen-lockfile"]
@@ -50,21 +57,14 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: node_modules/.vite/task-cache
-          key: vp-task-v1-${{ runner.os }}-${{ github.sha }}
+          key: vp-task-v1-${{ runner.os }}-node-${{ matrix.node }}-${{ github.sha }}
           restore-keys: |
-            vp-task-v1-${{ runner.os }}-
-      # Format + lint; lint is type-aware (oxlint-tsgolint), so it runs before
-      # any build against the packages' `src/` (see the packages' tsconfig).
-      - name: Format and lint
-        run: vp check
-      - name: Type gates
-        run: vp run --concurrency-limit 2 check
-      - name: Unit tests
-        run: vp run -r test:unit
-      - name: Build
-        run: vp run -r build
-      # Type-checks AND runs every JSDoc @example and README block against the built dist/.
-      - name: Verify documentation examples (docgen)
-        run: vp run docgen
-      - name: Audit
-        run: pnpm audit --audit-level high
+            vp-task-v1-${{ runner.os }}-node-${{ matrix.node }}-
+      # A green leg means a released Node.js: fail on a pre-release
+      # (an alpha, RC or nightly that `latest` could resolve to).
+      - name: Show the Node.js version (released only)
+        run: >-
+          node -e "console.log(process.version); if (process.version.includes('-'))
+          { console.error('pre-release Node ' + process.version); process.exit(1) }"
+      - name: CI
+        run: vp run ci

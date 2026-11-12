@@ -311,6 +311,16 @@ export default defineConfig({
   },
   run: {
     tasks: {
+      // The whole CI pipeline as one task, in order: format + lint (type-aware,
+      // so before any build), the type gates, the unit tests, the build, the
+      // docs examples (which run against dist/) and the dependency audit.
+      // `.github/workflows/ci.yml` runs exactly `vp run ci`, so a local run is
+      // the CI run. Fail-fast: the first failing gate stops the rest.
+      ci: {
+        command:
+          "vp check && vp run --concurrency-limit 2 check && vp run -r test:unit && vp run -r build && vp run docgen && pnpm audit --audit-level high",
+        cache: false,
+      },
       // The CI typecheck gate, as one task: every package's `check`, plus the
       // dist-consumer check that type-checks a consumer fixture against the
       // EMITTED declarations. A pure graph node. The packages are named explicitly — a
