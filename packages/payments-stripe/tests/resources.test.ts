@@ -172,7 +172,7 @@ describe("the resource plan", () => {
   });
 
   it("has a module for every resource subpath the package publishes, and nothing else", () => {
-    const manifest = Schema.decodeUnknownSync(Manifest)(
+    const manifest = Schema.decodeSync(Manifest)(
       // oxlint-disable-next-line effect/avoid-sync-fs -- see the import
       readFileSync(new URL("package.json", PACKAGE), "utf8"),
     );
