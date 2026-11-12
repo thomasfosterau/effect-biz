@@ -46,7 +46,7 @@ export class PaymentIntent extends Schema.Class<PaymentIntent, { readonly brand:
 )({
   id: Schema.String,
   /** Amount in the smallest currency unit. */
-  amount: Schema.Number,
+  amount: Schema.Int,
   currency: Schema.String,
   status: PaymentStatus,
   customerId: Schema.OptionFromNullOr(Schema.String),
@@ -56,7 +56,7 @@ export class PaymentIntent extends Schema.Class<PaymentIntent, { readonly brand:
   description: Schema.OptionFromNullOr(Schema.String),
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
-  created: Schema.Number,
+  created: Schema.Int,
 }) {}
 
 /** Parameters for creating a payment intent. */

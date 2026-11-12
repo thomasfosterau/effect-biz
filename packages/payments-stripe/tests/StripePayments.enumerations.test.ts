@@ -1,8 +1,8 @@
 import type * as Schema from "effect/Schema";
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
-import type * as Layer from "effect/Layer";
 import * as Price from "@thomasfosterau/effect-biz/Payments.Price";
 import * as PaymentIntent from "@thomasfosterau/effect-biz/Payments.PaymentIntent";
 import * as Subscription from "@thomasfosterau/effect-biz/Payments.Subscription";
@@ -20,7 +20,7 @@ const run = <A, E>(
 ): Promise<A> => {
   const stub = stubStripe(() => body);
   return Effect.runPromise(
-    effect.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer)),
+    effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
   );
 };
 

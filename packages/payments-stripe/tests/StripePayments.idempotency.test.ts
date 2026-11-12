@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
-import type * as Layer from "effect/Layer";
+import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
@@ -54,7 +54,7 @@ const requestOf = async (
   const stub = stubStripe(() => ({}));
   // The empty answer fails the decode; the request was recorded before that.
   await Effect.runPromiseExit(
-    operation.pipe(Effect.provide(capabilities), Effect.provide(stub.layer)),
+    operation.pipe(Effect.provide(Layer.provideMerge(capabilities, stub.layer))),
   );
   return {
     idempotencyKey: Option.fromNullishOr(stub.calls[0]?.headers.get("idempotency-key")),
@@ -122,7 +122,7 @@ describe("Stripe maps the neutral idempotencyKey to Idempotency-Key", () => {
     const error = await Effect.runPromise(
       Effect.flip(
         Effect.asVoid(
-          op.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer)),
+          op.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
         ),
       ),
     );
@@ -136,7 +136,7 @@ describe("Stripe maps the neutral idempotencyKey to Idempotency-Key", () => {
       Effect.gen(function* () {
         yield* Effect.exit(Subscription.cancel("sub_1"));
         yield* Effect.exit(PaymentIntent.cancel("pi_1"));
-      }).pipe(Effect.provide(noRetries), Effect.provide(stub.layer)),
+      }).pipe(Effect.provide(Layer.provideMerge(noRetries, stub.layer))),
     );
     expect(stub.calls.map((call) => [call.method, call.headers.get("idempotency-key")])).toEqual([
       ["DELETE", null],
@@ -205,12 +205,14 @@ describe("a retried write after a lost response is one logical write (effect-fin
         return yield* createWithRetry(key);
       }).pipe(
         Effect.provide(
-          StripePayments.layer({
-            apiKey: Redacted.make("sk_test_not_a_real_key"),
-            maxNetworkRetries: 0,
-          }),
+          Layer.provideMerge(
+            StripePayments.layer({
+              apiKey: Redacted.make("sk_test_not_a_real_key"),
+              maxNetworkRetries: 0,
+            }),
+            fake.http,
+          ),
         ),
-        Effect.provide(fake.http),
       ),
     );
     expect(created.id).toBe("cus_1");
@@ -232,12 +234,14 @@ describe("a retried write after a lost response is one logical write (effect-fin
           times: 1,
         }),
         Effect.provide(
-          StripePayments.layer({
-            apiKey: Redacted.make("sk_test_not_a_real_key"),
-            maxNetworkRetries: 0,
-          }),
+          Layer.provideMerge(
+            StripePayments.layer({
+              apiKey: Redacted.make("sk_test_not_a_real_key"),
+              maxNetworkRetries: 0,
+            }),
+            fake.http,
+          ),
         ),
-        Effect.provide(fake.http),
       ),
     );
     expect(created.id).toBe("cus_1");
@@ -249,12 +253,14 @@ describe("a retried write after a lost response is one logical write (effect-fin
     const created = await Effect.runPromise(
       createWithRetry().pipe(
         Effect.provide(
-          StripePayments.layer({
-            apiKey: Redacted.make("sk_test_not_a_real_key"),
-            maxNetworkRetries: 0,
-          }),
+          Layer.provideMerge(
+            StripePayments.layer({
+              apiKey: Redacted.make("sk_test_not_a_real_key"),
+              maxNetworkRetries: 0,
+            }),
+            fake.http,
+          ),
         ),
-        Effect.provide(fake.http),
       ),
     );
     expect(fake.writes()).toBe(2);
@@ -267,12 +273,14 @@ describe("a retried write after a lost response is one logical write (effect-fin
       Customer.create({ email: "a@example.com", idempotencyKey: KEY }).pipe(
         Effect.flip,
         Effect.provide(
-          StripePayments.layer({
-            apiKey: Redacted.make("sk_test_not_a_real_key"),
-            maxNetworkRetries: 0,
-          }),
+          Layer.provideMerge(
+            StripePayments.layer({
+              apiKey: Redacted.make("sk_test_not_a_real_key"),
+              maxNetworkRetries: 0,
+            }),
+            fake.http,
+          ),
         ),
-        Effect.provide(fake.http),
       ),
     );
     expect(error).toBeInstanceOf(PaymentNetworkError);

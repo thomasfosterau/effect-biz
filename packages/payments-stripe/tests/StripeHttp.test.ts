@@ -64,7 +64,7 @@ const over = <A, E>(
 ) => {
   const { http, calls } = stubFetch(handler);
   const result = Effect.runPromise(
-    withTestClock(effect.pipe(Effect.provide(layer(config(options))), Effect.provide(http))),
+    withTestClock(effect.pipe(Effect.provide(Layer.provideMerge(layer(config(options)), http)))),
   );
   return { result, calls };
 };
@@ -153,10 +153,9 @@ describe("resource modules over StripeHttp", () => {
   });
 
   it("lets a path id win over a params member of the same name", async () => {
-    const { result, calls } = over(
-      // SAFETY: untyped code passing the id again in its params.
-      Customer.update("cus_1", { customer: "cus_2", name: "A" } as never),
-    );
+    // Untyped code passing the id again in its params: a variable, so no excess-property check.
+    const untypedParams = { customer: "cus_2", name: "A" };
+    const { result, calls } = over(Customer.update("cus_1", untypedParams));
     await result;
     expect(calls[0]?.url.pathname).toBe("/v1/customers/cus_1");
   });
@@ -199,9 +198,9 @@ describe("resource modules over StripeHttp", () => {
     const { http } = stubFetch(() => jsonResponse(200, { id: "cus_1", object: "customer" }));
     const result = await Effect.runPromise(
       Customer.retrieve("cus_1").pipe(
-        Effect.provide(layer(config())),
-        Effect.provide(http),
-        Effect.provide(strictValidation),
+        Effect.provide(
+          Layer.provideMerge(Layer.provideMerge(layer(config()), http), strictValidation),
+        ),
       ),
     );
     expect(result).toEqual({ id: "cus_1", object: "customer" });
@@ -210,7 +209,9 @@ describe("resource modules over StripeHttp", () => {
   it("runs over Distilled's Credentials in context (layerFromContext)", async () => {
     const stub = stubStripe(() => ({ id: "cus_1" }));
     const result = await Effect.runPromise(
-      Customer.retrieve("cus_1").pipe(Effect.provide(layerFromContext), Effect.provide(stub.layer)),
+      Customer.retrieve("cus_1").pipe(
+        Effect.provide(Layer.provideMerge(layerFromContext, stub.layer)),
+      ),
     );
     expect(result).toEqual({ id: "cus_1" });
     expect(stub.calls[0]?.headers.get("stripe-version")).toBe(DISTILLED_API_VERSION);
@@ -523,10 +524,11 @@ describe("StripeHttp configuration", () => {
     const { http, calls } = stubFetch(() => jsonResponse(200, { id: "cus_1" }));
     await Effect.runPromise(
       Customer.retrieve("cus_1").pipe(
-        Effect.provide(layerFromEnv()),
-        Effect.provide(http),
         Effect.provide(
-          ConfigProvider.layer(ConfigProvider.fromUnknown({ STRIPE_API_KEY: TEST_KEY })),
+          Layer.provideMerge(
+            Layer.provideMerge(layerFromEnv(), http),
+            ConfigProvider.layer(ConfigProvider.fromUnknown({ STRIPE_API_KEY: TEST_KEY })),
+          ),
         ),
       ),
     );
@@ -539,8 +541,9 @@ describe("StripeHttp configuration", () => {
       Effect.flip(
         Layer.build(layerFromEnv("MY_STRIPE_KEY")).pipe(
           Effect.scoped,
-          Effect.provide(http),
-          Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({}))),
+          Effect.provide(
+            Layer.provideMerge(http, ConfigProvider.layer(ConfigProvider.fromUnknown({}))),
+          ),
         ),
       ),
     );
@@ -562,8 +565,7 @@ describe("StripeHttp configuration", () => {
       Effect.flip(
         Layer.build(layerFromEnv()).pipe(
           Effect.scoped,
-          Effect.provide(http),
-          Effect.provide(ConfigProvider.layer(provider)),
+          Effect.provide(Layer.provideMerge(http, ConfigProvider.layer(provider))),
         ),
       ),
     );
