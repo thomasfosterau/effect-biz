@@ -721,6 +721,27 @@ interface WithAst {
   readonly ast: AST.AST;
 }
 
+/** Whether a Distilled export carries its schemas as `.input` / `.output` (`API.OperationMethod`). */
+const hasSchemas = (
+  value: unknown,
+): value is { readonly input: WithAst; readonly output: WithAst } =>
+  Predicate.hasProperty(value, "input") &&
+  Predicate.hasProperty(value.input, "ast") &&
+  Predicate.hasProperty(value, "output") &&
+  Predicate.hasProperty(value.output, "ast");
+
+/** Decodes a Distilled export, failing when it carries no schemas. */
+const decodeOperation = Schema.decodeUnknownSync(Schema.declare(hasSchemas));
+
+/** The `Http()` trait every generated input carries: method, path template and content type. */
+const decodeHttp = Schema.decodeUnknownSync(
+  Schema.Struct({
+    method: Schema.Literals(["GET", "POST", "DELETE"]),
+    uri: Schema.String,
+    contentType: Schema.optionalKey(Schema.String),
+  }),
+);
+
 const OPERATION =
   /(?:\/\*\*(?<doc>[^\n]*?)\*\/\n)?export declare const (?<name>\w+): API\.(?:Paginated)?OperationMethod<(?<input>\w+), (?<output>\w+), \w+, StripeOpContext(?:, \w+)?>;/g;
 
@@ -760,16 +781,9 @@ export const readOperations = (
 ): ReadonlyArray<DistilledOperation> =>
   [...declarations.matchAll(OPERATION)].map((match) => {
     const { doc = "", name = "", input = "", output = "" } = match.groups ?? {};
-    // SAFETY: every `API.OperationMethod` Distilled exports carries its
-    // schemas as `.input` / `.output` (`@distilled.cloud/core/api`'s `make`).
-    const operation = distilled[name] as { readonly input: WithAst; readonly output: WithAst };
+    const operation = decodeOperation(distilled[name]);
     const inputAst = operation.input.ast;
-    // SAFETY: every generated input carries the `Http()` trait.
-    const http = getAnn(inputAst, httpSymbol) as {
-      readonly method: DistilledOperation["method"];
-      readonly uri: string;
-      readonly contentType?: string | undefined;
-    };
+    const http = decodeHttp(getAnn(inputAst, httpSymbol));
     const props = getProps(inputAst);
     const labels = props.filter((prop) => hasPropAnn(prop, labelSymbol));
     const tokens = labels.map((prop) => ({

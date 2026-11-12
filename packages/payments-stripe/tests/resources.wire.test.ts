@@ -1,6 +1,7 @@
 import { assert, describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Predicate from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import * as Redacted from "effect/Redacted";
@@ -34,9 +35,18 @@ type Exported = (
   ...args: ReadonlyArray<unknown>
 ) => Effect.Effect<unknown, PaymentsError, StripeHttp>;
 
-const load = async (subpath: string): Promise<Readonly<Record<string, Exported>>> =>
-  // SAFETY: every generated module exports its operations as functions of this shape.
-  (await import(`../src/${subpath}.ts`)) as Readonly<Record<string, Exported>>;
+const decodeModule = Schema.decodeUnknownSync(
+  Schema.Record(
+    Schema.String,
+    // Every generated module exports its operations as functions of this shape.
+    Schema.declare((value): value is Exported => Predicate.isFunction(value)),
+  ),
+);
+
+const load = async (subpath: string): Promise<Readonly<Record<string, Exported>>> => {
+  const loaded: unknown = await import(`../src/${subpath}.ts`);
+  return decodeModule(loaded);
+};
 
 /** The arguments of a call: an id per path id, `{}` for params, no options. */
 const argsOf = (operation: Planned): ReadonlyArray<unknown> => [
