@@ -18,6 +18,8 @@
  */
 
 import * as Arr from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -30,16 +32,22 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import * as Actor from "./Actor.js";
 import * as Audit from "./Audit.js";
 import type * as BizError from "./BizError.js";
 import * as BizErrors from "./BizError.js";
+import * as Company from "./Company.js";
+import * as Currency from "./Currency.js";
 import * as Dispatcher from "./Dispatcher.js";
 import * as DomainEvent from "./DomainEvent.js";
 import * as EventRecorder from "./EventRecorder.js";
+import type * as Id from "./Id.js";
+import * as NumberSequence from "./NumberSequence.js";
 import * as Outbox from "./Outbox.js";
 import * as Page from "./Page.js";
 import type * as Repository from "./Repository.js";
+import * as Rounding from "./Rounding.js";
 import * as Subscriber from "./Subscriber.js";
 import * as Tenancy from "./Tenancy.js";
 import * as UnitOfWork from "./UnitOfWork.js";
@@ -1074,3 +1082,269 @@ export const eventsContract = <
     (port, other) => ({ port, subject, other }),
     subject.repository,
   );
+
+/** The services a numbering-contract case uses. */
+export type NumberingServices =
+  | NumberSequence.NumberSequences
+  | NumberSequence.SequenceDefinitions
+  | Company.CompanyRepository
+  | UnitOfWork.UnitOfWork
+  | Id.IdGenerator;
+
+type NumberingBody = () => Effect.Effect<
+  void,
+  Failure,
+  NumberingServices | Repository.WriteContext
+>;
+
+/** How many fibers the concurrent numbering cases race. */
+const RACERS = 20;
+
+/** A company of the case's tenant in `timeZone`, with its fiscal year from 1 July. */
+const companyIn = (timeZone: string) =>
+  Company.create({
+    legalName: "Contract Pty Ltd",
+    tradingName: Option.none(),
+    registrations: [],
+    baseCurrency: Currency.make("AUD"),
+    country: Company.CountryCode.make("AU"),
+    locale: "en-AU",
+    timeZone,
+    fiscalYearStart: new Company.FiscalYearStart({ month: 7, day: 1 }),
+    rounding: new Rounding.RoundingPolicy({ mode: "half-even", scale: 2 }),
+  });
+
+/** Defines `documentType` for `company`, its pattern from `pattern`. */
+const defineFor = (
+  company: Company.Company,
+  documentType: string,
+  pattern: string,
+  options: Pick<NumberSequence.DefineInput, "reset" | "mode"> = {},
+) =>
+  NumberSequence.define({
+    ...options,
+    companyId: company.id,
+    documentType: NumberSequence.DocumentType.make(documentType),
+    pattern: NumberSequence.Pattern.make(pattern),
+  });
+
+/** One command that takes the next number and does nothing else. */
+const issue = (company: Company.Company, documentType: string) =>
+  UnitOfWork.transaction(
+    NumberSequence.next(company.id, NumberSequence.DocumentType.make(documentType)),
+  );
+
+/** `prefix` followed by each of `1..count`, padded to 4. */
+const numbered = (prefix: string, count: number): ReadonlyArray<string> =>
+  Arr.makeBy(count, (index) => `${prefix}${String(index + 1).padStart(4, "0")}`);
+
+/**
+ * Runs `RACERS` commands at once, each taking a number and then waiting
+ * until every one has taken its own (so they all decide from the same
+ * counter), then `after` with its index; returns each command's outcome.
+ */
+const race = <E>(
+  take: Effect.Effect<string, E, NumberingServices | Repository.WriteContext>,
+  after: (index: number) => Effect.Effect<void, Aborted>,
+) =>
+  Effect.gen(function* () {
+    const arrived = yield* Ref.make(0);
+    const allTaken = yield* Deferred.make<void>();
+    const gate = yield* Deferred.make<void>();
+    const command = (index: number) =>
+      UnitOfWork.transaction(
+        Effect.gen(function* () {
+          const number = yield* take;
+          if ((yield* Ref.updateAndGet(arrived, (n) => n + 1)) >= RACERS) {
+            yield* Deferred.succeed(allTaken, undefined);
+          }
+          yield* Deferred.await(gate);
+          yield* after(index);
+          return number;
+        }),
+      );
+    const fiber = yield* Effect.forkChild(
+      Effect.forEach(
+        Arr.makeBy(RACERS, (index) => index),
+        (index) => Effect.result(command(index)),
+        {
+          concurrency: "unbounded",
+        },
+      ),
+    );
+    yield* Deferred.await(allTaken);
+    yield* Deferred.succeed(gate, undefined);
+    return yield* Fiber.join(fiber);
+  });
+
+const distinct = (values: ReadonlyArray<string>): boolean =>
+  Arr.dedupe(values).length === values.length;
+
+const sorted = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
+  Arr.sort(values, Order.String);
+
+const epochMillis = (iso: string): number => DateTime.toEpochMillis(DateTime.makeUnsafe(iso));
+
+/** Runs `self` on a `TestClock` of its own, whatever clock the runner provides. */
+const onTestClock = <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+  Effect.scoped(
+    Effect.flatMap(TestClock.make(), (clock) => Effect.provideService(self, Clock.Clock, clock)),
+  );
+
+const numberingCases = (): ReadonlyArray<readonly [string, NumberingBody]> => [
+  [
+    "concurrent gap-less next calls never repeat a number and leave no gap",
+    Effect.fnUntraced(function* () {
+      const company = yield* companyIn("UTC");
+      yield* defineFor(company, "contract.gap-less", "A-{#}");
+      const outcomes = yield* race(issue(company, "contract.gap-less"), () => Effect.void);
+      const issued = Arr.getSuccesses(outcomes);
+      yield* ensure(Arr.isReadonlyArrayNonEmpty(issued), "at least one command takes a number");
+      yield* ensure(distinct(issued), "no number is issued twice");
+      yield* ensure(
+        Arr.every(Arr.getFailures(outcomes), (error) => P.isTagged(error, "ConcurrencyConflict")),
+        "a command that loses every retry fails with ConcurrencyConflict",
+      );
+      yield* ensure(
+        sorted(issued).join() === numbered("A-", issued.length).join(),
+        "the numbers issued are 1 to n, without a gap",
+      );
+      yield* ensure(
+        (yield* issue(company, "contract.gap-less")) ===
+          numbered("A-", issued.length + 1)[issued.length],
+        "the next number follows the last one committed",
+      );
+    }),
+  ],
+  [
+    "concurrent gaps-allowed next calls never repeat a number, even when their commands roll back",
+    Effect.fnUntraced(function* () {
+      const company = yield* companyIn("UTC");
+      yield* defineFor(company, "contract.gaps", "B-{#}", { mode: "gaps-allowed" });
+      const taken = yield* Ref.make<ReadonlyArray<string>>([]);
+      const outcomes = yield* race(
+        Effect.tap(
+          NumberSequence.next(company.id, NumberSequence.DocumentType.make("contract.gaps")),
+          (number) => Ref.update(taken, Arr.append(number)),
+        ),
+        (index) => (index % 2 === 0 ? Effect.void : Effect.fail(new Aborted())),
+      );
+      const issued = yield* Ref.get(taken);
+      yield* ensure(Arr.getSuccesses(outcomes).length === RACERS / 2, "half the commands commit");
+      yield* ensure(distinct(issued), "no number is issued twice");
+      yield* ensure(
+        sorted(issued).join() === numbered("B-", RACERS).join(),
+        "every command took a number of its own, at once",
+      );
+      yield* ensure(
+        (yield* issue(company, "contract.gaps")) === numbered("B-", RACERS + 1)[RACERS],
+        "a rolled-back command's number is not reissued",
+      );
+    }),
+  ],
+  [
+    "a rolled-back command consumes no gap-less number",
+    Effect.fnUntraced(function* () {
+      const company = yield* companyIn("UTC");
+      yield* defineFor(company, "contract.rollback", "C-{#}");
+      yield* ensure((yield* issue(company, "contract.rollback")) === "C-0001", "the first number");
+      yield* Effect.forEach(
+        Arr.makeBy(3, (index) => index),
+        () =>
+          failsWith(
+            UnitOfWork.transaction(
+              Effect.andThen(
+                NumberSequence.next(
+                  company.id,
+                  NumberSequence.DocumentType.make("contract.rollback"),
+                ),
+                Effect.fail(new Aborted()),
+              ),
+            ),
+            "Aborted",
+            "a command that takes a number and fails",
+          ),
+        { concurrency: 1, discard: true },
+      );
+      yield* ensure(
+        (yield* issue(company, "contract.rollback")) === "C-0002",
+        "the next committed number follows the last committed one",
+      );
+    }),
+  ],
+  [
+    "a yearly sequence resets at the new year in the company's time zone",
+    Effect.fnUntraced(function* () {
+      const sydney = yield* companyIn("Australia/Sydney");
+      const utc = yield* companyIn("UTC");
+      yield* defineFor(sydney, "contract.yearly", "{YYYY}-{#}", { reset: "yearly" });
+      yield* defineFor(utc, "contract.yearly", "{YYYY}-{#}", { reset: "yearly" });
+      // 23:00 on 31 December in Sydney (UTC+11), and in UTC 12:00.
+      yield* TestClock.setTime(epochMillis("2026-12-31T12:00:00Z"));
+      yield* ensure((yield* issue(sydney, "contract.yearly")) === "2026-0001", "Sydney's 2026");
+      yield* ensure((yield* issue(utc, "contract.yearly")) === "2026-0001", "UTC's 2026");
+      // 00:30 on 1 January 2027 in Sydney; still 13:30 on 31 December in UTC.
+      yield* TestClock.setTime(epochMillis("2026-12-31T13:30:00Z"));
+      yield* ensure(
+        (yield* issue(sydney, "contract.yearly")) === "2027-0001",
+        "Sydney's counter resets in its own new year",
+      );
+      yield* ensure(
+        (yield* issue(utc, "contract.yearly")) === "2026-0002",
+        "UTC's counter carries on in 2026",
+      );
+    }, onTestClock),
+  ],
+  [
+    "next on a document type without a definition is NotFound",
+    Effect.fnUntraced(function* () {
+      const company = yield* companyIn("UTC");
+      yield* failsWith(
+        issue(company, "contract.undefined"),
+        "NotFound",
+        "next on an undefined type",
+      );
+    }),
+  ],
+];
+
+/**
+ * The numbering contract's cases: concurrent `next` calls never repeat a
+ * number, in gap-less mode (where they also leave no gap) and in
+ * gaps-allowed mode (where a rolled-back command keeps its number); a
+ * rolled-back command consumes no gap-less number; a yearly reset follows
+ * the company's time zone (on a `TestClock` the case provides itself); and
+ * an undefined document type is `NotFound`. Each case runs under a tenant
+ * of its own and the actor `system:repository-contract`, over the
+ * implementation's `NumberSequences`, `SequenceDefinitions`,
+ * `CompanyRepository`, `UnitOfWork` and `IdGenerator`; give each fresh
+ * stores. The racing cases retry conflicting commits, so run them on a live
+ * clock.
+ *
+ * @example
+ * ```ts
+ * import { Effect, Layer } from "effect";
+ * import * as Company from "@thomasfosterau/effect-biz/Company";
+ * import * as Id from "@thomasfosterau/effect-biz/Id";
+ * import * as NumberSequence from "@thomasfosterau/effect-biz/NumberSequence";
+ * import * as Testing from "@thomasfosterau/effect-biz/testing";
+ * import * as UnitOfWork from "@thomasfosterau/effect-biz/UnitOfWork";
+ *
+ * const cases = Testing.numberSequencesContract();
+ *
+ * // Each case against fresh stores.
+ * const layer = () =>
+ *   NumberSequence.layerMemory.pipe(
+ *     Layer.provideMerge(
+ *       Layer.mergeAll(Company.layerMemory, UnitOfWork.layerMemory, Id.layerSequential),
+ *     ),
+ *   );
+ * const program = Effect.forEach(cases, (contractCase) => Effect.provide(contractCase.run, layer()), {
+ *   concurrency: 1,
+ * });
+ * Effect.runPromise(program).then(() => console.log(cases.length)); // 5
+ * ```
+ */
+export const numberSequencesContract = (): ReadonlyArray<
+  Case<Provided<NumberingServices | Repository.WriteContext>>
+> => casesOf(numberingCases(), 3000, () => undefined, Effect.void);

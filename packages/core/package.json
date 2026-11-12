@@ -86,6 +86,10 @@
       "types": "./dist/Money.d.ts",
       "default": "./dist/Money.js"
     },
+    "./NumberSequence": {
+      "types": "./dist/NumberSequence.d.ts",
+      "default": "./dist/NumberSequence.js"
+    },
     "./Outbox": {
       "types": "./dist/Outbox.d.ts",
       "default": "./dist/Outbox.js"
