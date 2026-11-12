@@ -75,10 +75,11 @@ const strictly = (
   schema: Schema.Top,
   body: Schema.Json,
   options?: SchemaAST.ParseOptions,
-): unknown =>
+): void => {
   // SAFETY: Distilled's generated schemas are plain structs, unions and
   // suspensions over `effect/Schema` built-ins, which need no services.
   Schema.decodeSync(schema as Schema.Codec<unknown, unknown>, options)(body);
+};
 
 /**
  * Reject excess properties too. Only for the fixtures Distilled models in

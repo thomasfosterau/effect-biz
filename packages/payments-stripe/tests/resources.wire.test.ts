@@ -53,10 +53,7 @@ const decodeModule = Schema.decodeUnknownSync(
 );
 
 const load = (subpath: string) =>
-  Effect.map(
-    awaitTestPromise((): Promise<unknown> => import(`../src/${subpath}.ts`)),
-    (loaded) => decodeModule(loaded),
-  );
+  awaitTestPromise(async () => decodeModule(await import(`../src/${subpath}.ts`)));
 
 /** The arguments of a call: an id per path id, `{}` for params, no options. */
 const argsOf = (operation: Planned): ReadonlyArray<unknown> => [
