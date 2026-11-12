@@ -115,7 +115,7 @@ const failureAt = (issue: "Missing key" | "Expected no excess property", member:
   new RegExp(`^${escaped(issue)}\\s+at \\["${escaped(member)}"\\]$`);
 
 /** `fixture` without its `member`: the mutation the strict check must catch. */
-const without = (fixture: Readonly<Record<string, unknown>>, member: string) =>
+const without = (fixture: Readonly<Record<string, Schema.Json>>, member: string) =>
   R.remove(fixture, member);
 
 describe("endive fixtures", () => {

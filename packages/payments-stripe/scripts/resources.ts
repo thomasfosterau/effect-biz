@@ -41,9 +41,9 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
-import type * as AST from "effect/SchemaAST";
 import { getAnn, getProps, hasPropAnn, nameOf } from "@distilled.cloud/core/protocol-http";
 import { httpSymbol, labelSymbol } from "@distilled.cloud/core/trait";
+import type { Exported, Operation } from "./distilled.ts";
 import { format } from "vite-plus/fmt";
 
 /** One published resource subpath and the API paths whose operations it holds. */
@@ -716,11 +716,6 @@ export const plan = (operations: ReadonlyArray<DistilledOperation>): Plan => {
 // Reading Distilled
 // ---------------------------------------------------------------------------
 
-/** A schema, as Distilled's operations expose theirs (`.input` / `.output`). */
-interface WithAst {
-  readonly ast: AST.AST;
-}
-
 const OPERATION =
   /(?:\/\*\*(?<doc>[^\n]*?)\*\/\n)?export declare const (?<name>\w+): API\.(?:Paginated)?OperationMethod<(?<input>\w+), (?<output>\w+), \w+, StripeOpContext(?:, \w+)?>;/g;
 
@@ -730,7 +725,7 @@ const OPERATION =
  * pattern misses cannot drop an operation silently.
  */
 export const runtimeOperations = (
-  distilled: Readonly<Record<string, unknown>>,
+  distilled: Readonly<Record<string, Exported>>,
 ): ReadonlyArray<string> =>
   Arr.sort(
     R.keys(distilled).filter((name) => {
@@ -749,6 +744,21 @@ const summaryOf = (doc: string): string =>
     ?.replace(/<[^>]+>/g, "")
     .trim() ?? "";
 
+/** A declared operation the installed Distilled module does not export as one. */
+class NotAnOperation extends Schema.TaggedError<
+  NotAnOperation,
+  { readonly brand: unique symbol }
+>()("NotAnOperation", { operation: Schema.String }) {}
+
+/** The export called `name`, which must be an operation. */
+const operationNamed = (distilled: Readonly<Record<string, Exported>>, name: string): Operation => {
+  const exported = distilled[name];
+  if (exported === undefined || !("input" in exported) || !("output" in exported)) {
+    throw new NotAnOperation({ operation: name });
+  }
+  return exported;
+};
+
 /**
  * Every operation of `@distilled.cloud/stripe/stripe`: names and docs from its
  * declarations (`lib/services/stripe.d.ts`), method, path and members from
@@ -756,13 +766,13 @@ const summaryOf = (doc: string): string =>
  */
 export const readOperations = (
   declarations: string,
-  distilled: Readonly<Record<string, unknown>>,
+  distilled: Readonly<Record<string, Exported>>,
 ): ReadonlyArray<DistilledOperation> =>
   [...declarations.matchAll(OPERATION)].map((match) => {
     const { doc = "", name = "", input = "", output = "" } = match.groups ?? {};
-    // SAFETY: every `API.OperationMethod` Distilled exports carries its
-    // schemas as `.input` / `.output` (`@distilled.cloud/core/api`'s `make`).
-    const operation = distilled[name] as { readonly input: WithAst; readonly output: WithAst };
+    // Every `API.OperationMethod` Distilled exports carries its schemas as
+    // `.input` / `.output` (`@distilled.cloud/core/api`'s `make`).
+    const operation = operationNamed(distilled, name);
     const inputAst = operation.input.ast;
     // SAFETY: every generated input carries the `Http()` trait.
     const http = getAnn(inputAst, httpSymbol) as {
