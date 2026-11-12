@@ -34,6 +34,14 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./BizError": {
+      "types": "./dist/BizError.d.ts",
+      "default": "./dist/BizError.js"
+    },
+    "./Id": {
+      "types": "./dist/Id.d.ts",
+      "default": "./dist/Id.js"
+    },
     "./Payments": {
       "types": "./dist/Payments.d.ts",
       "default": "./dist/Payments.js"

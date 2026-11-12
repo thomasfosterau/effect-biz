@@ -13,7 +13,9 @@ Two halves, one package:
 
 ## Invariants
 
-- **Foundation placeholder today.** `src/index.ts` carries only `name`; the platform-foundation issues replace it with the identifiers, tenancy context, error channel, domain events and repository conventions.
+- **The foundation is one subpath per module** (`./Id`, `./BizError`, …); `src/index.ts` (`.`) still carries only `name`, and the remaining platform-foundation slices (tenancy, repositories, events) add their own subpaths.
+- **Ids are lower-case UUIDv7 strings, branded per kind** (`Id.make("PartyId")`), and come only from the `IdGenerator` service, never from `crypto.randomUUID` or a host's own identifiers. `Id.layer` keeps them increasing within a millisecond with a 12-bit counter (RFC 9562 method 1), seeded below half its range so a burst of 2,048 ids fits one millisecond before the timestamp is borrowed forward.
+- **Errors come from `BizError`.** A domain package adds its own tagged error only for a case a caller must branch on; any other broken rule is a `BusinessRuleViolation` with a module-namespaced `code`. No error field or message carries a secret or personal data: only entity kinds, ids, codes and schema paths, and each message is built from those fields (a `message` getter). `BizError.httpStatus` is the one mapping the HTTP surfaces use; a new error adds its row there, to `isRetryable` if retryable, and to the README's table.
 
 ### Payments
 
