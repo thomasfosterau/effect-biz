@@ -57,6 +57,8 @@ export const failed = <A>(result: Result.Result<A, BusinessRuleViolation>): Busi
     (value) => new globalThis.Error(`Expected a failure, got ${String(value)}`),
   );
 
-/** Whether decoding the JSON input against the schema fails. */
-export const rejects = (schema: Schema.Decoder<unknown>, input: Schema.Json): boolean =>
-  Schema.decodeUnknownExit(schema)(input)._tag === "Failure";
+/** Whether decoding the input (JSON, or one of the non-JSON values a test feeds: a bigint, undefined) against the schema fails. */
+export const rejects = (
+  schema: Schema.Decoder<unknown>,
+  input: Schema.Json | bigint | undefined,
+): boolean => Schema.decodeUnknownExit(schema)(input)._tag === "Failure";
