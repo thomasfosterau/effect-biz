@@ -2,6 +2,8 @@
 
 **Disclaimer:** This is an experiment. Don't use it in production.
 
+**Not published yet.** The package is `"private": true` until its npm bootstrap and trusted publisher exist; removing `private` (with its first changeset) is the owner's step ([PUBLISHING.md](https://github.com/thomasfosterau/effect-biz/blob/trunk/PUBLISHING.md#a-new-package)).
+
 The SQL foundation of the effect-biz package family: the `Dialect` service (`postgres`, `sqlite` or `d1`, derived from the `SqlClient` you provide) and the column codecs (decimals, timestamps, JSON, branded ids, nullable `Option`s) every domain package's `effect/sql` repository layer is built from, plus in-process test databases.
 
 ## Install

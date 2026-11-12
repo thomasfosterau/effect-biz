@@ -21,6 +21,14 @@ No package has been published yet.
 5. **Protect the `release` environment.** **Settings → Environments → `release`** → enable **Required reviewers** and restrict deployment to `trunk`.
 6. **Protect `trunk`.** Require pull requests and passing CI before merge, and disallow direct pushes.
 
+## A new package
+
+A new package (`@thomasfosterau/effect-biz-sql` today) lands with `"private": true` in its `package.json`. The `@thomasfosterau/effect-biz*` fixed group would otherwise version it with the next release, and with `privatePackages.version: false` in [.changeset/config.json](./.changeset/config.json) Changesets neither versions nor publishes a private package, so the next "Version Packages" PR and `pnpm -r publish` leave it out. It carries no changeset while private. Once it should ship, the owner:
+
+1. bootstraps it on npm and configures its trusted publisher (steps 3 and 4 above);
+2. removes `"private": true` and adds its first changeset (`minor`), in one PR;
+3. merges the next "Version Packages" PR, which now bumps it with the group.
+
 ## Renaming the repository
 
 Four things bind the release to the repository name and must move together: the fork guard `if: github.repository == 'thomasfosterau/effect-biz'` in [release.yml](./.github/workflows/release.yml), the `repo` option of the changelog generator in [.changeset/config.json](./.changeset/config.json), the `repository` URL in each `package.json`, and the trusted-publisher binding on npmjs.com.
