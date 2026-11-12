@@ -49,31 +49,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Installs the pnpm version pinned by the package.json "packageManager"
-      # field. Must run before setup-node so its pnpm cache can find the store.
-      - name: Setup pnpm
-        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      # The latest stable Node, matching CI. Never `latest`: setup-node
-      # resolves it to the first nodejs.org index entry, pre-releases included
-      # (v27.0.0-alpha since 2026-10-29), and a release must not publish from
-      # an alpha. `"*"` with `check-latest` is the newest stable release.
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "*"
-          check-latest: true
-          cache: pnpm
-          registry-url: https://registry.npmjs.org
-
+      # Vite+ at the catalog's pin, pnpm from package.json's `packageManager`,
+      # the pnpm store cache, and the install. Node is pinned, never `latest`
+      # or a range: a release must not publish from a pre-release, and the
+      # pinned Node ships npm 11.20.0 (trusted publishing needs npm >= 11.5.1
+      # wherever npm itself publishes).
+      #
       # --ignore-scripts stops a compromised dependency from running install
       # scripts in the privileged publish job (the Shai-Hulud vector). It also
       # skips this workspace's own `prepare` (git hooks + the tsc/oxlint
       # patch), neither of which the `vp pack` build needs. It holds only
       # because `pnpm_config_verify_deps_before_run` is off for this job (see
       # `env` above): otherwise the first `pnpm run` re-installs with scripts.
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Setup Vite+ and install dependencies
+        uses: voidzero-dev/setup-vp@cab1ab9eaff52d4857875f4f2c016e36af8f2c76 # v1.22.0
+        with:
+          version-file: pnpm-workspace.yaml
+          node-version: "26.13.1"
+          cache: true
+          run-install: |
+            - args: ["--frozen-lockfile", "--ignore-scripts"]
 
       # When changesets are pending, this opens/updates a "Version Packages" PR
       # (via `pnpm run version`). Once that PR is merged (no changesets remain),
