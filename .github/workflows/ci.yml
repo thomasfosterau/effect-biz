@@ -60,8 +60,12 @@ jobs:
           key: vp-task-v1-${{ runner.os }}-node-${{ matrix.node }}-${{ github.sha }}
           restore-keys: |
             vp-task-v1-${{ runner.os }}-node-${{ matrix.node }}-
-      - name: Show the Node.js version
-        run: node --version
+      # A green leg means a released Node.js: fail on a pre-release
+      # (an alpha, RC or nightly that `latest` could resolve to).
+      - name: Show the Node.js version (released only)
+        run: >-
+          node -e "console.log(process.version); if (process.version.includes('-'))
+          { console.error('pre-release Node ' + process.version); process.exit(1) }"
       - name: CI
         run: vp run ci
 
