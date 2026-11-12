@@ -40,9 +40,12 @@ export interface Route {
  * The fields of a caller's {@link RequestOptions}, and nothing else: an
  * options object from untyped code must not be able to set `upload`.
  */
-const pickOptions = (options: unknown): RequestOptions => {
-  const field = (key: keyof RequestOptions): string | undefined =>
-    P.hasProperty(options, key) && P.isString(options[key]) ? options[key] : undefined;
+const pickOptions = (options?: Param): RequestOptions => {
+  const given = paramsOf(options);
+  const field = (key: keyof RequestOptions): string | undefined => {
+    const value = given[key];
+    return P.isString(value) ? value : undefined;
+  };
   return {
     idempotencyKey: field("idempotencyKey"),
     stripeAccount: field("stripeAccount"),
