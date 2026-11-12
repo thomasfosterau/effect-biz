@@ -31,7 +31,7 @@ jobs:
       NODE_OPTIONS: --max-old-space-size=2048
       VITEST_MAX_WORKERS: 2
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           # Changesets compares against the base branch.
@@ -39,7 +39,7 @@ jobs:
       # Vite+ at the catalog's pin, the Node.js it manages (the newest LTS),
       # pnpm from package.json's `packageManager`, the pnpm store cache, and
       # `vp install --frozen-lockfile` (`vp` resolves the lockfile flag from CI).
-      - uses: voidzero-dev/setup-vp@cab1ab9eaff52d4857875f4f2c016e36af8f2c76 # v1.22.0
+      - uses: voidzero-dev/setup-vp@v1.22.0
         with:
           version-file: pnpm-workspace.yaml
           node-version: lts
@@ -47,7 +47,7 @@ jobs:
           run-install: |
             - args: ["--frozen-lockfile"]
       - name: Restore the Vite+ task cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache@v6.1.0
         with:
           path: node_modules/.vite/task-cache
           key: vp-task-v1-${{ runner.os }}-${{ github.sha }}
