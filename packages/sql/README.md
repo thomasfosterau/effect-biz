@@ -4,7 +4,7 @@
 
 **Not published yet.** The package is `"private": true` until its npm bootstrap and trusted publisher exist; removing `private` (with its first changeset) is the owner's step ([PUBLISHING.md](https://github.com/thomasfosterau/effect-biz/blob/trunk/PUBLISHING.md#a-new-package)).
 
-The SQL foundation of the effect-biz package family: the `Dialect` service (`postgres`, `sqlite` or `d1`, derived from the `SqlClient` you provide) and the column codecs (decimals, timestamps, JSON, branded ids, nullable `Option`s) every domain package's `effect/sql` repository layer is built from, plus in-process test databases.
+The SQL foundation of the effect-biz package family: the `Dialect` service (`postgres`, `sqlite` or `d1`, derived from the `SqlClient` you provide) and the column codecs (decimals, timestamps, JSON, branded ids, nullable `Option`s) every domain package's `effect/sql` repository layer is built from, the SQL unit of work and a repository helper over them, plus in-process test databases.
 
 ## Install
 
@@ -50,13 +50,15 @@ Effect.runPromise(program.pipe(Effect.provide(Testing.layerSqlite))).then(consol
 
 ## Entry points
 
-The column conventions and the dialect notes are in the guide [`docs/sql/columns-and-dialects.md`](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/sql/columns-and-dialects.md).
+The column conventions and the dialect notes are in the guide [`docs/sql/columns-and-dialects.md`](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/sql/columns-and-dialects.md); the repository helper, the batch commit and its guards per dialect in [`docs/sql/repositories-and-unit-of-work.md`](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/sql/repositories-and-unit-of-work.md).
 
 | Subpath | Purpose |
 | --- | --- |
 | `./Dialect` | The `Dialect` service: `postgres`, `sqlite` or `d1` and the facts that differ (column types, interactive transactions, row locks), derived from the `SqlClient` (`layer`, `fromClient`) or stated (`layerAs`); `match`; `UnsupportedDialect`. |
 | `./Column` | The column codecs: `decimal`, `timestamp`, `json`, `id`, `nullable`, gathered per dialect by `make` and `columns`. |
-| `./testing` | `layerSqlite`: a fresh in-memory SQLite database with its `Dialect`, for unit suites. Needs the optional peer `@effect/sql-sqlite-node`. |
+| `./SqlUnitOfWork` | Core's `UnitOfWork` over SQL: `layer` (one `withTransaction` per batch on Postgres and SQLite; on D1 one atomic `Batch`, each guard a statement that raises when unmet), `layerBatch`; the staged `Write` (`guarded`, `unguarded`, `stage`, `journal`), the `Committer`, the `Batch` port a D1 host provides, `BatchRequired`. |
+| `./SqlRepository` | `make`: a whole `Repository.Port` over one table, tenant-scoped, decoded through `Schema`, with version-guarded writes staged into the unit of work, core's `Query` translated to `WHERE` / `ORDER BY` over an allow-list (`Kind`) and keyset paging with core's cursors. |
+| `./testing` | `layerSqlite`: a fresh in-memory SQLite database with its `Dialect`, for unit suites; `layerBatch`: a `SqlUnitOfWork.Batch` with D1's semantics over it, to run D1's commit in-process. Needs the optional peer `@effect/sql-sqlite-node`. |
 | `./testing.postgres` | `layerPostgres`: the scratch Postgres database at `EFFECT_BIZ_PG_URL`, for opt-in suites. Needs the optional peer `@effect/sql-pg`. |
 
 ## Links

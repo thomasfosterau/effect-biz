@@ -45,6 +45,14 @@
       "types": "./dist/Dialect.d.ts",
       "default": "./dist/Dialect.js"
     },
+    "./SqlRepository": {
+      "types": "./dist/SqlRepository.d.ts",
+      "default": "./dist/SqlRepository.js"
+    },
+    "./SqlUnitOfWork": {
+      "types": "./dist/SqlUnitOfWork.d.ts",
+      "default": "./dist/SqlUnitOfWork.js"
+    },
     "./testing": {
       "types": "./dist/testing.d.ts",
       "default": "./dist/testing.js"
