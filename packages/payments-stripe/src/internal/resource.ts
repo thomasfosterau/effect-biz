@@ -40,11 +40,15 @@ export interface Route {
  * The fields of a caller's {@link RequestOptions}, and nothing else: an
  * options object from untyped code must not be able to set `upload`.
  */
-const pickOptions = (options: RequestOptions | undefined): RequestOptions => ({
-  idempotencyKey: options?.idempotencyKey,
-  stripeAccount: options?.stripeAccount,
-  apiVersion: options?.apiVersion,
-});
+const pickOptions = (options: unknown): RequestOptions => {
+  const field = (key: keyof RequestOptions): string | undefined =>
+    P.hasProperty(options, key) && P.isString(options[key]) ? options[key] : undefined;
+  return {
+    idempotencyKey: field("idempotencyKey"),
+    stripeAccount: field("stripeAccount"),
+    apiVersion: field("apiVersion"),
+  };
+};
 
 /**
  * Refuse a path id that is not a non-empty string before anything is sent:
@@ -118,9 +122,7 @@ export const operation = <F>(distilled: Operation<never, unknown, unknown>, rout
   ): Effect.Effect<unknown, PaymentsError, StripeHttp> => {
     const ids = args.slice(0, route.ids.length);
     const params = route.params ? args[route.ids.length] : undefined;
-    // SAFETY: the trailing argument is `RequestOptions` by the generated
-    // signature; `pickOptions` reads only its three fields.
-    const options = args[route.ids.length + (route.params ? 1 : 0)] as RequestOptions | undefined;
+    const options = args[route.ids.length + (route.params ? 1 : 0)];
     const given = paramsOf(params);
     const input = R.fromEntries([
       ...R.toEntries(route.upload ? flattenUpload(given) : given),

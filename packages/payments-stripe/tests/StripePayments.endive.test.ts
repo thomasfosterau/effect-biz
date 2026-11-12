@@ -1,6 +1,7 @@
 import { describe, expect } from "vite-plus/test";
 import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
@@ -54,7 +55,9 @@ const onDefaultLayer = <A, E>(
   body: Schema.Json,
 ) => {
   const { http, calls } = stubFetch(() => jsonResponse(200, body));
-  const result = effect.pipe(Effect.provide(StripePayments.layer(config)), Effect.provide(http));
+  const result = effect.pipe(
+    Effect.provide(Layer.provideMerge(StripePayments.layer(config), http)),
+  );
   return { result, calls };
 };
 
@@ -267,9 +270,12 @@ describe("the default layer decodes endive responses", () => {
       Effect.gen(function* () {
         const { http } = stubFetch(() => jsonResponse(200, endiveSubscription));
         const subscription = yield* StripeSubscription.retrieve(endiveSubscription.id).pipe(
-          Effect.provide(StripeHttp.layer(config)),
-          Effect.provide(http),
-          Effect.provide(strictValidation),
+          Effect.provide(
+            Layer.provideMerge(
+              Layer.provideMerge(StripeHttp.layer(config), http),
+              strictValidation,
+            ),
+          ),
         );
         expect(subscription).toEqual(endiveSubscription);
       }),

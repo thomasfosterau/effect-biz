@@ -2,7 +2,7 @@ import type * as Schema from "effect/Schema";
 import { describe, expect } from "vite-plus/test";
 import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import type * as Layer from "effect/Layer";
+import * as Layer from "effect/Layer";
 import * as Customer from "@thomasfosterau/effect-biz/Payments.Customer";
 import * as Product from "@thomasfosterau/effect-biz/Payments.Product";
 import * as Price from "@thomasfosterau/effect-biz/Payments.Price";
@@ -123,7 +123,7 @@ const run = <A, E>(
   return {
     calls: stub.calls,
     result: withTestClock(
-      effect.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer)),
+      effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
     ),
   };
 };
@@ -453,8 +453,7 @@ describe("StripePayments capabilities", () => {
       const stub = stubStripe(() => throwing(new TypeError("network down")));
       const error = yield* withTestClock(
         Effect.flip(Customer.create({ email: "x@example.com" })).pipe(
-          Effect.provide(StripePayments.capabilities),
-          Effect.provide(stub.layer),
+          Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer)),
         ),
       );
       expect(error).toBeInstanceOf(PaymentNetworkError);

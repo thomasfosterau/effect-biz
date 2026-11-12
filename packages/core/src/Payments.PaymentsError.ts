@@ -25,7 +25,7 @@ export class PaymentProviderError extends Schema.TaggedError<
   /** Provider-specific error code, when available. */
   code: Schema.optional(Schema.String),
   /** HTTP status code returned by the provider, when available. */
-  statusCode: Schema.optional(Schema.Number),
+  statusCode: Schema.optional(Schema.Int),
   /** The original, provider-specific error object. */
   cause: Schema.optional(Schema.Defect()),
 }) {}
@@ -39,7 +39,7 @@ export class PaymentAuthenticationError extends Schema.TaggedError<
   { readonly brand: unique symbol }
 >()("PaymentAuthenticationError", {
   message: Schema.String,
-  statusCode: Schema.optional(Schema.Number),
+  statusCode: Schema.optional(Schema.Int),
 }) {}
 
 /**
@@ -52,7 +52,7 @@ export class PaymentRateLimitError extends Schema.TaggedError<
 >()("PaymentRateLimitError", {
   message: Schema.String,
   /** Seconds to wait before retrying, when the provider advertises it. */
-  retryAfter: Schema.optional(Schema.Number),
+  retryAfter: Schema.optional(Schema.Finite),
 }) {}
 
 /**
@@ -65,7 +65,7 @@ export class PaymentInvalidRequestError extends Schema.TaggedError<
   message: Schema.String,
   /** The offending parameter, when the provider identifies one. */
   param: Schema.optional(Schema.String),
-  statusCode: Schema.optional(Schema.Number),
+  statusCode: Schema.optional(Schema.Int),
 }) {}
 
 /**

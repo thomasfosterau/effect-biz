@@ -70,7 +70,7 @@ const over = <A, E>(
 ) => {
   const { http, calls } = stubFetch(handler);
   const result = withTestClock(
-    effect.pipe(Effect.provide(StripePayments.layer(config(options))), Effect.provide(http)),
+    effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.layer(config(options)), http))),
   );
   return { result, calls };
 };
@@ -111,7 +111,7 @@ describe("StripePayments pins the API version", () => {
     Effect.gen(function* () {
       const stub = stubStripe(() => ({}));
       yield* Effect.exit(
-        call.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer)),
+        call.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
       );
       expect(stub.calls).toHaveLength(1);
       expect(`${stub.calls[0]?.method} ${stub.calls[0]?.path}`).toBe(route);
@@ -164,8 +164,7 @@ describe("StripePayments request policy", () => {
     Effect.gen(function* () {
       const { http, calls } = stubFetch(() => jsonResponse(200, customer));
       yield* Customer.retrieve("cus_1").pipe(
-        Effect.provide(StripePayments.layer(config())),
-        Effect.provide(http),
+        Effect.provide(Layer.provideMerge(StripePayments.layer(config()), http)),
         Effect.provideService(FetchHttpClient.RequestInit, { credentials: "omit" }),
       );
       expect(calls[0]?.init?.redirect).toBe("error");
@@ -369,9 +368,15 @@ describe("StripePayments request policy", () => {
       // fields Distilled marks required.
       const { http, calls } = stubFetch(() => jsonResponse(200, basilSubscription));
       const subscription = yield* Subscription.retrieve(basilSubscription.id).pipe(
-        Effect.provide(StripePayments.layer(config({ apiVersion: "2025-08-27.basil" }))),
-        Effect.provide(http),
-        Effect.provide(strictValidation),
+        Effect.provide(
+          Layer.provideMerge(
+            Layer.provideMerge(
+              StripePayments.layer(config({ apiVersion: "2025-08-27.basil" })),
+              http,
+            ),
+            strictValidation,
+          ),
+        ),
       );
       expect(subscription.id).toBe(basilSubscription.id);
       expect(calls[0]?.headers.get("stripe-version")).toBe("2025-08-27.basil");
@@ -604,8 +609,7 @@ describe("StripePayments configuration", () => {
       const withKey = (values: Record<string, string>) =>
         Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(values)));
       yield* Customer.retrieve("cus_1").pipe(
-        Effect.provide(StripePayments.layerFromEnv("BILLING_KEY")),
-        Effect.provide(http),
+        Effect.provide(Layer.provideMerge(StripePayments.layerFromEnv("BILLING_KEY"), http)),
         withKey({ BILLING_KEY: TEST_KEY }),
       );
       expect(calls[0]?.headers.get("authorization")).toBe(`Bearer ${TEST_KEY}`);
@@ -614,8 +618,7 @@ describe("StripePayments configuration", () => {
         (values) =>
           Effect.flip(
             Customer.retrieve("cus_1").pipe(
-              Effect.provide(StripePayments.layerFromEnv()),
-              Effect.provide(http),
+              Effect.provide(Layer.provideMerge(StripePayments.layerFromEnv(), http)),
               withKey(values),
             ),
           ),
@@ -633,10 +636,16 @@ describe("StripePayments configuration", () => {
     Effect.gen(function* () {
       const error = yield* Effect.flip(
         Customer.retrieve("cus_1").pipe(
-          Effect.provide(StripePayments.layerFromEnv()),
-          Effect.provide(stubFetch(() => jsonResponse(200, customer)).http),
           Effect.provide(
-            ConfigProvider.layer(ConfigProvider.fromUnknown({ STRIPE_API_KEY: { nested: true } })),
+            Layer.provideMerge(
+              Layer.provideMerge(
+                StripePayments.layerFromEnv(),
+                stubFetch(() => jsonResponse(200, customer)).http,
+              ),
+              ConfigProvider.layer(
+                ConfigProvider.fromUnknown({ STRIPE_API_KEY: { nested: true } }),
+              ),
+            ),
           ),
         ),
       );

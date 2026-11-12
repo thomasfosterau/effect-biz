@@ -2,7 +2,7 @@ import type * as Schema from "effect/Schema";
 import { describe, expect } from "vite-plus/test";
 import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import type * as Layer from "effect/Layer";
+import * as Layer from "effect/Layer";
 import * as Price from "@thomasfosterau/effect-biz/Payments.Price";
 import * as PaymentIntent from "@thomasfosterau/effect-biz/Payments.PaymentIntent";
 import * as Subscription from "@thomasfosterau/effect-biz/Payments.Subscription";
@@ -19,7 +19,7 @@ const run = <A, E>(
   body: Schema.Json,
 ): Effect.Effect<A, E> => {
   const stub = stubStripe(() => body);
-  return effect.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer));
+  return effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer)));
 };
 
 const page = (...data: Array<Schema.Json>) => ({ object: "list", has_more: false, data });

@@ -1,7 +1,9 @@
 import { assert, describe, expect } from "vite-plus/test";
 import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Exit from "effect/Exit";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import * as Redacted from "effect/Redacted";
@@ -41,11 +43,18 @@ type Exported = (
   ...args: ReadonlyArray<unknown>
 ) => Effect.Effect<unknown, PaymentsError, StripeHttp>;
 
+const decodeModule = Schema.decodeUnknownSync(
+  Schema.Record(
+    Schema.String,
+    // Every generated module exports its operations as functions of this shape.
+    Schema.declare((value): value is Exported => P.isFunction(value)),
+  ),
+);
+
 const load = (subpath: string) =>
   Effect.map(
-    awaitTestPromise(() => import(`../src/${subpath}.ts`)),
-    // SAFETY: every generated module exports its operations as functions of this shape.
-    (module) => module as Readonly<Record<string, Exported>>,
+    awaitTestPromise((): Promise<unknown> => import(`../src/${subpath}.ts`)),
+    (loaded) => decodeModule(loaded),
   );
 
 /** The arguments of a call: an id per path id, `{}` for params, no options. */
@@ -69,8 +78,9 @@ const run = (
   const { http, calls } = stubFetch(respond);
   const exit = Effect.exit(
     call.pipe(
-      Effect.provide(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 })),
-      Effect.provide(http),
+      Effect.provide(
+        Layer.provideMerge(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }), http),
+      ),
     ),
   );
   return { exit, calls };

@@ -40,10 +40,11 @@ describe("CheckoutSession accessors", () => {
   });
 
   it("requires a URL on the entity", () => {
-    // SAFETY: deliberately ill-typed, to exercise the constructor's own check.
-    expect(() => new CheckoutSession.CheckoutSession({ id: "cs_1", url: 1 as never })).toThrow(
-      "Schema validation failed",
-    );
+    // `Reflect.construct` takes untyped arguments: deliberately ill-typed, to
+    // exercise the constructor's own check.
+    expect(() =>
+      Reflect.construct(CheckoutSession.CheckoutSession, [{ id: "cs_1", url: 1 }]),
+    ).toThrow("Schema validation failed");
   });
 });
 

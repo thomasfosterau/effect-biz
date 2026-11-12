@@ -45,7 +45,7 @@ const run = <A, E>(
   return {
     calls: stub.calls,
     result: withTestClock(
-      effect.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer)),
+      effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
     ),
   };
 };
@@ -127,9 +127,9 @@ describe("StripePayments checkoutSessionsLayer", () => {
     "never sends subscription data for a payment checkout, even from an untyped caller",
     () =>
       Effect.gen(function* () {
-        // SAFETY: deliberately ill-typed — `subscriptionMetadata` is not a
-        // `PaymentParams` field — to model a caller outside the type system.
-        const untyped: CheckoutSession.CreateParams = { ...checkout, mode: "payment" } as never;
+        // `subscriptionMetadata` is not a `PaymentParams` field: the spread models
+        // a caller outside the type system.
+        const untyped: CheckoutSession.CreateParams = { ...checkout, mode: "payment" };
         const { result, calls } = run(CheckoutSession.create(untyped), {
           "POST /v1/checkout/sessions": { id: "cs_3", url: "https://checkout.stripe.com/cs_3" },
         });
