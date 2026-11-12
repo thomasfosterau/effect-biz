@@ -28,9 +28,12 @@ import { installed } from "./distilled.ts";
 import { plan, readOperations, render, runtimeOperations } from "./resources.ts";
 
 /** The plan has a problem, so nothing is written. */
-class PlanError extends Schema.TaggedError<PlanError>()("PlanError", {
-  message: Schema.String,
-}) {}
+class PlanError extends Schema.TaggedError<PlanError, { readonly brand: unique symbol }>()(
+  "PlanError",
+  {
+    message: Schema.String,
+  },
+) {}
 
 /** Plan from the installed Distilled release and write every resource module. */
 const generate = Effect.fn("generateResources")(function* () {

@@ -1,0 +1,29 @@
+name: Auto-assign
+
+# Assigns the owner to every pull request that has no assignee yet. No
+# checkout and no third-party action: one `gh` call with the job's token.
+# `pull_request` (never `pull_request_target`), so a fork's PR runs with a
+# read-only token and simply cannot assign; the owner's and agents' PRs come
+# from branches of this repository. A PR opened with GITHUB_TOKEN (the
+# "Version Packages" PR) triggers no workflow, so it is not assigned here.
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+# No permissions by default; the job opts into exactly what it needs.
+permissions: {}
+
+jobs:
+  assign:
+    if: github.actor != 'dependabot[bot]' && toJSON(github.event.pull_request.assignees) == '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write # add the assignee
+    steps:
+      - name: Assign the owner
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr edit "$PR_URL" --add-assignee thomasfosterau

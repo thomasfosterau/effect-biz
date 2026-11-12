@@ -20,13 +20,25 @@ Hooks are managed by Vite+; the editable [.vite-hooks/pre-commit](.vite-hooks/pr
 
 ## CI expectations
 
-[ci.yml](.github/workflows/ci.yml) runs one job: `vp check` (format + type-aware lint), `vp run check` (the type gate), `vp run -r test:unit`, `vp run -r build`, `vp run docgen` (type-checks and runs every JSDoc `@example` and README block against `dist/`), and `pnpm audit --audit-level high`. [release.yml](.github/workflows/release.yml) runs changesets/action on `trunk`: it opens the version PR while unreleased changesets exist and publishes to npmjs once it merges, via OIDC trusted publishing (see [PUBLISHING.md](PUBLISHING.md)).
+[ci.yml](.github/workflows/ci.yml) runs one job: steps 1–6 of the gates in [AGENTS.md → Verification](AGENTS.md#verification), in that order. [release.yml](.github/workflows/release.yml) runs changesets/action on `trunk`: it opens the version PR while unreleased changesets exist and publishes to npmjs once it merges, via OIDC trusted publishing (see [PUBLISHING.md](PUBLISHING.md)).
 
 ## Docs to update with a change
 
-The package `README.md` for any exported change (it is the API reference npm shows); the package `CLAUDE.md` for a new term or invariant; the package table in `AGENTS.md` and the root `README.md` for a new package.
+The package `README.md` for any exported change (it is the API reference npm shows); the package `AGENTS.md` for a new term or invariant; the package table in the root `README.md` (and the checklist in [AGENTS.md → Packages](AGENTS.md#packages)) for a new package.
 
-## Running individual checks
+## Commands
+
+- `pnpm install` — dependencies plus the Vite+ git hooks (pre-commit runs `vp staged`: format with fixes, then lint without them, on staged files) and the `prepare` step that patches the native `tsc` / `oxlint` / `oxlint-tsgolint` with `@effect/tsgo`.
+- `vp check` — format + lint (Oxfmt + Oxlint with `@effect/tsgo`'s preset and `@enfect/oxlint`'s `recommended` Effect rules, over oxlint's `correctness`, `suspicious` and `perf` categories and the `typescript`, `unicorn`, `oxc`, `import`, `promise`, `vitest` and `jsdoc` plugins). Lint is type-aware through oxlint-tsgolint (`typeAware` + `typeCheck`), which reads each package's `tsconfig.json` (siblings mapped to `src/`, so it needs no build). Fix a finding in code; a rule is relaxed only in `vite.config.ts`, with its reason (and a site count for an allowance). `vp run check` — the type gate: every package's `src` + `tests` (plus payments-stripe's `examples` and `scripts`) under the Effect-patched native `tsc` (`tsconfig.check.json` where a package has a sibling, which it then reads through `dist/`), plus the dist-consumer check (which builds `dist/` and asserts the emitted types). They are different commands.
+- `vp run -r test:unit` — unit tests.
+- `vp run -r build` — `vp pack` → every package's `dist/`.
+- `vp run --filter ./packages/payments-stripe generate:resources` (offline) — regenerate the Stripe resource modules from the installed `@distilled.cloud/stripe` and `scripts/resources.ts`; run it after a Distilled bump or a change to `scripts/`.
+- `vp run docgen` — every package's `@effect/docgen`: type-checks and runs each JSDoc example and README block against `dist/` (it builds first), and writes the git-ignored API reference to `packages/*/docs/`.
+- `vp run test:coverage` — every package's unit suite under one Istanbul map at `coverage/coverage-final.json`, which `fallow audit` reads for exact per-function CRAP scores.
+- `vp exec fallow dead-code` / `vp exec fallow audit --base origin/trunk` — dead code, duplication, complexity and the package boundaries (`.fallowrc.json`: core imports no provider, a provider imports only core), and the change-set gate.
+- `pnpm changeset` — add a changeset.
+
+For a narrower run:
 
 ```sh
 vp lint                                   # oxlint
@@ -41,4 +53,4 @@ vp run test:coverage                      # one Istanbul map for the workspace
 vp exec fallow audit --base origin/trunk  # dead code, complexity, boundaries for this change set
 ```
 
-Workflows are hardened for Dependabot PRs: `permissions: {}` by default, actions pinned to commit SHAs, no persisted checkout credentials outside the Release job, no secrets in CI, and the Release job never runs for Dependabot. `uvx zizmor --offline .github` audits them.
+The workflow hardening rules (and the `uvx zizmor --offline .github` audit) are in [AGENTS.md → Verification](AGENTS.md#verification).

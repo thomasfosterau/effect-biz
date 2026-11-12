@@ -35,7 +35,9 @@ export type RefundStatus = typeof RefundStatus.Type;
 /**
  * A refund of a previously captured payment.
  */
-export class Refund extends Schema.Class<Refund>("@effect-biz/payments/Refund")({
+export class Refund extends Schema.Class<Refund, { readonly brand: unique symbol }>(
+  "@effect-biz/payments/Refund",
+)({
   id: Schema.String,
   /** Amount refunded in the smallest currency unit. */
   amount: Schema.Number,

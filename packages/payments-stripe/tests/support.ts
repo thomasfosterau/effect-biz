@@ -9,8 +9,8 @@
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Predicate from "effect/Predicate";
-import * as Rec from "effect/Record";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import type * as Schema from "effect/Schema";
 import * as Redacted from "effect/Redacted";
 import { Credentials } from "@distilled.cloud/stripe/Credentials";
@@ -50,11 +50,11 @@ const fieldsOf = (
 ): ReadonlyArray<readonly [string, string]> =>
   value === undefined || value === null
     ? []
-    : Predicate.isString(value) || Predicate.isNumber(value) || Predicate.isBoolean(value)
+    : P.isString(value) || P.isNumber(value) || P.isBoolean(value)
       ? [[key, String(value)]]
       : isJsonArray(value)
         ? value.flatMap((item, index) => fieldsOf(`${key}[${index}]`, item))
-        : Arr.flatMap(Rec.toEntries(value), ([name, item]) => fieldsOf(`${key}[${name}]`, item));
+        : Arr.flatMap(R.toEntries(value), ([name, item]) => fieldsOf(`${key}[${name}]`, item));
 
 /**
  * `params` flattened the way Stripe reads a form body, for comparison with a
@@ -65,7 +65,7 @@ const fieldsOf = (
 export const formOf = (
   params: Readonly<Record<string, Schema.Json | undefined>>,
 ): Record<string, string> =>
-  Rec.fromEntries(Arr.flatMap(Rec.toEntries(params), ([key, value]) => fieldsOf(key, value)));
+  R.fromEntries(Arr.flatMap(R.toEntries(params), ([key, value]) => fieldsOf(key, value)));
 
 /**
  * A stubbed Stripe API for the capability layers: `answer` maps each call to a
@@ -82,7 +82,7 @@ export const stubStripe = (
     (request): StripeCall => ({
       method: request.method,
       path: request.url.pathname,
-      params: Rec.fromEntries(
+      params: R.fromEntries(
         request.method === "POST"
           ? new URLSearchParams(request.body ?? "")
           : request.url.searchParams,

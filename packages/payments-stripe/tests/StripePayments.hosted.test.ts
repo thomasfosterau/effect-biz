@@ -2,7 +2,7 @@ import type * as Schema from "effect/Schema";
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Rec from "effect/Record";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as CheckoutSession from "@thomasfosterau/effect-biz/Payments.CheckoutSession";
 import * as BillingPortal from "@thomasfosterau/effect-biz/Payments.BillingPortal";
@@ -126,9 +126,9 @@ describe("StripePayments checkoutSessionsLayer", () => {
     });
     await result;
     expect(calls[0]?.params).toMatchObject({ mode: "payment" });
-    expect(
-      Rec.keys(calls[0]?.params ?? {}).some((key) => key.startsWith("subscription_data")),
-    ).toBe(false);
+    expect(R.keys(calls[0]?.params ?? {}).some((key) => key.startsWith("subscription_data"))).toBe(
+      false,
+    );
   });
 
   it("passes a Stripe rejection through the neutral channel", async () => {
