@@ -123,11 +123,11 @@ export const macrotask = Effect.callback<void>((resume) => {
 });
 
 /**
- * Run `effect` under a `TestClock`, advancing it until the effect completes,
- * so retry backoff, timeouts and token expiry elapse instantly and
- * deterministically.
+ * Run `effect` under the ambient `TestClock` (`it.effect` provides one),
+ * advancing it until the effect completes, so retry backoff, timeouts and
+ * token expiry elapse instantly and deterministically.
  */
-export const withTestClock = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<A, E> =>
+export const withTestClock = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
   Effect.gen(function* () {
     const fiber = yield* Effect.forkChild(effect);
     /** Advance the clock a second at a time, at most `remaining` times, until `fiber` is done. */
@@ -142,7 +142,7 @@ export const withTestClock = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<
       );
     yield* advance(1000);
     return yield* Fiber.join(fiber);
-  }).pipe(Effect.provide(TestClock.layer()));
+  });
 
 /**
  * Every string and object reachable from `root` through the values an object

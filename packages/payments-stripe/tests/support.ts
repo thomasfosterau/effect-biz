@@ -13,8 +13,10 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import type * as Schema from "effect/Schema";
 import * as Redacted from "effect/Redacted";
+import { FetchHttpClient } from "effect/http";
 import { Credentials } from "@distilled.cloud/stripe/Credentials";
 import { jsonResponse, stubApi } from "../../../tests/stubs.ts";
+import * as StripePayments from "../src/StripePayments.ts";
 
 export {
   awaitTestPromise,
@@ -70,12 +72,28 @@ export const formOf = (
   R.fromEntries(Arr.flatMap(R.toEntries(params), ([key, value]) => fieldsOf(key, value)));
 
 /**
+ * What the capability layers require of their host: Distilled's `Credentials`
+ * (holding {@link TEST_KEY}) and an `HttpClient` over `fetch`. The `fetch` is
+ * the `FetchHttpClient.Fetch` reference, which the client reads on each
+ * request, so one shared layer serves every case: a case points it at its
+ * stub with `Effect.provideService(FetchHttpClient.Fetch, stub.fetch)`.
+ */
+export const stripeBackend = Layer.merge(
+  FetchHttpClient.layer,
+  Layer.succeed(
+    Credentials,
+    Effect.succeed({ apiKey: Redacted.make(TEST_KEY), apiBaseUrl: "https://api.stripe.com" }),
+  ),
+);
+
+/** Every neutral capability over {@link stripeBackend}, with the backend itself beside them. */
+export const capabilitiesOverStub = Layer.provideMerge(StripePayments.capabilities, stripeBackend);
+
+/**
  * A stubbed Stripe API for the capability layers: `answer` maps each call to a
  * body (served as a 200) or a whole `Response`, and may throw to simulate a
- * connection failure. `layer` is what the capability layers require:
- * Distilled's `Credentials` (holding {@link TEST_KEY}) and the stubbed
- * `HttpClient`; `fetch` is the stub alone, for a program that builds its own
- * client and credentials.
+ * connection failure. `fetch` is the stub, to be served as
+ * `FetchHttpClient.Fetch` over {@link stripeBackend}.
  */
 export const stubStripe = (
   answer: (call: StripeCall, attempt: number) => Schema.Json | undefined | Response,
@@ -93,16 +111,7 @@ export const stubStripe = (
     }),
     answer,
   );
-  const credentials = Layer.succeed(
-    Credentials,
-    Effect.succeed({ apiKey: Redacted.make(TEST_KEY), apiBaseUrl: "https://api.stripe.com" }),
-  );
-  return {
-    calls: stub.calls,
-    requests: stub.requests,
-    fetch: stub.fetch,
-    layer: Layer.merge(stub.http, credentials),
-  };
+  return { calls: stub.calls, requests: stub.requests, fetch: stub.fetch };
 };
 
 /** `stubStripe` answering from a table keyed by `METHOD /path`; a miss is a 404. */

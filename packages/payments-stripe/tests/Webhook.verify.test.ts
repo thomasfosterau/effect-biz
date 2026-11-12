@@ -57,12 +57,12 @@ const sign = (
 ): Effect.Effect<string, TestPromiseRejected> =>
   Effect.map(digest(payload, timestamp, secret), (hex) => `t=${timestamp},v1=${hex}`);
 
-/** Run `effect` with the clock at `nowSeconds`. */
+/** Run `effect` with the (ambient, `it.effect`-provided) `TestClock` at `nowSeconds`. */
 const at = <A, E>(nowSeconds: number, effect: Effect.Effect<A, E>): Effect.Effect<A, E> =>
   Effect.gen(function* () {
     yield* TestClock.setTime(nowSeconds * 1000);
     return yield* effect;
-  }).pipe(Effect.provide(TestClock.layer()));
+  });
 
 type Options = Partial<Webhook.VerifyOptions>;
 

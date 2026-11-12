@@ -267,9 +267,9 @@ export default defineConfig({
               ],
             },
           ],
-          // A test is an application entry point: each case provides its own
-          // stub layers, which is exactly where `Effect.provide` belongs.
-          "effecttsgo/strict-effect-provide": "off",
+          // `layer(L)(name, (it) => …)` hands its cases the layer-aware `it`,
+          // which shadows the file's own (`@effect/vitest`'s documented form).
+          "eslint/no-shadow": ["error", { allow: ["it"] }],
           // A helper declared inside the `it` that uses it keeps each case
           // self-contained; `src/` still hoists them.
           "unicorn/consistent-function-scoping": "off",

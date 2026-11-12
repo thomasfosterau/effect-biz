@@ -9,7 +9,7 @@
 // oxlint-disable-next-line effect/use-filesystem-service -- a test listing the examples on disk, outside any Effect runtime
 import { readdirSync } from "node:fs";
 import { afterAll, afterEach, describe, expect, vi } from "vite-plus/test";
-import { it } from "@effect/vitest";
+import { it, layer } from "@effect/vitest";
 import * as Arr from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
@@ -54,10 +54,14 @@ const exampleFiles = Arr.sort(
  * `FetchHttpClient.Fetch`: the examples bring their own
  * `FetchHttpClient.layer`, which reads the implementation per request.
  */
-const runExample = <A, E>(
-  program: Effect.Effect<A, E>,
+const runExample = <A, E, R>(
+  program: Effect.Effect<A, E, R>,
   fetch: typeof globalThis.fetch,
-): Effect.Effect<{ readonly exit: Exit.Exit<A, E>; readonly lines: ReadonlyArray<string> }> =>
+): Effect.Effect<
+  { readonly exit: Exit.Exit<A, E>; readonly lines: ReadonlyArray<string> },
+  never,
+  R
+> =>
   Effect.gen(function* () {
     const lines: Array<string> = [];
     const record = (...args: ReadonlyArray<unknown>) => {
@@ -148,165 +152,168 @@ const stripeError = (status: number, error: Readonly<Record<string, string>>) =>
  */
 const suites = {
   "basic.ts": () => {
-    it.effect("creates the customer, then a payment intent for it", () =>
-      Effect.gen(function* () {
-        const stripe = stubStripeTable({
-          "POST /v1/customers": customer,
-          "POST /v1/payment_intents": paymentIntent,
-        });
-        const { exit, lines } = yield* runExample(
-          basic.program.pipe(Effect.provide(basic.layer)),
-          stripe.fetch,
-        );
-
-        expect(Exit.isSuccess(exit) && exit.value.customer.id).toBe("cus_1");
-        expect(Exit.isSuccess(exit) && exit.value.paymentIntent.id).toBe("pi_1");
-        expect(stripe.calls.map((call) => [call.method, call.path, call.params])).toEqual([
-          [
-            "POST",
-            "/v1/customers",
-            formOf({
-              email: "customer@example.com",
-              name: "John Doe",
-              metadata: { userId: "user_123" },
-            }),
-          ],
-          [
-            "POST",
-            "/v1/payment_intents",
-            formOf({
-              amount: 2000,
-              currency: "usd",
-              customer: "cus_1",
-              metadata: { orderId: "order_456" },
-            }),
-          ],
-        ]);
-        expect(lines).toEqual([
-          "Creating customer...",
-          "Customer created: cus_1",
-          "Creating payment intent...",
-          "Payment intent created: pi_1",
-          "Status: requires_payment_method",
-          "Amount: $20",
-        ]);
-      }),
-    );
-
-    it.effect("logs a rejected key as a neutral authentication failure and keeps the failure", () =>
-      Effect.gen(function* () {
-        const stripe = stubStripeTable({
-          "POST /v1/customers": stripeError(401, {
-            type: "invalid_request_error",
-            message: "Invalid API Key provided",
-          }),
-        });
-        const { exit, lines } = yield* runExample(
-          basic.program.pipe(Effect.provide(basic.layer)),
-          stripe.fetch,
-        );
-
-        expect(failureOf(exit)).toMatchObject({ _tag: "PaymentAuthenticationError" });
-        expect(stripe.calls).toHaveLength(1);
-        expect(lines.at(-1)).toMatch(/^Authentication failed: /);
-      }),
-    );
-
-    it.effect("logs a declined payment as a neutral provider error and keeps the failure", () =>
-      Effect.gen(function* () {
-        const stripe = stubStripeTable({
-          "POST /v1/customers": customer,
-          "POST /v1/payment_intents": stripeError(402, {
-            type: "card_error",
-            message: "Your card was declined.",
-            code: "card_declined",
-          }),
-        });
-        const { exit, lines } = yield* runExample(
-          basic.program.pipe(Effect.provide(basic.layer)),
-          stripe.fetch,
-        );
-
-        expect(failureOf(exit)).toMatchObject({ _tag: "PaymentProviderError" });
-        expect(lines.at(-1)).toMatch(/^Provider error from stripe \(card_declined\): /);
-      }),
-    );
-  },
-
-  "subscription.ts": () => {
-    it.effect(
-      "creates a customer, product, recurring price and subscription with the key from STRIPE_API_KEY",
-      () =>
+    layer(basic.layer)((it) => {
+      it.effect("creates the customer, then a payment intent for it", () =>
         Effect.gen(function* () {
           const stripe = stubStripeTable({
-            "POST /v1/customers": {
-              ...customer,
-              email: "subscriber@example.com",
-              name: "Jane Smith",
-            },
-            "POST /v1/products": product,
-            "POST /v1/prices": price,
-            "POST /v1/subscriptions": stripeSubscription,
+            "POST /v1/customers": customer,
+            "POST /v1/payment_intents": paymentIntent,
           });
-          const env = ConfigProvider.layer(
-            ConfigProvider.fromUnknown({ STRIPE_API_KEY: TEST_KEY }),
-          );
-          const { exit, lines } = yield* runExample(
-            subscription.program.pipe(Effect.provide(subscription.layer.pipe(Layer.provide(env)))),
-            stripe.fetch,
-          );
+          const { exit, lines } = yield* runExample(basic.program, stripe.fetch);
 
-          expect(Exit.isSuccess(exit) && exit.value.subscription.id).toBe("sub_1");
+          expect(Exit.isSuccess(exit) && exit.value.customer.id).toBe("cus_1");
+          expect(Exit.isSuccess(exit) && exit.value.paymentIntent.id).toBe("pi_1");
           expect(stripe.calls.map((call) => [call.method, call.path, call.params])).toEqual([
             [
               "POST",
               "/v1/customers",
-              formOf({ email: "subscriber@example.com", name: "Jane Smith" }),
-            ],
-            [
-              "POST",
-              "/v1/products",
-              formOf({ name: "Premium Subscription", description: "Monthly premium subscription" }),
-            ],
-            [
-              "POST",
-              "/v1/prices",
               formOf({
-                product: "prod_1",
-                unit_amount: 1999,
-                currency: "usd",
-                recurring: { interval: "month" },
+                email: "customer@example.com",
+                name: "John Doe",
+                metadata: { userId: "user_123" },
               }),
             ],
             [
               "POST",
-              "/v1/subscriptions",
-              formOf({ customer: "cus_1", items: [{ price: "price_1" }] }),
+              "/v1/payment_intents",
+              formOf({
+                amount: 2000,
+                currency: "usd",
+                customer: "cus_1",
+                metadata: { orderId: "order_456" },
+              }),
             ],
           ]);
-          expect(stripe.calls.map((call) => call.headers.get("authorization"))).toEqual(
-            Array.from({ length: 4 }, () => `Bearer ${TEST_KEY}`),
-          );
           expect(lines).toEqual([
             "Creating customer...",
             "Customer created: cus_1",
-            "Creating product...",
-            "Product created: prod_1",
-            "Creating price...",
-            "Price created: price_1",
-            "Creating subscription...",
-            "Subscription created: sub_1",
-            "Status: incomplete",
+            "Creating payment intent...",
+            "Payment intent created: pi_1",
+            "Status: requires_payment_method",
+            "Amount: $20",
           ]);
         }),
-    );
+      );
 
+      it.effect(
+        "logs a rejected key as a neutral authentication failure and keeps the failure",
+        () =>
+          Effect.gen(function* () {
+            const stripe = stubStripeTable({
+              "POST /v1/customers": stripeError(401, {
+                type: "invalid_request_error",
+                message: "Invalid API Key provided",
+              }),
+            });
+            const { exit, lines } = yield* runExample(basic.program, stripe.fetch);
+
+            expect(failureOf(exit)).toMatchObject({ _tag: "PaymentAuthenticationError" });
+            expect(stripe.calls).toHaveLength(1);
+            expect(lines.at(-1)).toMatch(/^Authentication failed: /);
+          }),
+      );
+
+      it.effect("logs a declined payment as a neutral provider error and keeps the failure", () =>
+        Effect.gen(function* () {
+          const stripe = stubStripeTable({
+            "POST /v1/customers": customer,
+            "POST /v1/payment_intents": stripeError(402, {
+              type: "card_error",
+              message: "Your card was declined.",
+              code: "card_declined",
+            }),
+          });
+          const { exit, lines } = yield* runExample(basic.program, stripe.fetch);
+
+          expect(failureOf(exit)).toMatchObject({ _tag: "PaymentProviderError" });
+          expect(lines.at(-1)).toMatch(/^Provider error from stripe \(card_declined\): /);
+        }),
+      );
+    });
+  },
+
+  "subscription.ts": () => {
+    layer(
+      subscription.layer.pipe(
+        Layer.provide(
+          ConfigProvider.layer(ConfigProvider.fromUnknown({ STRIPE_API_KEY: TEST_KEY })),
+        ),
+      ),
+    )((it) => {
+      it.effect(
+        "creates a customer, product, recurring price and subscription with the key from STRIPE_API_KEY",
+        () =>
+          Effect.gen(function* () {
+            const stripe = stubStripeTable({
+              "POST /v1/customers": {
+                ...customer,
+                email: "subscriber@example.com",
+                name: "Jane Smith",
+              },
+              "POST /v1/products": product,
+              "POST /v1/prices": price,
+              "POST /v1/subscriptions": stripeSubscription,
+            });
+            const { exit, lines } = yield* runExample(subscription.program, stripe.fetch);
+
+            expect(Exit.isSuccess(exit) && exit.value.subscription.id).toBe("sub_1");
+            expect(stripe.calls.map((call) => [call.method, call.path, call.params])).toEqual([
+              [
+                "POST",
+                "/v1/customers",
+                formOf({ email: "subscriber@example.com", name: "Jane Smith" }),
+              ],
+              [
+                "POST",
+                "/v1/products",
+                formOf({
+                  name: "Premium Subscription",
+                  description: "Monthly premium subscription",
+                }),
+              ],
+              [
+                "POST",
+                "/v1/prices",
+                formOf({
+                  product: "prod_1",
+                  unit_amount: 1999,
+                  currency: "usd",
+                  recurring: { interval: "month" },
+                }),
+              ],
+              [
+                "POST",
+                "/v1/subscriptions",
+                formOf({ customer: "cus_1", items: [{ price: "price_1" }] }),
+              ],
+            ]);
+            expect(stripe.calls.map((call) => call.headers.get("authorization"))).toEqual(
+              Array.from({ length: 4 }, () => `Bearer ${TEST_KEY}`),
+            );
+            expect(lines).toEqual([
+              "Creating customer...",
+              "Customer created: cus_1",
+              "Creating product...",
+              "Product created: prod_1",
+              "Creating price...",
+              "Price created: price_1",
+              "Creating subscription...",
+              "Subscription created: sub_1",
+              "Status: incomplete",
+            ]);
+          }),
+      );
+    });
+
+    // The subject is the layer failing to build: the example's layer reads the key from
+    // `STRIPE_API_KEY` while it is built, so there is no layer to share and the case builds it.
     it.effect("fails with PaymentConfigError, sending nothing, when STRIPE_API_KEY is unset", () =>
       Effect.gen(function* () {
         const stripe = stubStripeTable({});
-        const env = ConfigProvider.layer(ConfigProvider.fromUnknown({}));
         const { exit } = yield* runExample(
-          subscription.program.pipe(Effect.provide(subscription.layer.pipe(Layer.provide(env)))),
+          Layer.build(subscription.layer).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
+          ),
           stripe.fetch,
         );
 
@@ -351,7 +358,12 @@ const suites = {
           const { exit } = yield* runExample(
             webhooks
               .makeWebhookHandler()
-              .pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))),
+              .pipe(
+                Effect.provideService(
+                  ConfigProvider.ConfigProvider,
+                  ConfigProvider.fromUnknown({}),
+                ),
+              ),
             noNetwork,
           );
 
