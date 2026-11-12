@@ -34,9 +34,17 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./Actor": {
+      "types": "./dist/Actor.d.ts",
+      "default": "./dist/Actor.js"
+    },
     "./BizError": {
       "types": "./dist/BizError.d.ts",
       "default": "./dist/BizError.js"
+    },
+    "./Company": {
+      "types": "./dist/Company.d.ts",
+      "default": "./dist/Company.js"
     },
     "./Currency": {
       "types": "./dist/Currency.d.ts",
@@ -69,6 +77,10 @@
     "./Rounding": {
       "types": "./dist/Rounding.d.ts",
       "default": "./dist/Rounding.js"
+    },
+    "./Tenancy": {
+      "types": "./dist/Tenancy.d.ts",
+      "default": "./dist/Tenancy.js"
     },
     "./Payments": {
       "types": "./dist/Payments.d.ts",

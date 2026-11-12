@@ -100,6 +100,10 @@ export default defineConfig({
         },
       ],
       "eslint/prefer-const": "error",
+      // `@effect/tsgo` reads its own JSDoc tags: `@effect-leakable-service`
+      // marks a request-scoped context (the tenant, the actor) that every
+      // repository method is meant to require.
+      "jsdoc/check-tag-names": ["error", { definedTags: ["effect-leakable-service"] }],
 
       // Chained `Effect.provide(a), Effect.provide(b)` becomes one provide of a
       // composed layer (`Layer.provideMerge`, `Layer.mergeAll`).
