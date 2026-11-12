@@ -10,6 +10,7 @@ import type * as Actor from "../src/Actor.ts";
 import * as Audit from "../src/Audit.ts";
 import * as Id from "../src/Id.ts";
 import * as Memory from "../src/Memory.ts";
+import type * as Tenancy from "../src/Tenancy.ts";
 import type * as Repository from "../src/Repository.ts";
 import type * as Testing from "../src/testing.ts";
 
@@ -88,4 +89,27 @@ export const widgetSubject = <R>(
     return new Widget({ ...Struct.omit(widget(1), ["id", "audit"]), id, audit: created });
   }),
   change: (entity) => new Widget({ ...Struct.omit(entity, ["name"]), name: `${entity.name}!` }),
+});
+
+/** An in-memory event log: the second store a unit-of-work command writes. */
+export class Outbox extends Context.Service<Outbox, Memory.Log<string>>()("test/Outbox") {}
+
+/** An empty outbox. */
+export const outboxLayer: Layer.Layer<Outbox> = Layer.effect(Outbox, Memory.makeLog<string>());
+
+/** The unit-of-work contract subject for a widget port, recording into the {@link Outbox}. */
+export const widgetWorkSubject = <R>(
+  repository: Effect.Effect<Repository.Port<Widget, WidgetId>, never, R>,
+): Testing.UnitOfWorkSubject<
+  WidgetId,
+  Widget,
+  R | Outbox | Id.IdGenerator | Actor.CurrentActor | Tenancy.TenantContext
+> => ({
+  ...widgetSubject(repository),
+  record: Effect.flatMap(Effect.service(Outbox), (outbox) =>
+    Memory.append(outbox, "widget.changed"),
+  ),
+  recorded: Effect.flatMap(Effect.service(Outbox), (outbox) =>
+    Effect.map(Memory.entries(outbox), (entries) => entries.length),
+  ),
 });
