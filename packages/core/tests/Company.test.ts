@@ -1,10 +1,14 @@
 import { describe, expect, expectTypeOf } from "vite-plus/test";
 import { it, layer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as DateTime from "effect/DateTime";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import * as Struct from "effect/Struct";
+import * as Actor from "../src/Actor.ts";
+import * as Audit from "../src/Audit.ts";
 import * as BizError from "../src/BizError.ts";
 import * as Company from "../src/Company.ts";
 import * as Currency from "../src/Currency.ts";
@@ -14,6 +18,15 @@ import * as Tenancy from "../src/Tenancy.ts";
 
 const tenantA = Tenancy.TenantId.make("0190a6e4-1c2d-7abc-8def-0000000000a1");
 const tenantB = Tenancy.TenantId.make("0190a6e4-1c2d-7abc-8def-0000000000b2");
+
+const audit = new Audit.AuditFields({
+  createdAt: DateTime.makeUnsafe("2026-11-01T00:00:00Z"),
+  createdBy: "importer",
+  updatedAt: DateTime.makeUnsafe("2026-11-01T00:00:00Z"),
+  updatedBy: "importer",
+  version: 1,
+  archivedAt: Option.none(),
+});
 
 const input: Company.CreateInput = {
   legalName: "Example Pty Ltd",
@@ -34,13 +47,15 @@ describe("Company schema", () => {
       ...input,
       tradingName: Option.none(),
       id: Tenancy.CompanyId.make("0190a6e4-1c2d-7abc-8def-0123456789ab"),
-      version: 1,
+      audit,
     });
     const encoded = Schema.encodeSync(Json)(company);
     expect(Schema.encodeSync(Company.Company)(company)).toMatchObject({
       tradingName: null,
       baseCurrency: "AUD",
     });
+    expect(encoded).toContain('"createdAt":"2026-11-01T00:00:00.000Z"');
+    expect(encoded).toContain('"archivedAt":null');
     expect(Schema.decodeSync(Json)(encoded)).toEqual(company);
   });
 
@@ -71,18 +86,21 @@ describe("Company schema", () => {
       >
     >();
     expectTypeOf<Effect.Services<ReturnType<typeof Company.create>>>().toEqualTypeOf<
-      Id.IdGenerator | Company.CompanyRepository | Tenancy.TenantContext
+      Id.IdGenerator | Company.CompanyRepository | Tenancy.TenantContext | Actor.CurrentActor
     >();
   });
 });
 
-layer(Layer.merge(Company.layerMemory, Id.layerSequential), { buildPerTest: true })(
+const actorLayer = Layer.succeed(Actor.CurrentActor, Actor.system("test"));
+
+layer(Layer.mergeAll(Company.layerMemory, Id.layerSequential, actorLayer), { buildPerTest: true })(
   "Company.layerMemory",
   (it) => {
     it.effect("creates a company at version 1 and reads it back", () =>
       Effect.gen(function* () {
         const company = yield* Company.create(input);
-        expect(company.version).toBe(1);
+        expect(company.audit.version).toBe(1);
+        expect(company.audit.createdBy).toBe("test");
         expect(yield* Company.get(company.id)).toEqual(company);
         expect(yield* Company.list).toEqual([company]);
       }).pipe(Tenancy.withTenant(tenantA)),
@@ -119,11 +137,12 @@ layer(Layer.merge(Company.layerMemory, Id.layerSequential), { buildPerTest: true
           new Company.Company({
             ...input,
             id: company.id,
-            version: 1,
+            audit: company.audit,
             legalName: "Renamed Pty Ltd",
           }),
         );
-        expect(renamed.version).toBe(2);
+        expect(renamed.audit.version).toBe(2);
+        expect(renamed.audit.createdAt).toEqual(company.audit.createdAt);
         expect((yield* Company.get(company.id)).legalName).toBe("Renamed Pty Ltd");
         const stale = yield* Effect.flip(Company.update(company));
         expect(stale).toEqual(
@@ -147,7 +166,7 @@ layer(Layer.merge(Company.layerMemory, Id.layerSequential), { buildPerTest: true
         expect(outcomes.filter(Exit.isSuccess)).toHaveLength(1);
         const failures = outcomes.filter(Exit.isFailure);
         expect(failures).toHaveLength(1);
-        expect((yield* Company.get(company.id)).version).toBe(2);
+        expect((yield* Company.get(company.id)).audit.version).toBe(2);
       }).pipe(Tenancy.withTenant(tenantA)),
     );
 
@@ -156,13 +175,28 @@ layer(Layer.merge(Company.layerMemory, Id.layerSequential), { buildPerTest: true
         const company = new Company.Company({
           ...input,
           id: Tenancy.CompanyId.make("0190a6e4-1c2d-7abc-8def-0123456789ab"),
-          version: 3,
+          audit: new Audit.AuditFields({ ...Struct.omit(audit, ["version"]), version: 3 }),
         });
         const error = yield* Effect.flip(
           Company.CompanyRepository.use((repository) => repository.insert(company)),
         );
         expect(error).toBeInstanceOf(BizError.ConcurrencyConflict);
         expect(yield* Company.list).toEqual([]);
+      }).pipe(Tenancy.withTenant(tenantA)),
+    );
+
+    it.effect("archives and restores a company, which list and find then hide and show", () =>
+      Effect.gen(function* () {
+        const kept = yield* Company.create(input);
+        const company = yield* Company.create({ ...input, legalName: "Archived Pty Ltd" });
+        const archived = yield* Company.archive(company.id, 1);
+        expect(Option.isSome(archived.audit.archivedAt)).toBe(true);
+        expect(yield* Company.list).toEqual([kept]);
+        const found = yield* Company.find({ archived: "only", search: "archived" });
+        expect(found.items.map((row) => row.id)).toEqual([company.id]);
+        const restored = yield* Company.restore(company.id, 2);
+        expect(restored.audit.version).toBe(3);
+        expect((yield* Company.list).map((row) => row.id)).toEqual([kept.id, company.id]);
       }).pipe(Tenancy.withTenant(tenantA)),
     );
   },
