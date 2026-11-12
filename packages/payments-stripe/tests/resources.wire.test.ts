@@ -35,8 +35,8 @@ type Exported = (
 ) => Effect.Effect<unknown, PaymentsError, StripeHttp>;
 
 const load = async (subpath: string): Promise<Readonly<Record<string, Exported>>> =>
-  // SAFETY: every generated module exports its operations as functions of this shape.
-  (await import(`../src/${subpath}.ts`)) as Readonly<Record<string, Exported>>;
+  // Every generated module exports its operations as functions of this shape.
+  await import(`../src/${subpath}.ts`);
 
 /** The arguments of a call: an id per path id, `{}` for params, no options. */
 const argsOf = (operation: Planned): ReadonlyArray<unknown> => [

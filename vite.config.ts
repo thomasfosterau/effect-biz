@@ -119,9 +119,6 @@ export default defineConfig({
       "effecttsgo/flat-map-conditional-to-filter-or-fail": "error",
       "effecttsgo/map-some-to-as-some": "error",
       "effecttsgo/effect-succeed-with-undefined": "error",
-      // `casting-awareness` is an awareness prompt, not a defect rule — it
-      // fires on every `as`. Stays visible as a warning.
-      "effect/casting-awareness": "warn",
 
       // ---- Effect preset: rules this workspace's conventions cut across ----
       // `prefer-option-over-null` fires on `?: T | undefined`, which is the
@@ -138,6 +135,30 @@ export default defineConfig({
       "vite-plus/prefer-vite-plus-imports": "error",
     },
     overrides: [
+      // The assertions that cannot be typed away (each carries a `// SAFETY:`
+      // comment saying why); every other `as` in the workspace is gone.
+      // - Payments.internal.ts `omitUndefined`: the filtered record's type is
+      //   a mapped type over `T` that TypeScript cannot derive from the filter.
+      // - internal/resource.ts `operation`: the runtime function is the
+      //   generated signature `F`, which is a caller-chosen type parameter.
+      // - scripts/resources.ts: reads Distilled's untyped module export and
+      //   its `Http()` annotation payload.
+      // - the endive test: Distilled types every schema as `Schema.Top`,
+      //   which no checked decoder accepts.
+      // - the idempotency test: a raw string that the brand refuses is the case
+      //   under test.
+      {
+        files: [
+          "packages/core/src/Payments.internal.ts",
+          "packages/payments-stripe/src/internal/resource.ts",
+          "packages/payments-stripe/scripts/resources.ts",
+          "packages/payments-stripe/tests/StripePayments.endive.test.ts",
+          "packages/payments-stripe/tests/StripePayments.idempotency.test.ts",
+        ],
+        rules: {
+          "effect/casting-awareness": "off",
+        },
+      },
       // Build/test configs are evaluated by Vite and Vitest in bare Node,
       // before any Effect runtime exists — there is no `Config` provider to
       // read from and no `FileSystem` service to call, so `process.env` and

@@ -18,6 +18,7 @@
  * @module
  */
 
+import * as Arr from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -328,8 +329,7 @@ export type HandledEventType = (typeof handledEventTypes)[number];
 
 /** Whether an event type is one of {@link handledEventTypes}. */
 export const isHandledEventType = (type: string): type is HandledEventType =>
-  // SAFETY: widening a readonly tuple of string literals to its element supertype
-  (handledEventTypes as ReadonlyArray<string>).includes(type);
+  Arr.some(handledEventTypes, (handled) => handled === type);
 
 const Metadata = Maybe(Schema.Record(Schema.String, Schema.String));
 
