@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import {
@@ -39,20 +40,21 @@ describe("parseSignatureHeader", () => {
 });
 
 describe("signatureDigest", () => {
-  const digestOf = (payload: Uint8Array) =>
-    Effect.runPromise(signatureDigest("whsec_x", 10, payload, () => "failed"));
+  const digestOf = (payload: Uint8Array) => signatureDigest("whsec_x", 10, payload, () => "failed");
 
-  it("signs only the bytes a subarray view covers", async () => {
-    const whole = new TextEncoder().encode('xx{"id":1}yy');
-    const view = whole.subarray(2, whole.length - 2);
-    expect(view.byteOffset).toBe(2);
-    expect(await digestOf(view)).toBe(await digestOf(new TextEncoder().encode('{"id":1}')));
-  });
+  it.effect("signs only the bytes a subarray view covers", () =>
+    Effect.gen(function* () {
+      const whole = new TextEncoder().encode('xx{"id":1}yy');
+      const view = whole.subarray(2, whole.length - 2);
+      expect(view.byteOffset).toBe(2);
+      expect(yield* digestOf(view)).toBe(yield* digestOf(new TextEncoder().encode('{"id":1}')));
+    }),
+  );
 
-  it("fails with onFailure on an empty secret", async () => {
-    const outcome = await Effect.runPromise(
-      Effect.flip(signatureDigest("", 10, new Uint8Array(), () => "failed")),
-    );
-    expect(outcome).toBe("failed");
-  });
+  it.effect("fails with onFailure on an empty secret", () =>
+    Effect.gen(function* () {
+      const outcome = yield* Effect.flip(signatureDigest("", 10, new Uint8Array(), () => "failed"));
+      expect(outcome).toBe("failed");
+    }),
+  );
 });

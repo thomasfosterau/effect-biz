@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
@@ -28,17 +29,12 @@ interface Untagged {
 
 const callWith = (failure: DistilledOnlyError | Untagged) => {
   const { http, calls } = stubFetch(() => jsonResponse(200, {}));
-  const result = Effect.runPromise(
-    Effect.flip(
-      Effect.flatMap(StripeHttp, (client) =>
-        Effect.asVoid(client.call("GET", () => Effect.fail(failure), {})),
-      ).pipe(
-        Effect.provide(
-          Layer.provideMerge(
-            layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }),
-            http,
-          ),
-        ),
+  const result = Effect.flip(
+    Effect.flatMap(StripeHttp, (client) =>
+      Effect.asVoid(client.call("GET", () => Effect.fail(failure), {})),
+    ).pipe(
+      Effect.provide(
+        Layer.provideMerge(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }), http),
       ),
     ),
   );
@@ -46,24 +42,28 @@ const callWith = (failure: DistilledOnlyError | Untagged) => {
 };
 
 describe("StripeHttp", () => {
-  it("maps a Distilled failure with no response to PaymentProviderError by its tag", async () => {
-    const { result, calls } = callWith(new DistilledOnlyError({ message: "schema mismatch" }));
-    const error = await result;
-    expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error).toMatchObject({
-      provider: "stripe",
-      code: "DistilledOnlyError",
-      message: "schema mismatch",
-    });
-    expect(calls).toHaveLength(0);
-  });
+  it.effect("maps a Distilled failure with no response to PaymentProviderError by its tag", () =>
+    Effect.gen(function* () {
+      const { result, calls } = callWith(new DistilledOnlyError({ message: "schema mismatch" }));
+      const error = yield* result;
+      expect(error).toBeInstanceOf(PaymentProviderError);
+      expect(error).toMatchObject({
+        provider: "stripe",
+        code: "DistilledOnlyError",
+        message: "schema mismatch",
+      });
+      expect(calls).toHaveLength(0);
+    }),
+  );
 
-  it("names an untagged, message-less failure as unknown", async () => {
-    const error = await callWith({}).result;
-    expect(error).toMatchObject({
-      _tag: "PaymentProviderError",
-      code: "StripeUnknownError",
-      message: "The Stripe request failed",
-    });
-  });
+  it.effect("names an untagged, message-less failure as unknown", () =>
+    Effect.gen(function* () {
+      const error = yield* callWith({}).result;
+      expect(error).toMatchObject({
+        _tag: "PaymentProviderError",
+        code: "StripeUnknownError",
+        message: "The Stripe request failed",
+      });
+    }),
+  );
 });

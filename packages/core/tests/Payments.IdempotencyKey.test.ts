@@ -1,4 +1,5 @@
-import { describe, expect, expectTypeOf, it } from "vite-plus/test";
+import { describe, expect, expectTypeOf } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
@@ -17,14 +18,18 @@ import { PaymentInvalidRequestError } from "@thomasfosterau/effect-biz/Payments"
 const decodes = Schema.is(IdempotencyKey.IdempotencyKey);
 
 describe("IdempotencyKey", () => {
-  it("generates a valid, distinct key each time it runs", () => {
-    const keys = Array.from({ length: 50 }, () => Effect.runSync(IdempotencyKey.generate));
-    Arr.forEach(keys, (key) => {
-      expect(key).toMatch(/^[0-9a-f-]{36}$/);
-      expect(decodes(key)).toBe(true);
-    });
-    expect(HashSet.size(HashSet.fromIterable(keys))).toBe(50);
-  });
+  it.effect("generates a valid, distinct key each time it runs", () =>
+    Effect.gen(function* () {
+      const keys = yield* Effect.forEach(Arr.range(1, 50), () => IdempotencyKey.generate, {
+        concurrency: 1,
+      });
+      Arr.forEach(keys, (key) => {
+        expect(key).toMatch(/^[0-9a-f-]{36}$/);
+        expect(decodes(key)).toBe(true);
+      });
+      expect(HashSet.size(HashSet.fromIterable(keys))).toBe(50);
+    }),
+  );
 
   it("accepts 1 to 64 characters of A-Z a-z 0-9 _ -", () => {
     Arr.forEach(["a", "order_42", "Order-42", "x".repeat(64), "0123456789_-ABCxyz"], (ok) => {
@@ -41,26 +46,30 @@ describe("IdempotencyKey", () => {
     );
   });
 
-  it("validate passes none through, passes a good key, and refuses a bad one", async () => {
-    expect(await Effect.runPromise(IdempotencyKey.validate(undefined))).toBeUndefined();
-    expect(await Effect.runPromise(IdempotencyKey.validate("order-42"))).toBe("order-42");
-    const bads = ["", "x".repeat(65), "bad key"];
-    const errors = await Effect.runPromise(
-      Effect.forEach(bads, (bad) => Effect.flip(IdempotencyKey.validate(bad)), {
-        concurrency: 1,
-      }),
-    );
-    Arr.forEach(errors, (error) => {
-      expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error).toMatchObject({ param: "idempotencyKey" });
-    });
-    // The refused value is not echoed back (every message contains "").
-    const echoed = Arr.filter(
-      Arr.zip(bads, errors),
-      ([bad, error]) => bad !== "" && error.message.includes(bad),
-    );
-    expect(echoed).toEqual([]);
-  });
+  it.effect("validate passes none through, passes a good key, and refuses a bad one", () =>
+    Effect.gen(function* () {
+      expect(yield* IdempotencyKey.validate(undefined)).toBeUndefined();
+      expect(yield* IdempotencyKey.validate("order-42")).toBe("order-42");
+      const bads = ["", "x".repeat(65), "bad key"];
+      const errors = yield* Effect.forEach(
+        bads,
+        (bad) => Effect.flip(IdempotencyKey.validate(bad)),
+        {
+          concurrency: 1,
+        },
+      );
+      Arr.forEach(errors, (error) => {
+        expect(error).toBeInstanceOf(PaymentInvalidRequestError);
+        expect(error).toMatchObject({ param: "idempotencyKey" });
+      });
+      // The refused value is not echoed back (every message contains "").
+      const echoed = Arr.filter(
+        Arr.zip(bads, errors),
+        ([bad, error]) => bad !== "" && error.message.includes(bad),
+      );
+      expect(echoed).toEqual([]);
+    }),
+  );
 
   it("make throws on a bad shape", () => {
     expect(() => IdempotencyKey.IdempotencyKey.make("bad key")).toThrow("Schema validation failed");

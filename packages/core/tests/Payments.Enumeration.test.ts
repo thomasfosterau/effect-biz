@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
 import * as Enumeration from "@thomasfosterau/effect-biz/Payments.Enumeration";

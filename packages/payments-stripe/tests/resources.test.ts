@@ -1,4 +1,5 @@
-import { assert, describe, it, expect } from "vite-plus/test";
+import { assert, describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 // oxlint-disable-next-line effect/use-filesystem-service -- a test comparing generated sources with the files on disk, outside any Effect runtime
 import { readdirSync, readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
@@ -303,15 +304,17 @@ describe("the resource plan", () => {
 });
 
 describe("the generated resource modules", () => {
-  it("are what the generator writes from the installed Distilled release", async () => {
-    const files = await Effect.runPromise(render(planned, distilled.version));
-    expect(R.size(files)).toBe(RESOURCES.length);
-    R.toEntries(files).forEach(([file, code]) => {
-      // oxlint-disable-next-line effect/avoid-sync-fs -- see the import
-      const onDisk = readFileSync(new URL(file, PACKAGE), "utf8");
-      expect(onDisk, `${file} is stale: run generate:resources`).toBe(code);
-    });
-  });
+  it.effect("are what the generator writes from the installed Distilled release", () =>
+    Effect.gen(function* () {
+      const files = yield* render(planned, distilled.version);
+      expect(R.size(files)).toBe(RESOURCES.length);
+      R.toEntries(files).forEach(([file, code]) => {
+        // oxlint-disable-next-line effect/avoid-sync-fs -- see the import
+        const onDisk = readFileSync(new URL(file, PACKAGE), "utf8");
+        expect(onDisk, `${file} is stale: run generate:resources`).toBe(code);
+      });
+    }),
+  );
 
   it("leave no stale module behind", () => {
     // oxlint-disable-next-line effect/avoid-sync-fs -- see the import
