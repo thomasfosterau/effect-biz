@@ -53,6 +53,27 @@ const cases: ReadonlyArray<readonly [BizError.BizError, number, boolean, string]
     `Forbidden: sales-order:confirm on SalesOrder::"${id}"`,
   ],
   [
+    new BizError.Forbidden({
+      action: "sales-order:confirm",
+      resource: `SalesOrder::"${id}"`,
+      trace: Option.some(
+        new BizError.DecisionTrace({
+          reason: "forbid",
+          determining: [
+            new BizError.DeterminingPolicy({
+              policyId: "sales:no-confirm-on-hold",
+              effect: "forbid",
+              result: "matched",
+            }),
+          ],
+        }),
+      ),
+    }),
+    403,
+    false,
+    `Forbidden: sales-order:confirm on SalesOrder::"${id}"`,
+  ],
+  [
     new BizError.BusinessRuleViolation({
       code: "sales.credit-limit-exceeded",
       reason: "The order exceeds the customer's credit limit",

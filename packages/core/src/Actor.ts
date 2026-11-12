@@ -4,8 +4,9 @@
  *
  * An {@link Actor} is a user, a system process or an integration, with an id
  * and a display name. The host app provides the {@link CurrentActor} per
- * request with {@link withActor}; an effect-auth adapter derives it from
- * effect-auth's `CurrentPrincipal` (#130). effect-biz never authenticates.
+ * request with {@link withActor}, or derives it from effect-auth's
+ * `CurrentPrincipal` with `./Authorization`'s `withActor` / `layerActor`.
+ * effect-biz never authenticates.
  *
  * The display name is personal data: never log it or put it in an error.
  *

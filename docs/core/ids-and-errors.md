@@ -30,7 +30,7 @@ Every module fails with the same small set of `Schema.TaggedError`s, so a host h
 | `ValidationError` | the input is malformed; `issues` are addressed by path | 422 | no |
 | `ConcurrencyConflict` | a version-guarded write lost a race; retry from the load | 409 | yes |
 | `InvalidTransition` | the command is not allowed from the entity's state | 409 | no |
-| `Forbidden` | the principal may not perform the action on the resource | 403 | no |
+| `Forbidden` | the principal may not perform the action on the resource; `trace` (an `Option`) names the policies that denied ([Authorization](authorization.md)) | 403 | no |
 | `BusinessRuleViolation` | a business rule is broken; `code` is namespaced (`sales.credit-limit-exceeded`) | 422 | no |
 | `Unavailable` | a port or integration is down or not configured | 503 | yes |
 
