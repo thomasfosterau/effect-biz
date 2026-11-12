@@ -12,14 +12,158 @@ pnpm add effect @thomasfosterau/effect-biz
 
 `effect` is a peer (`^4.0.0`): your application owns the single copy.
 
-## Status
+## Foundation
 
-The platform foundation is a placeholder, tracked in the repository's issues.
+The modules every domain package builds on, one subpath each. More (tenancy, repositories, events) land as the platform-foundation slices do; see the repository's issues.
+
+### Identifiers (`./Id`)
+
+Every entity id is a lower-case UUIDv7 string, branded per kind, so ids of different kinds are not assignable to each other. Declare a kind with `Id.make`, and create ids with `Id.generate` from the `IdGenerator` service: `Id.layer` (UUIDv7 from `Clock` and `Random`, increasing within a millisecond, deterministic under `TestClock` and a seeded `Random`) or `Id.layerSequential` for tests.
 
 ```ts
-import { name } from "@thomasfosterau/effect-biz";
+import { Effect } from "effect";
+import * as Id from "@thomasfosterau/effect-biz/Id";
 
-console.log(name);
+const PartyId = Id.make("PartyId");
+
+const program = Id.generate(PartyId);
+
+console.log(Effect.runSync(program.pipe(Effect.provide(Id.layerSequential)))); // "00000000-0000-7000-8000-000000000001"
+```
+
+An identifier from another system (a host application's user id, a sales channel's order number) is never reused as an effect-biz id; it is stored beside the entity as an external reference.
+
+### Errors (`./BizError`)
+
+Every module fails with the same small set of `Schema.TaggedError`s, so a host handles them once. `BizError.BizError` is the schema of the union (for RPC), `isRetryable` says whether repeating the command may succeed, and `httpStatus` is the status an API answers with:
+
+| Error | Raised when | HTTP | Retryable |
+| --- | --- | --- | --- |
+| `NotFound` | the named entity does not exist (or is not visible to the tenant) | 404 | no |
+| `AlreadyExists` | a create would duplicate a natural key | 409 | no |
+| `ValidationError` | the input is malformed; `issues` are addressed by path | 422 | no |
+| `ConcurrencyConflict` | a version-guarded write lost a race; retry from the load | 409 | yes |
+| `InvalidTransition` | the command is not allowed from the entity's state | 409 | no |
+| `Forbidden` | the principal may not perform the action on the resource | 403 | no |
+| `BusinessRuleViolation` | a business rule is broken; `code` is namespaced (`sales.credit-limit-exceeded`) | 422 | no |
+| `Unavailable` | a port or integration is down or not configured | 503 | yes |
+
+`BizError.decodeUnknown(schema)` decodes a command's input and fails with a `ValidationError` (built by `fromSchemaError`) instead of a `SchemaError`.
+
+```ts
+import { Effect, Schema } from "effect";
+import * as BizError from "@thomasfosterau/effect-biz/BizError";
+
+const Input = Schema.Struct({ name: Schema.String });
+
+const error = Effect.runSync(Effect.flip(BizError.decodeUnknown(Input)({ name: 1 })));
+
+console.log(error._tag, BizError.httpStatus(error)); // "ValidationError" 422
+console.log(error.issues[0]?.path); // ["name"]
+```
+
+No error carries a secret or personal data: only entity kinds, ids, codes and schema paths.
+
+### Exact numbers
+
+A quantity, price, rate or percentage is never a JavaScript `number`. Every one is an `effect/BigDecimal`, and crosses a boundary (a SQL row, an event, an HTTP body) as a canonical decimal string. Arithmetic stays Effect's own `BigDecimal.sum`, `subtract` and `multiply`, which are exact; the one inexact operation, division, always takes a rounding policy, and so does every other place that rounds. Pure functions that can fail return a `Result` whose failure is a `BizError.BusinessRuleViolation` with a `core.*` code, and never throw.
+
+#### Decimals (`./Decimal`)
+
+`Decimal` is a schema whose Type is a `BigDecimal` and whose Encoded form is `-?digits` with an optional `.digits`: no exponent, no empty string, no leading `+`, never a JSON number. Encoding writes the shortest plain form and loses no precision (`BigDecimal.format` alone switches to an exponent for very small or large scales).
+
+```ts
+import { BigDecimal, Schema } from "effect";
+import * as Decimal from "@thomasfosterau/effect-biz/Decimal";
+
+const price = Schema.decodeUnknownSync(Decimal.Decimal)("12.50");
+const total = BigDecimal.multiply(price, Decimal.make("3"));
+
+console.log(Schema.encodeSync(Decimal.Decimal)(total)); // "37.5"
+console.log(Schema.decodeUnknownExit(Decimal.Decimal)("1e5")._tag); // "Failure"
+console.log(Schema.decodeUnknownExit(Decimal.Decimal)(1.5)._tag); // "Failure"
+```
+
+`make(text)` parses a literal (and throws), `fromString` returns an `Option`, `zero` and `one` are constants, `format(value, scale)` pads to a fixed scale (and is `None` rather than rounding), and `divide(a, b, policy)` is `None` for a zero divisor.
+
+#### Rounding (`./Rounding`)
+
+`RoundingMode` is Effect's `BigDecimal` rounding modes. The common names map onto them: half-even is `"half-even"`, half-up is `"half-from-zero"`, up is `"from-zero"` and down is `"to-zero"`. A `RoundingPolicy` is a mode and a scale (fraction digits kept); a company configures one wherever it rounds.
+
+```ts
+import { BigDecimal } from "effect";
+import * as Rounding from "@thomasfosterau/effect-biz/Rounding";
+
+const halfEven = new Rounding.RoundingPolicy({ mode: "half-even", scale: 0 });
+const halfUp = new Rounding.RoundingPolicy({ mode: "half-from-zero", scale: 0 });
+const tie = BigDecimal.fromStringUnsafe("2.5");
+
+console.log(BigDecimal.format(Rounding.round(tie, halfEven))); // "2"
+console.log(BigDecimal.format(Rounding.round(tie, halfUp))); // "3"
+```
+
+#### Quantities (`./Quantity`)
+
+A `Quantity` is an exact `amount` of a `unit`. Core carries only the `UnitCode`; the catalogue owns the units and their conversions. `NonNegativeQuantity` refuses a negative amount. `add` and `subtract` fail with `core.unit-mismatch` (both codes in `details`) when the units differ.
+
+```ts
+import { Result, Schema } from "effect";
+import * as Decimal from "@thomasfosterau/effect-biz/Decimal";
+import * as Quantity from "@thomasfosterau/effect-biz/Quantity";
+
+const unit = Schema.decodeSync(Quantity.UnitCode);
+const kg = new Quantity.Quantity({ amount: Decimal.make("1.25"), unit: unit("kg") });
+const each = new Quantity.Quantity({ amount: Decimal.make("1"), unit: unit("each") });
+
+const mismatch = Quantity.add(kg, each);
+console.log(Result.isFailure(mismatch) && mismatch.failure.code); // "core.unit-mismatch"
+```
+
+#### Percentages and rates (`./Percentage`, `./Rate`)
+
+`Percentage` holds a number of percent (`"12.5"` is 12.5%); `toFactor` (`0.125`) and `fromFactor` are exact, and `of(base, percentage, policy)` rounds. `Rate` is a positive dimensionless factor (an exchange rate, a multiplier); `apply(value, rate, policy)` and `invert(rate, policy)` round with the policy given, and `invert` fails with `core.rate-not-positive` if the result rounds to zero.
+
+```ts
+import { BigDecimal, Result } from "effect";
+import * as Decimal from "@thomasfosterau/effect-biz/Decimal";
+import * as Percentage from "@thomasfosterau/effect-biz/Percentage";
+import * as Rate from "@thomasfosterau/effect-biz/Rate";
+import * as Rounding from "@thomasfosterau/effect-biz/Rounding";
+
+const cents = new Rounding.RoundingPolicy({ mode: "half-even", scale: 2 });
+const gst = new Percentage.Percentage({ value: Decimal.make("10") });
+console.log(BigDecimal.format(Percentage.of(Decimal.make("12.345"), gst, cents))); // "1.23"
+
+const rate = new Rate.Rate({ value: Decimal.make("1.5432") });
+console.log(BigDecimal.format(Rate.apply(Decimal.make("100"), rate, cents))); // "154.32"
+const back = Rate.invert(rate, new Rounding.RoundingPolicy({ mode: "half-even", scale: 6 }));
+console.log(Result.isSuccess(back) && BigDecimal.format(back.success.value)); // "0.648004"
+```
+
+#### Currency and money (`./Currency`, `./Money`)
+
+`CurrencyCode` is three upper-case letters, branded. `Currency.minorUnits(code)` is the one ISO 4217 minor-unit table (2 by default; 0 for `JPY`, `KRW`, …; 3 for `KWD`, `BHD`, …; 4 for `CLF`, `UYW`).
+
+`Money` is an exact `{ amount, currency }`, encoded as `{ "amount": "12.5", "currency": "AUD" }`. It is not the payments `Money` (`./Payments.Money`: integer minor units in a `number`, the providers' wire format); convert at the gateway edge with `toMinorUnits` and `fromMinorUnits`. `add`, `subtract` and `sum` fail with `core.currency-mismatch`; `multiply` by an exact factor never rounds; `round` defaults to the currency's minor units, half-even; `toMinorUnits` fails with `core.money-scale` rather than drop digits; `allocate` splits by the largest-remainder method so the parts sum exactly to the rounded total. `isZero`, `isNegative`, `Order` (within one currency) and `Equivalence` are there too.
+
+```ts
+import { BigDecimal, Result } from "effect";
+import * as Currency from "@thomasfosterau/effect-biz/Currency";
+import * as Decimal from "@thomasfosterau/effect-biz/Decimal";
+import * as Money from "@thomasfosterau/effect-biz/Money";
+
+const aud = Currency.make("AUD");
+const total = Money.make(Decimal.make("100"), aud);
+
+const parts = Money.allocate(total, [Decimal.make("1"), Decimal.make("1"), Decimal.make("1")]);
+console.log(Result.isSuccess(parts) && parts.success.map((part) => BigDecimal.format(part.amount))); // ["33.34", "33.33", "33.33"]
+
+const yen = Money.make(Decimal.make("1234.5"), Currency.make("JPY"));
+console.log(Result.isFailure(Money.toMinorUnits(yen))); // true: round first
+console.log(Result.getOrUndefined(Money.toMinorUnits(Money.round(yen)))); // 1234n
+
+const mixed = Money.add(total, Money.zero(Currency.make("USD")));
+console.log(Result.isFailure(mixed) && mixed.failure.code); // "core.currency-mismatch"
 ```
 
 ## Payments
