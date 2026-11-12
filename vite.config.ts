@@ -115,6 +115,7 @@ export default defineConfig({
       "effecttsgo/run-of-exit-to-run-exit": "error",
       "effecttsgo/effect-fn-iife": "error",
       "effecttsgo/flat-map-conditional-to-filter-or-fail": "error",
+      "effecttsgo/map-some-to-as-some": "error",
       // `casting-awareness` is an awareness prompt, not a defect rule — it
       // fires on every `as`. Stays visible as a warning.
       "effect/casting-awareness": "warn",

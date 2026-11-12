@@ -445,9 +445,7 @@ const decodeHandled = Schema.decodeUnknownEffect(HandledEvent);
 export const decodeHandledEvent = (
   event: WebhookEvent,
 ): Effect.Effect<Option.Option<HandledEvent>, Schema.SchemaError> =>
-  isHandledEventType(event.type)
-    ? Effect.map(decodeHandled(event), Option.some)
-    : Effect.succeedNone;
+  isHandledEventType(event.type) ? Effect.asSome(decodeHandled(event)) : Effect.succeedNone;
 
 const decodeCheckoutSessionObject = Schema.decodeUnknownEffect(CheckoutSessionObject);
 const decodeSubscriptionObject = Schema.decodeUnknownEffect(SubscriptionObject);
