@@ -152,10 +152,9 @@ describe("resource modules over StripeHttp", () => {
   });
 
   it("lets a path id win over a params member of the same name", async () => {
-    const { result, calls } = over(
-      // SAFETY: untyped code passing the id again in its params.
-      Customer.update("cus_1", { customer: "cus_2", name: "A" } as never),
-    );
+    // Untyped code passing the id again in its params: a variable, so no excess-property check.
+    const untypedParams = { customer: "cus_2", name: "A" };
+    const { result, calls } = over(Customer.update("cus_1", untypedParams));
     await result;
     expect(calls[0]?.url.pathname).toBe("/v1/customers/cus_1");
   });
