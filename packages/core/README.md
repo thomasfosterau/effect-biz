@@ -10,7 +10,7 @@ The foundation of the effect-biz package family: the identifiers, error channel,
 pnpm add effect @thomasfosterau/effect-biz
 ```
 
-`effect` is a peer (`^4.0.0`): your application owns the single copy.
+`effect` is a peer (`^4.0.0`): your application owns the single copy. [`@thomasfosterau/effect-auth`](https://www.npmjs.com/package/@thomasfosterau/effect-auth) (`^0.2.0`) is an optional peer, needed only for `./Authorization`.
 
 ## Example
 
@@ -38,6 +38,7 @@ Each module is its own subpath. Guides are in [`docs/core`](https://github.com/t
 | `./Tenancy` | The tenant and company a call acts for: `TenantContext`, `CompanyContext`, `withTenant`, `withCompany`. | [Tenancy](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/tenancy.md) |
 | `./Company` | Companies (legal entities) and their tenant-scoped repository port. | [Tenancy](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/tenancy.md) |
 | `./Actor` | Who is acting: the `CurrentActor` a command records. | [Tenancy](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/tenancy.md) |
+| `./Authorization` | Authorisation through effect-auth's `Authorizer`: `authorize(action, resource)` (a denial is `Forbidden`), action catalogues and the model, resolver composition, the `CurrentActor` from the `CurrentPrincipal`, and `layerPermissive` for tests. Needs the optional peer `@thomasfosterau/effect-auth`. | [Authorisation](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/authorization.md) |
 | `./Repository` | The repository conventions: the tenant-scoped, version-guarded `Port` every domain repository has. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
 | `./Audit` | `AuditFields` (created / updated at and by, `version`, `archivedAt`), stamped from `Clock` and the `CurrentActor`. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
 | `./Query` | A typed filter and sort spec (`eq`, `in`, `range`, `search`, `archived`, `sort`) and its pure interpreter. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
