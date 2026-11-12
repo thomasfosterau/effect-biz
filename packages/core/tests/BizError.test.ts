@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as BizError from "../src/BizError.ts";
@@ -86,12 +87,14 @@ describe("BizError", () => {
     expect(decoded.constructor).toBe(error.constructor);
   });
 
-  it("is yielded and caught by tag", async () => {
-    const program = Effect.fail(new BizError.NotFound({ entity: "Party", id })).pipe(
-      Effect.catchTag("NotFound", (error) => Effect.succeed(error.id)),
-    );
-    expect(await Effect.runPromise(program)).toBe(id);
-  });
+  it.effect("is yielded and caught by tag", () =>
+    Effect.gen(function* () {
+      const program = Effect.fail(new BizError.NotFound({ entity: "Party", id })).pipe(
+        Effect.catchTag("NotFound", (error) => Effect.succeed(error.id)),
+      );
+      expect(yield* program).toBe(id);
+    }),
+  );
 });
 
 describe("BizError.decodeUnknown", () => {
@@ -100,25 +103,27 @@ describe("BizError.decodeUnknown", () => {
     lines: Schema.Array(Schema.Struct({ quantity: Schema.String })),
   });
 
-  it("succeeds with the decoded value", async () => {
-    const input = { sku: "A", lines: [{ quantity: "1.5" }] };
-    expect(await Effect.runPromise(BizError.decodeUnknown(Line)(input))).toEqual(input);
-  });
+  it.effect("succeeds with the decoded value", () =>
+    Effect.gen(function* () {
+      const input = { sku: "A", lines: [{ quantity: "1.5" }] };
+      expect(yield* BizError.decodeUnknown(Line)(input)).toEqual(input);
+    }),
+  );
 
-  it("fails with a ValidationError addressing each issue by path", async () => {
-    const error = await Effect.runPromise(
-      Effect.flip(BizError.decodeUnknown(Line)({ sku: 1, lines: [{ quantity: 2 }] })),
-    );
-    expect(error).toBeInstanceOf(BizError.ValidationError);
-    expect(error.issues.map((issue) => issue.path)).toEqual([["sku"]]);
-    const all = await Effect.runPromise(
-      Effect.flip(
+  it.effect("fails with a ValidationError addressing each issue by path", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        BizError.decodeUnknown(Line)({ sku: 1, lines: [{ quantity: 2 }] }),
+      );
+      expect(error).toBeInstanceOf(BizError.ValidationError);
+      expect(error.issues.map((issue) => issue.path)).toEqual([["sku"]]);
+      const all = yield* Effect.flip(
         Schema.decodeUnknownEffect(Line)(
           { sku: 1, lines: [{ quantity: 2 }] },
           { errors: "all" },
         ).pipe(Effect.mapError(BizError.fromSchemaError)),
-      ),
-    );
-    expect(all.issues.map((issue) => issue.path)).toEqual([["sku"], ["lines", 0, "quantity"]]);
-  });
+      );
+      expect(all.issues.map((issue) => issue.path)).toEqual([["sku"], ["lines", 0, "quantity"]]);
+    }),
+  );
 });

@@ -1,4 +1,5 @@
-import { assert, describe, it, expect } from "vite-plus/test";
+import { assert, describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Arr from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
@@ -47,10 +48,10 @@ import {
   tokenCache,
 } from "../src/Payments.internal.ts";
 import {
-  awaitTestPromise,
   jsonResponse,
   reachableFrom,
   stubFetch,
+  throwing,
   withTestClock,
 } from "../../../tests/stubs.ts";
 
@@ -108,9 +109,9 @@ const settle = Effect.forEach(Arr.range(1, 10), () => Effect.yieldNow, {
 });
 
 describe("shareLogin", () => {
-  it("a caller arriving right after a failure never joins the settled login", async () => {
-    const result = await Effect.runPromise(
-      Effect.gen(function* () {
+  it.effect("a caller arriving right after a failure never joins the settled login", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.gen(function* () {
         const { getToken, logins, gate } = yield* harness([refused, ok("tok_2")]);
         const leader = yield* fork(Effect.flip(getToken));
         // A waiter that calls again the moment it sees the failure: it is
@@ -131,72 +132,76 @@ describe("shareLogin", () => {
           waiter: yield* Fiber.join(waiter),
           logins: yield* Ref.get(logins),
         };
-      }),
-    );
+      });
 
-    expect(result.leader).toEqual(new LoginFailed({ attempt: 1 }));
-    expect(result.waiter.first).toBe(result.leader);
-    expect(result.waiter.second).toEqual(Exit.succeed("tok_2"));
-    expect(result.logins).toBe(2);
-  });
+      expect(result.leader).toEqual(new LoginFailed({ attempt: 1 }));
+      expect(result.waiter.first).toBe(result.leader);
+      expect(result.waiter.second).toEqual(Exit.succeed("tok_2"));
+      expect(result.logins).toBe(2);
+    }),
+  );
 
-  it("a leader re-checks the cache, so a caller that took the slot after a success does not log in again", async () => {
-    const result = await Effect.runPromise(
+  it.effect(
+    "a leader re-checks the cache, so a caller that took the slot after a success does not log in again",
+    () =>
       Effect.gen(function* () {
-        const { getToken, logins, gate, readGate } = yield* harness([ok("tok_1")]);
-        const leader = yield* fork(getToken);
-        yield* settle;
-        // The late caller misses the cache, then pauses before taking the slot.
-        const pause = yield* Deferred.make<void>();
-        yield* Ref.set(readGate, Option.some(pause));
-        const late = yield* fork(getToken);
-        yield* settle;
-        // The first login succeeds, stores its token and frees the slot…
-        yield* Deferred.succeed(gate, undefined);
-        const first = yield* Fiber.join(leader);
-        // …and only then does the late caller take the (now empty) slot.
-        yield* Deferred.succeed(pause, undefined);
-        return { first, late: yield* Fiber.join(late), logins: yield* Ref.get(logins) };
+        const result = yield* Effect.gen(function* () {
+          const { getToken, logins, gate, readGate } = yield* harness([ok("tok_1")]);
+          const leader = yield* fork(getToken);
+          yield* settle;
+          // The late caller misses the cache, then pauses before taking the slot.
+          const pause = yield* Deferred.make<void>();
+          yield* Ref.set(readGate, Option.some(pause));
+          const late = yield* fork(getToken);
+          yield* settle;
+          // The first login succeeds, stores its token and frees the slot…
+          yield* Deferred.succeed(gate, undefined);
+          const first = yield* Fiber.join(leader);
+          // …and only then does the late caller take the (now empty) slot.
+          yield* Deferred.succeed(pause, undefined);
+          return { first, late: yield* Fiber.join(late), logins: yield* Ref.get(logins) };
+        });
+
+        expect(result.first).toBe("tok_1");
+        expect(result.late).toBe("tok_1");
+        expect(result.logins).toBe(1);
       }),
-    );
+  );
 
-    expect(result.first).toBe("tok_1");
-    expect(result.late).toBe("tok_1");
-    expect(result.logins).toBe(1);
-  });
-
-  it("shares a login failure whose cause contains an interruption; waiters do not re-login", async () => {
-    const result = await Effect.runPromise(
+  it.effect(
+    "shares a login failure whose cause contains an interruption; waiters do not re-login",
+    () =>
       Effect.gen(function* () {
-        const { getToken, logins, gate } = yield* harness([
-          // The login fails on its own, with an interrupt in its cause (e.g.
-          // a child it ran was interrupted); the leader is not interrupted.
-          (attempt) =>
-            Exit.failCause(
-              Cause.combine(Cause.fail(new LoginFailed({ attempt })), Cause.interrupt()),
-            ),
-        ]);
-        const fibers = yield* Effect.forEach(
-          Array.from({ length: 4 }),
-          () => fork(Effect.exit(getToken)),
-          { concurrency: 1 },
-        );
-        yield* settle;
-        yield* Deferred.succeed(gate, undefined);
-        const exits = yield* Effect.forEach(fibers, Fiber.join, { concurrency: 1 });
-        return { exits, logins: yield* Ref.get(logins) };
+        const result = yield* Effect.gen(function* () {
+          const { getToken, logins, gate } = yield* harness([
+            // The login fails on its own, with an interrupt in its cause (e.g.
+            // a child it ran was interrupted); the leader is not interrupted.
+            (attempt) =>
+              Exit.failCause(
+                Cause.combine(Cause.fail(new LoginFailed({ attempt })), Cause.interrupt()),
+              ),
+          ]);
+          const fibers = yield* Effect.forEach(
+            Array.from({ length: 4 }),
+            () => fork(Effect.exit(getToken)),
+            { concurrency: 1 },
+          );
+          yield* settle;
+          yield* Deferred.succeed(gate, undefined);
+          const exits = yield* Effect.forEach(fibers, Fiber.join, { concurrency: 1 });
+          return { exits, logins: yield* Ref.get(logins) };
+        });
+
+        expect(result.logins).toBe(1);
+        Arr.forEach(result.exits, (exit) => {
+          expect(Exit.findErrorOption(exit)).toEqual(Option.some(new LoginFailed({ attempt: 1 })));
+        });
       }),
-    );
+  );
 
-    expect(result.logins).toBe(1);
-    Arr.forEach(result.exits, (exit) => {
-      expect(Exit.findErrorOption(exit)).toEqual(Option.some(new LoginFailed({ attempt: 1 })));
-    });
-  });
-
-  it("interrupting the leader interrupts its login and lets a waiter take over", async () => {
-    const result = await Effect.runPromise(
-      Effect.gen(function* () {
+  it.effect("interrupting the leader interrupts its login and lets a waiter take over", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.gen(function* () {
         const { getToken, logins, gate } = yield* harness([ok("tok_1")]);
         const leader = yield* fork(getToken);
         yield* settle;
@@ -210,14 +215,14 @@ describe("shareLogin", () => {
           waiter: yield* Fiber.join(waiter),
           logins: yield* Ref.get(logins),
         };
-      }),
-    );
+      });
 
-    expect(Exit.hasInterrupts(result.leader)).toBe(true);
-    expect(result.waiter).toBe("tok_1");
-    // The abandoned attempt and the waiter's own.
-    expect(result.logins).toBe(2);
-  });
+      expect(Exit.hasInterrupts(result.leader)).toBe(true);
+      expect(result.waiter).toBe("tok_1");
+      // The abandoned attempt and the waiter's own.
+      expect(result.logins).toBe(2);
+    }),
+  );
 });
 
 describe("scaleToMinor", () => {
@@ -301,21 +306,21 @@ describe("decimalText and formatDecimal", () => {
 });
 
 describe("checkMinorUnits", () => {
-  it("needs no currency and refuses a negative or non-safe-integer amount", async () => {
-    await Effect.runPromise(checkMinorUnits(0, "amount"));
-    await Effect.runPromise(checkMinorUnits(Number.MAX_SAFE_INTEGER, "amount"));
-    const errors = await Effect.runPromise(
-      Effect.forEach(
+  it.effect("needs no currency and refuses a negative or non-safe-integer amount", () =>
+    Effect.gen(function* () {
+      yield* checkMinorUnits(0, "amount");
+      yield* checkMinorUnits(Number.MAX_SAFE_INTEGER, "amount");
+      const errors = yield* Effect.forEach(
         [-1, 10.5, 2 ** 53, Number.NaN],
         (minor) => Effect.flip(checkMinorUnits(minor, "amount")),
         { concurrency: 1 },
-      ),
-    );
-    Arr.forEach(errors, (error) => {
-      expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error.param).toBe("amount");
-    });
-  });
+      );
+      Arr.forEach(errors, (error) => {
+        expect(error).toBeInstanceOf(PaymentInvalidRequestError);
+        expect(error.param).toBe("amount");
+      });
+    }),
+  );
 });
 
 describe("exponentFrom", () => {
@@ -352,27 +357,31 @@ describe("isOk and isAbsoluteHttpUrl", () => {
 });
 
 describe("timeoutOf", () => {
-  it("accepts a positive finite number of milliseconds, or Infinity", async () => {
-    expect(Duration.toMillis(await Effect.runPromise(timeoutOf("Acme", "timeout", 250)))).toBe(250);
-    expect(Duration.isFinite(await Effect.runPromise(timeoutOf("Acme", "timeout", Infinity)))).toBe(
-      false,
-    );
-  });
+  it.effect("accepts a positive finite number of milliseconds, or Infinity", () =>
+    Effect.gen(function* () {
+      expect(Duration.toMillis(yield* timeoutOf("Acme", "timeout", 250))).toBe(250);
+      expect(Duration.isFinite(yield* timeoutOf("Acme", "timeout", Infinity))).toBe(false);
+    }),
+  );
 
-  it("refuses anything else with PaymentConfigError naming the provider and option", async () => {
-    const millis = [0, -1, Number.NaN, -Infinity];
-    const errors = await Effect.runPromise(
-      Effect.forEach(millis, (value) => Effect.flip(timeoutOf("Acme", "loginTimeout", value)), {
-        concurrency: 1,
-      }),
-    );
-    Arr.forEach(Arr.zip(millis, errors), ([value, error]) => {
-      expect(error).toBeInstanceOf(PaymentConfigError);
-      expect(error.message).toBe(
-        `Acme loginTimeout must be a positive number of milliseconds, or Infinity for none (got ${value})`,
+  it.effect("refuses anything else with PaymentConfigError naming the provider and option", () =>
+    Effect.gen(function* () {
+      const millis = [0, -1, Number.NaN, -Infinity];
+      const errors = yield* Effect.forEach(
+        millis,
+        (value) => Effect.flip(timeoutOf("Acme", "loginTimeout", value)),
+        {
+          concurrency: 1,
+        },
       );
-    });
-  });
+      Arr.forEach(Arr.zip(millis, errors), ([value, error]) => {
+        expect(error).toBeInstanceOf(PaymentConfigError);
+        expect(error.message).toBe(
+          `Acme loginTimeout must be a positive number of milliseconds, or Infinity for none (got ${value})`,
+        );
+      });
+    }),
+  );
 });
 
 describe("send", () => {
@@ -383,61 +392,66 @@ describe("send", () => {
   const run = <A, E>(
     effect: (http: HttpClient.HttpClient) => Effect.Effect<A, E>,
     fetch: () => Response | Promise<Response>,
-  ) =>
-    Effect.runPromise(
-      Effect.flatMap(HttpClient.HttpClient, effect).pipe(Effect.provide(stubFetch(fetch).http)),
-    );
+  ) => Effect.flatMap(HttpClient.HttpClient, effect).pipe(Effect.provide(stubFetch(fetch).http));
   const options = { provider: "Acme", what: "request", limit: Duration.seconds(5) };
 
-  it("reads any status with its JSON body, or {} for a body that is not JSON", async () => {
-    expect(
-      await run(
+  it.effect("reads any status with its JSON body, or {} for a body that is not JSON", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* run(
+          (http) => send(http, request, options),
+          () => jsonResponse(402, { a: 1 }),
+        ),
+      ).toMatchObject({
+        status: 402,
+        json: { a: 1 },
+      });
+      expect(
+        yield* run(
+          (http) => send(http, request, options),
+          () => new Response("<html>", { status: 502 }),
+        ),
+      ).toMatchObject({ status: 502, json: {} });
+    }),
+  );
+
+  it.effect("keeps the response headers, keyed in lower case", () =>
+    Effect.gen(function* () {
+      const reply = yield* run(
         (http) => send(http, request, options),
-        () => jsonResponse(402, { a: 1 }),
-      ),
-    ).toMatchObject({
-      status: 402,
-      json: { a: 1 },
-    });
-    expect(
-      await run(
-        (http) => send(http, request, options),
-        () => new Response("<html>", { status: 502 }),
-      ),
-    ).toMatchObject({ status: 502, json: {} });
-  });
+        () => new Response("{}", { status: 429, headers: { "Retry-After": "7" } }),
+      );
+      expect(reply.headers["retry-after"]).toBe("7");
+    }),
+  );
 
-  it("keeps the response headers, keyed in lower case", async () => {
-    const reply = await run(
-      (http) => send(http, request, options),
-      () => new Response("{}", { status: 429, headers: { "Retry-After": "7" } }),
-    );
-    expect(reply.headers["retry-after"]).toBe("7");
-  });
+  it.effect("fails a connection failure with PaymentNetworkError, never carrying the request", () =>
+    Effect.gen(function* () {
+      const boom = new TypeError("fetch failed");
+      const error = yield* run(
+        (http) => Effect.flip(send(http, request, options)),
+        () => throwing(boom),
+      );
+      expect(error).toBeInstanceOf(PaymentNetworkError);
+      expect(error.cause).toBe(boom);
+      expect(reachableFrom(error).strings.filter((value) => value.includes(SECRET))).toEqual([]);
+      expect(reachableFrom(error).objects.filter(HttpClientRequest.isHttpClientRequest)).toEqual(
+        [],
+      );
+    }),
+  );
 
-  it("fails a connection failure with PaymentNetworkError, never carrying the request", async () => {
-    const boom = new TypeError("fetch failed");
-    const error = await run(
-      (http) => Effect.flip(send(http, request, options)),
-      () => {
-        throw boom;
-      },
-    );
-    expect(error).toBeInstanceOf(PaymentNetworkError);
-    expect(error.cause).toBe(boom);
-    expect(reachableFrom(error).strings.filter((value) => value.includes(SECRET))).toEqual([]);
-    expect(reachableFrom(error).objects.filter(HttpClientRequest.isHttpClientRequest)).toEqual([]);
-  });
-
-  it("fails a request unanswered after the limit with the provider's timeout error", async () => {
-    const error = await run(
-      (http) => withTestClock(Effect.flip(send(http, request, options))),
-      () => new Promise<Response>(() => {}),
-    );
-    expect(error).toBeInstanceOf(PaymentNetworkError);
-    expect(error.message).toBe("Acme request timed out after 5000 ms");
-    expect(error.message).toBe(timedOut("Acme", "request", Duration.seconds(5)).message);
-  });
+  it.effect("fails a request unanswered after the limit with the provider's timeout error", () =>
+    Effect.gen(function* () {
+      const error = yield* run(
+        (http) => withTestClock(Effect.flip(send(http, request, options))),
+        () => new Promise<Response>(() => {}),
+      );
+      expect(error).toBeInstanceOf(PaymentNetworkError);
+      expect(error.message).toBe("Acme request timed out after 5000 ms");
+      expect(error.message).toBe(timedOut("Acme", "request", Duration.seconds(5)).message);
+    }),
+  );
 
   it("maps an HttpClientError onto PaymentNetworkError by its message and cause", () => {
     const cause = new Error("socket hang up");
@@ -452,9 +466,9 @@ describe("send", () => {
 });
 
 describe("tokenCache", () => {
-  it("serves a stored token until a minute before it expires", async () => {
-    const result = await Effect.runPromise(
-      Effect.gen(function* () {
+  it.effect("serves a stored token until a minute before it expires", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.gen(function* () {
         const cache = yield* tokenCache;
         const empty = yield* cache.cached;
         yield* cache.store("tok_1", 120_000);
@@ -464,19 +478,19 @@ describe("tokenCache", () => {
         yield* TestClock.adjust("1 second");
         const stale = yield* cache.cached;
         return { empty, fresh, stillFresh, stale };
-      }).pipe(Effect.provide(TestClock.layer())),
-    );
-    expect(result).toEqual({
-      empty: Option.none(),
-      fresh: Option.some("tok_1"),
-      stillFresh: Option.some("tok_1"),
-      stale: Option.none(),
-    });
-  });
+      }).pipe(Effect.provide(TestClock.layer()));
+      expect(result).toEqual({
+        empty: Option.none(),
+        fresh: Option.some("tok_1"),
+        stillFresh: Option.some("tok_1"),
+        stale: Option.none(),
+      });
+    }),
+  );
 
-  it("forgets a refused token only while it is still the stored one", async () => {
-    const result = await Effect.runPromise(
-      Effect.gen(function* () {
+  it.effect("forgets a refused token only while it is still the stored one", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.gen(function* () {
         const cache = yield* tokenCache;
         yield* cache.store("tok_2", Number.MAX_SAFE_INTEGER);
         yield* cache.forget("tok_1");
@@ -484,22 +498,22 @@ describe("tokenCache", () => {
         yield* cache.forget("tok_2");
         const forgotten = yield* cache.cached;
         return { kept, forgotten };
-      }),
-    );
-    expect(result).toEqual({ kept: Option.some("tok_2"), forgotten: Option.none() });
-  });
+      });
+      expect(result).toEqual({ kept: Option.some("tok_2"), forgotten: Option.none() });
+    }),
+  );
 
-  it("gives every build its own cache", async () => {
-    const result = await Effect.runPromise(
-      Effect.gen(function* () {
+  it.effect("gives every build its own cache", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.gen(function* () {
         const first = yield* tokenCache;
         const second = yield* tokenCache;
         yield* first.store("tok_1", Number.MAX_SAFE_INTEGER);
         return yield* second.cached;
-      }),
-    );
-    expect(result).toEqual(Option.none());
-  });
+      });
+      expect(result).toEqual(Option.none());
+    }),
+  );
 });
 
 describe("omitUndefined", () => {
@@ -512,25 +526,27 @@ describe("omitUndefined", () => {
 });
 
 describe("checkId", () => {
-  it("passes a non-empty string id", async () => {
-    await expect(Effect.runPromise(checkId("customer", "cus_1"))).resolves.toBeUndefined();
-  });
+  it.effect("passes a non-empty string id", () =>
+    Effect.gen(function* () {
+      expect(yield* checkId("customer", "cus_1")).toBeUndefined();
+    }),
+  );
 
-  it("refuses an empty or non-string id before anything is sent", async () => {
-    const errors = await Effect.runPromise(
-      Effect.forEach(
+  it.effect("refuses an empty or non-string id before anything is sent", () =>
+    Effect.gen(function* () {
+      const errors = yield* Effect.forEach(
         ["", undefined, 42],
         // SAFETY: untyped callers can pass anything; that is what is under test.
         (id) => Effect.flip(checkId("customer", id as string)),
         { concurrency: 1 },
-      ),
-    );
-    Arr.forEach(errors, (error) => {
-      expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error.message).toBe("The customer id must be a non-empty string");
-      expect(error.param).toBe("id");
-    });
-  });
+      );
+      Arr.forEach(errors, (error) => {
+        expect(error).toBeInstanceOf(PaymentInvalidRequestError);
+        expect(error.message).toBe("The customer id must be a non-empty string");
+        expect(error.param).toBe("id");
+      });
+    }),
+  );
 });
 
 describe("stringField", () => {
@@ -545,44 +561,44 @@ describe("stringField", () => {
 
 describe("observeResponses", () => {
   const observe = (fetch: () => Response) =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const watched = yield* observeResponses(yield* HttpClient.HttpClient);
-        const before = yield* watched.last;
-        const response = yield* watched.client.get("https://api.example.com/v1/things");
-        // The body is still readable after the observer read it.
-        const text = yield* response.text;
-        return { before, text, after: yield* watched.last };
-      }).pipe(Effect.provide(stubFetch(fetch).http)),
-    );
+    Effect.gen(function* () {
+      const watched = yield* observeResponses(yield* HttpClient.HttpClient);
+      const before = yield* watched.last;
+      const response = yield* watched.client.get("https://api.example.com/v1/things");
+      // The body is still readable after the observer read it.
+      const text = yield* response.text;
+      return { before, text, after: yield* watched.last };
+    }).pipe(Effect.provide(stubFetch(fetch).http));
 
-  it("records the status, headers and JSON body, and hands the response on unread", async () => {
-    const { before, text, after } = await observe(() =>
-      jsonResponse(409, { error: "conflict" }, { "retry-after": "2" }),
-    );
-    expect(before).toEqual(Option.none());
-    expect(text).toBe('{"error":"conflict"}');
-    assert(Option.isSome(after), "a response was observed");
-    expect(after.value.status).toBe(409);
-    expect(after.value.headers["retry-after"]).toBe("2");
-    expect(after.value.body).toEqual(Option.some({ error: "conflict" }));
-  });
-
-  it("records an empty body or one that is not JSON as None", async () => {
-    const bodies = ["", "<html>"];
-    const results = await Effect.runPromise(
-      Effect.forEach(
-        bodies,
-        (body) => awaitTestPromise(() => observe(() => new Response(body, { status: 200 }))),
-        { concurrency: 1 },
-      ),
-    );
-    Arr.forEach(Arr.zip(bodies, results), ([body, { text, after }]) => {
-      expect(text).toBe(body);
+  it.effect("records the status, headers and JSON body, and hands the response on unread", () =>
+    Effect.gen(function* () {
+      const { before, text, after } = yield* observe(() =>
+        jsonResponse(409, { error: "conflict" }, { "retry-after": "2" }),
+      );
+      expect(before).toEqual(Option.none());
+      expect(text).toBe('{"error":"conflict"}');
       assert(Option.isSome(after), "a response was observed");
-      expect(after.value.body).toEqual(Option.none());
-    });
-  });
+      expect(after.value.status).toBe(409);
+      expect(after.value.headers["retry-after"]).toBe("2");
+      expect(after.value.body).toEqual(Option.some({ error: "conflict" }));
+    }),
+  );
+
+  it.effect("records an empty body or one that is not JSON as None", () =>
+    Effect.gen(function* () {
+      const bodies = ["", "<html>"];
+      const results = yield* Effect.forEach(
+        bodies,
+        (body) => observe(() => new Response(body, { status: 200 })),
+        { concurrency: 1 },
+      );
+      Arr.forEach(Arr.zip(bodies, results), ([body, { text, after }]) => {
+        expect(text).toBe(body);
+        assert(Option.isSome(after), "a response was observed");
+        expect(after.value.body).toEqual(Option.none());
+      });
+    }),
+  );
 });
 
 describe("rejectedError", () => {
@@ -611,17 +627,23 @@ describe("responseDecoder", () => {
     thing.id.toUpperCase(),
   );
 
-  it("decodes a body and maps it, ignoring unknown fields", async () => {
-    expect(await Effect.runPromise(decodeThing({ id: "t_1", extra: true }))).toBe("T_1");
-  });
+  it.effect("decodes a body and maps it, ignoring unknown fields", () =>
+    Effect.gen(function* () {
+      expect(yield* decodeThing({ id: "t_1", extra: true })).toBe("T_1");
+    }),
+  );
 
-  it("fails a body that does not decode with a PaymentProviderError naming the provider", async () => {
-    const error = await Effect.runPromise(Effect.flip(decodeThing({ id: 42 })));
-    expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error.provider).toBe("acme");
-    expect(error.message).toBe("Acme returned a malformed thing response");
-    expect(error.cause).toBeDefined();
-  });
+  it.effect(
+    "fails a body that does not decode with a PaymentProviderError naming the provider",
+    () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(decodeThing({ id: 42 }));
+        expect(error).toBeInstanceOf(PaymentProviderError);
+        expect(error.provider).toBe("acme");
+        expect(error.message).toBe("Acme returned a malformed thing response");
+        expect(error.cause).toBeDefined();
+      }),
+  );
 });
 
 describe("epochSecondsOf", () => {
@@ -711,71 +733,75 @@ describe("pageNumberedList", () => {
     firstPage = 1,
   ) => {
     const asked: Array<number | undefined> = [];
-    const result = Effect.runPromise(
-      pageNumberedList(params, { provider: "Acme", firstPage }, (page) => {
-        asked.push(page);
-        return Effect.succeed({ data: ["x"], hasMore });
-      }),
-    );
+    const result = pageNumberedList(params, { provider: "Acme", firstPage }, (page) => {
+      asked.push(page);
+      return Effect.succeed({ data: ["x"], hasMore });
+    });
     return { result, asked };
   };
   /** The failure of listing from `startingAfter`, and whether the list ran. */
-  const failure = async (startingAfter: string, limit?: number) => {
+  const failure = Effect.fnUntraced(function* (startingAfter: string, limit?: number) {
     const asked: Array<number | undefined> = [];
-    const error = await Effect.runPromise(
-      Effect.flip(
-        pageNumberedList({ startingAfter, limit }, { provider: "Acme", firstPage: 1 }, (page) => {
-          asked.push(page);
-          return Effect.succeed({ data: [], hasMore: false });
-        }),
-      ),
+    const error = yield* Effect.flip(
+      pageNumberedList({ startingAfter, limit }, { provider: "Acme", firstPage: 1 }, (page) => {
+        asked.push(page);
+        return Effect.succeed({ data: [], hasMore: false });
+      }),
     );
     return { error, asked };
-  };
-
-  it("lists the vendor's first page by default, with the next page's cursor", async () => {
-    const { result, asked } = listed({ limit: 2 }, true);
-    expect(await result).toEqual({ data: ["x"], hasMore: true, nextCursor: "page=2&size=2" });
-    expect(asked).toEqual([undefined]);
-    const zeroBased = listed({}, true, 0);
-    expect((await zeroBased.result).nextCursor).toBe("page=1");
   });
 
-  it("lists the page a cursor names, for the same limit", async () => {
-    const { result, asked } = listed({ limit: 2, startingAfter: "page=2&size=2" }, true);
-    expect((await result).nextCursor).toBe("page=3&size=2");
-    expect(asked).toEqual([2]);
-  });
-
-  it("gives the last page no cursor", async () => {
-    const page = await listed({ startingAfter: "page=3" }, false).result;
-    expect(page).toEqual({ data: ["x"], hasMore: false });
-    expect(page).not.toHaveProperty("nextCursor");
-  });
-
-  it.each(["cus_123", "page=", "page=x", "page=2&size=", "page=0", ""])(
-    "refuses %j, an item id, a malformed cursor or one below the first page, listing nothing",
-    async (cursor) => {
-      const { error, asked } = await failure(cursor);
-      expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error).toMatchObject({
-        param: "startingAfter",
-        message: "Acme startingAfter must be the nextCursor of a previous page, not an item id",
-      });
-      expect(asked).toEqual([]);
-    },
+  it.effect("lists the vendor's first page by default, with the next page's cursor", () =>
+    Effect.gen(function* () {
+      const { result, asked } = listed({ limit: 2 }, true);
+      expect(yield* result).toEqual({ data: ["x"], hasMore: true, nextCursor: "page=2&size=2" });
+      expect(asked).toEqual([undefined]);
+      const zeroBased = listed({}, true, 0);
+      expect((yield* zeroBased.result).nextCursor).toBe("page=1");
+    }),
   );
 
-  it.each([
+  it.effect("lists the page a cursor names, for the same limit", () =>
+    Effect.gen(function* () {
+      const { result, asked } = listed({ limit: 2, startingAfter: "page=2&size=2" }, true);
+      expect((yield* result).nextCursor).toBe("page=3&size=2");
+      expect(asked).toEqual([2]);
+    }),
+  );
+
+  it.effect("gives the last page no cursor", () =>
+    Effect.gen(function* () {
+      const page = yield* listed({ startingAfter: "page=3" }, false).result;
+      expect(page).toEqual({ data: ["x"], hasMore: false });
+      expect(page).not.toHaveProperty("nextCursor");
+    }),
+  );
+
+  it.effect.each(["cus_123", "page=", "page=x", "page=2&size=", "page=0", ""])(
+    "refuses %j, an item id, a malformed cursor or one below the first page, listing nothing",
+    (cursor) =>
+      Effect.gen(function* () {
+        const { error, asked } = yield* failure(cursor);
+        expect(error).toBeInstanceOf(PaymentInvalidRequestError);
+        expect(error).toMatchObject({
+          param: "startingAfter",
+          message: "Acme startingAfter must be the nextCursor of a previous page, not an item id",
+        });
+        expect(asked).toEqual([]);
+      }),
+  );
+
+  it.effect.each([
     ["page=2&size=10", 20],
     ["page=2&size=10", undefined],
     ["page=2", 10],
   ] as const)(
     "refuses %s with limit %s: a cursor for another limit would skip or repeat items",
-    async (cursor, limit) => {
-      const { error } = await failure(cursor, limit);
-      expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error).toMatchObject({ param: "startingAfter" });
-    },
+    ([cursor, limit]) =>
+      Effect.gen(function* () {
+        const { error } = yield* failure(cursor, limit);
+        expect(error).toBeInstanceOf(PaymentInvalidRequestError);
+        expect(error).toMatchObject({ param: "startingAfter" });
+      }),
   );
 });

@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import { HttpBody, HttpClientRequest } from "effect/http";
 import { deleteParamsToQuery } from "../src/internal/deleteQuery.ts";
 
