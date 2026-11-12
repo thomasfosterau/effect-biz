@@ -150,17 +150,20 @@ const matchesIn = (entity: Audit.Audited, field: string, allowed: ReadonlyArray<
   Arr.some(allowed, (expected) => matchesEq(entity, field, expected));
 
 /** Whether a value satisfies a bound, when the bound is given. */
-const bound = (limit: Value | undefined, value: Value, holds: (order: number) => boolean) =>
-  limit === undefined || holds(compareValues(value, limit));
+const bound = (limit: Option.Option<Value>, value: Value, holds: (order: number) => boolean) =>
+  Option.match(limit, {
+    onNone: () => true,
+    onSome: (given) => holds(compareValues(value, given)),
+  });
 
 const matchesRange = (entity: Audit.Audited, field: string, range: Range<Value>): boolean =>
   Option.exists(
     fieldValue(entity, field),
     (value) =>
-      bound(range.gt, value, (order) => order > 0) &&
-      bound(range.gte, value, (order) => order >= 0) &&
-      bound(range.lt, value, (order) => order < 0) &&
-      bound(range.lte, value, (order) => order <= 0),
+      bound(Option.fromNullishOr(range.gt), value, (order) => order > 0) &&
+      bound(Option.fromNullishOr(range.gte), value, (order) => order >= 0) &&
+      bound(Option.fromNullishOr(range.lt), value, (order) => order < 0) &&
+      bound(Option.fromNullishOr(range.lte), value, (order) => order <= 0),
   );
 
 /** Whether an entity with the given archive state passes each `archived` flag. */
@@ -172,10 +175,10 @@ const archivedFilter: R.ReadonlyRecord<Archived, (archived: boolean) => boolean>
 
 const matchesSearch = (
   entity: Audit.Audited,
-  search: string | undefined,
+  search: string,
   fields: ReadonlyArray<string>,
 ): boolean => {
-  const needle = (search ?? "").trim().toLowerCase();
+  const needle = search.trim().toLowerCase();
   return (
     Str.isEmpty(needle) ||
     Arr.some(fields, (field) =>
@@ -189,12 +192,13 @@ const matchesSearch = (
 
 /** Whether every `[field, condition]` entry of a per-field condition holds. */
 const every = <C>(
-  record: R.ReadonlyRecord<string, C | undefined> | undefined,
+  record: Readonly<Partial<Record<string, C>>>,
   holds: (field: string, condition: C) => boolean,
 ): boolean =>
-  Arr.every(
-    R.toEntries(record ?? {}),
-    ([field, condition]) => condition === undefined || holds(field, condition),
+  Arr.every(R.toEntries(record), ([field, condition]) =>
+    // A key may be present and undefined for a caller outside this workspace's
+    // `exactOptionalPropertyTypes`; such a condition imposes nothing.
+    P.isUndefined(condition) ? true : holds(field, condition),
   );
 
 /** Whether an entity satisfies every condition of a query. */
@@ -202,10 +206,12 @@ export const matches =
   <A extends Audit.Audited>(query: Query<A>, options: Options<A> = {}) =>
   (entity: A): boolean =>
     archivedFilter[query.archived ?? "exclude"](Audit.isArchived(entity)) &&
-    every<Value>(query.eq, (field, value) => matchesEq(entity, field, value)) &&
-    every<ReadonlyArray<Value>>(query.in, (field, values) => matchesIn(entity, field, values)) &&
-    every<Range<Value>>(query.range, (field, range) => matchesRange(entity, field, range)) &&
-    matchesSearch(entity, query.search, options.searchable ?? []);
+    every<Value>(query.eq ?? {}, (field, value) => matchesEq(entity, field, value)) &&
+    every<ReadonlyArray<Value>>(query.in ?? {}, (field, values) =>
+      matchesIn(entity, field, values),
+    ) &&
+    every<Range<Value>>(query.range ?? {}, (field, range) => matchesRange(entity, field, range)) &&
+    matchesSearch(entity, query.search ?? "", options.searchable ?? []);
 
 /** The fingerprint of a query's sort, which its cursors carry: `"name:asc,createdOn:desc"`. */
 export const sortKey = <A>(query: Query<A>): string =>
