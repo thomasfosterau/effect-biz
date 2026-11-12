@@ -1,6 +1,6 @@
 # The unit of work
 
-How a command reads and writes: **load → decide (pure) → commit one batch**, retried from the load step when the batch hits a version conflict. The shape suits Cloudflare D1 (no row locks, no interactive transactions) as well as Postgres, so every dialect and the in-memory layers work the same way (#29, #128). See also [repositories](repositories.md).
+How a command reads and writes: **load → decide (pure) → commit one batch**, retried from the load step when the batch hits a version conflict. The shape suits Cloudflare D1 (no row locks, no interactive transactions) as well as Postgres, so every dialect and the in-memory layers work the same way (#29, #128). See also [repositories](repositories.md) and [domain events](events.md), which a command records in the same batch.
 
 ## The shape of a command
 

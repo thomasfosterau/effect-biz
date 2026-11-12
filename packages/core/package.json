@@ -62,6 +62,18 @@
       "types": "./dist/Decimal.d.ts",
       "default": "./dist/Decimal.js"
     },
+    "./Dispatcher": {
+      "types": "./dist/Dispatcher.d.ts",
+      "default": "./dist/Dispatcher.js"
+    },
+    "./DomainEvent": {
+      "types": "./dist/DomainEvent.d.ts",
+      "default": "./dist/DomainEvent.js"
+    },
+    "./EventRecorder": {
+      "types": "./dist/EventRecorder.d.ts",
+      "default": "./dist/EventRecorder.js"
+    },
     "./Id": {
       "types": "./dist/Id.d.ts",
       "default": "./dist/Id.js"
@@ -73,6 +85,10 @@
     "./Money": {
       "types": "./dist/Money.d.ts",
       "default": "./dist/Money.js"
+    },
+    "./Outbox": {
+      "types": "./dist/Outbox.d.ts",
+      "default": "./dist/Outbox.js"
     },
     "./Page": {
       "types": "./dist/Page.d.ts",
@@ -101,6 +117,10 @@
     "./Rounding": {
       "types": "./dist/Rounding.d.ts",
       "default": "./dist/Rounding.js"
+    },
+    "./Subscriber": {
+      "types": "./dist/Subscriber.d.ts",
+      "default": "./dist/Subscriber.js"
     },
     "./Tenancy": {
       "types": "./dist/Tenancy.d.ts",

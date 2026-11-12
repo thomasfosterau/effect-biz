@@ -19,6 +19,7 @@
 
 import * as Arr from "effect/Array";
 import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as Fiber from "effect/Fiber";
@@ -27,12 +28,19 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
 import * as Actor from "./Actor.js";
 import * as Audit from "./Audit.js";
 import type * as BizError from "./BizError.js";
+import * as BizErrors from "./BizError.js";
+import * as Dispatcher from "./Dispatcher.js";
+import * as DomainEvent from "./DomainEvent.js";
+import * as EventRecorder from "./EventRecorder.js";
+import * as Outbox from "./Outbox.js";
 import * as Page from "./Page.js";
 import type * as Repository from "./Repository.js";
+import * as Subscriber from "./Subscriber.js";
 import * as Tenancy from "./Tenancy.js";
 import * as UnitOfWork from "./UnitOfWork.js";
 
@@ -741,3 +749,328 @@ export const unitOfWorkContract = <
   subject: UnitOfWorkSubject<I, A, R, RMake>,
 ): ReadonlyArray<Case<Provided<R | RMake | UnitOfWork.UnitOfWork>>> =>
   casesOf(workCases<I, A, R | RMake>(), 1000, (port) => ({ port, subject }), subject.repository);
+
+/** The event every events-contract case records: one step of an aggregate's history. */
+const ContractStep = DomainEvent.make(
+  "contract.aggregate.stepped",
+  Schema.Struct({ step: Schema.Int }),
+);
+
+/** The services an events-contract case uses besides the subject's. */
+type EventServices =
+  | Outbox.Outbox
+  | Subscriber.Inbox
+  | UnitOfWork.UnitOfWork
+  | EventRecorder.EventRecorder;
+
+type EventsBody<I extends string, A extends Audit.Audited & { readonly id: I }, R> = (
+  context: Context<I, A, R>,
+) => Effect.Effect<void, Failure, R | Repository.WriteContext | EventServices>;
+
+/** Records step `step` of the aggregate `aggregate`, as one command of its own. */
+const recordStep = (aggregate: string, step: number) =>
+  UnitOfWork.transaction(
+    EventRecorder.record(
+      ContractStep.of({
+        aggregate: { kind: "ContractAggregate", id: aggregate, version: step },
+        payload: { step },
+      }),
+    ),
+  );
+
+/** Every case's dispatcher settings: retry at once, three attempts in all. */
+const contractDispatch: Dispatcher.Options = {
+  maxAttempts: 3,
+  backoff: Schedule.spaced(Duration.zero),
+  concurrency: 4,
+};
+
+/** The steps a subscriber handled, as `aggregate:step`, in order. */
+const logged = (log: Ref.Ref<ReadonlyArray<string>>, aggregate: string) =>
+  Effect.map(Ref.get(log), (entries) =>
+    Arr.filter(entries, (entry) => entry.startsWith(`${aggregate}:`)).join(),
+  );
+
+/** A subscriber that logs each step it handles. */
+const logging = (name: string, log: Ref.Ref<ReadonlyArray<string>>) =>
+  Subscriber.make(name, [ContractStep], (event) =>
+    Ref.update(log, Arr.append(`${event.aggregate.id}:${event.payload.step}`)),
+  );
+
+/** Delivers `envelope` straight to `subscriber`, as a relay would. */
+const deliverTo = (subscriber: Subscriber.Subscriber, envelope: DomainEvent.Envelope) =>
+  Effect.mapError(
+    subscriber.handle(envelope),
+    (error) => new Unmet({ reason: `${subscriber.name} failed with ${error.tag}` }),
+  );
+
+/** This tenant's dead letters for `subscriber`. */
+const deadFor = (subscriber: string) =>
+  Effect.gen(function* () {
+    const tenantId = yield* Tenancy.currentTenant;
+    const outbox = yield* Outbox.Outbox;
+    return Arr.filter(
+      yield* outbox.deadLetters,
+      (dead) => dead.subscriber === subscriber && dead.envelope.tenantId === tenantId,
+    );
+  });
+
+const eventCases = <
+  I extends string,
+  A extends Audit.Audited & { readonly id: I },
+  R,
+>(): ReadonlyArray<readonly [string, EventsBody<I, A, R>]> => [
+  [
+    "an event is recorded atomically with the state change: a failed command records nothing",
+    Effect.fnUntraced(function* (context) {
+      const existing = yield* Effect.tap(context.subject.make, context.port.insert);
+      const log = yield* Ref.make<ReadonlyArray<string>>([]);
+      const dispatcher = yield* Dispatcher.make(
+        [yield* logging("contract.observer", log)],
+        contractDispatch,
+      );
+      const command = (step: number) =>
+        UnitOfWork.transaction(
+          Effect.andThen(
+            context.port.update(context.subject.change(existing)),
+            recordStep(existing.id, step),
+          ),
+        );
+      yield* failsWith(
+        Effect.andThen(command(1), Effect.fail(new Aborted())).pipe(UnitOfWork.transaction),
+        "Aborted",
+        "the failing command",
+      );
+      yield* dispatcher.drain;
+      yield* ensure(
+        Arr.isReadonlyArrayEmpty(yield* Ref.get(log)),
+        "a failed command's event is never delivered",
+      );
+      yield* ensure(
+        (yield* context.port.get(existing.id)).audit.version === 1,
+        "nor its state change applied",
+      );
+      yield* command(2);
+      yield* dispatcher.drain;
+      yield* ensure(
+        (yield* logged(log, existing.id)) === `${existing.id}:2`,
+        "a committed command's event is delivered once",
+      );
+    }),
+  ],
+  [
+    "a redelivered event is handled once per subscriber",
+    Effect.fnUntraced(function* (context) {
+      const insertedIds = yield* Ref.make<ReadonlyArray<I>>([]);
+      /** A subscriber whose handler stages one insert per run, noting the id it inserts. */
+      const writing = (name: string) =>
+        Subscriber.make(name, [ContractStep], () =>
+          Effect.flatMap(context.subject.make, (entity) =>
+            Effect.andThen(
+              context.port.insert(entity),
+              Ref.update(insertedIds, Arr.append(entity.id)),
+            ),
+          ),
+        );
+      const first = yield* writing("contract.first");
+      const second = yield* writing("contract.second");
+      const dispatcher = yield* Dispatcher.make([first, second], contractDispatch);
+      const envelope = yield* recordStep("redelivered", 1);
+      // A relay claims both deliveries and dies (its lease ends at once) after handling
+      // the first one twice over, concurrently, and marking nothing.
+      const outbox = yield* Outbox.Outbox;
+      const claims = yield* outbox.claimBatch({
+        owner: "contract.crashed",
+        subscriptions: [first, second],
+        limit: 10,
+        leaseFor: 0,
+      });
+      yield* ensure(claims.length === 2, "the relay claims one delivery per subscriber");
+      yield* Effect.all([deliverTo(first, envelope), deliverTo(first, envelope)], {
+        concurrency: "unbounded",
+      });
+      // Another relay claims the expired deliveries again; then both are delivered yet again.
+      yield* dispatcher.drain;
+      yield* Effect.all([deliverTo(first, envelope), deliverTo(second, envelope)], {
+        concurrency: 1,
+      });
+      const committed = yield* context.port.getMany(yield* Ref.get(insertedIds));
+      yield* ensure(
+        committed.length === 2,
+        "each subscriber's handler committed its writes exactly once",
+      );
+    }),
+  ],
+  [
+    "a failing subscriber does not block the others; it retries, then dead-letters",
+    Effect.fnUntraced(function* () {
+      const log = yield* Ref.make<ReadonlyArray<string>>([]);
+      const attempts = yield* Ref.make(0);
+      const broken = yield* Subscriber.make("contract.broken", [ContractStep], () =>
+        Effect.andThen(
+          Ref.update(attempts, (n) => n + 1),
+          Effect.fail(
+            new BizErrors.BusinessRuleViolation({ code: "contract.broken", reason: "always" }),
+          ),
+        ),
+      );
+      const dispatcher = yield* Dispatcher.make(
+        [broken, yield* logging("contract.healthy", log)],
+        contractDispatch,
+      );
+      yield* recordStep("first", 1);
+      yield* recordStep("second", 1);
+      yield* dispatcher.drain;
+      const entries = yield* Ref.get(log);
+      yield* ensure(
+        sameIds(entries, ["first:1", "second:1"]),
+        "the healthy subscriber handles every event",
+      );
+      yield* ensure((yield* Ref.get(attempts)) === 6, "the broken one is tried 3 times per event");
+      const dead = yield* deadFor("contract.broken");
+      yield* ensure(
+        dead.length === 2 &&
+          Arr.every(
+            dead,
+            (letter) =>
+              letter.attempts === 3 &&
+              letter.error.tag === "BusinessRuleViolation" &&
+              letter.error.message.includes("contract.broken"),
+          ),
+        "each event is dead-lettered for it after its last attempt, with the error's tag and message",
+      );
+      yield* ensure(
+        Arr.isReadonlyArrayEmpty(yield* deadFor("contract.healthy")),
+        "nothing is dead-lettered for the healthy subscriber",
+      );
+    }),
+  ],
+  [
+    "each subscriber gets an aggregate's events in order; a retry holds back no other aggregate",
+    Effect.fnUntraced(function* () {
+      const log = yield* Ref.make<ReadonlyArray<string>>([]);
+      const failuresLeft = yield* Ref.make(2);
+      // Fails `a:1` twice (then handles it), and `c:1` always (so it is dead-lettered).
+      const flaky = yield* Subscriber.make("contract.flaky", [ContractStep], (event) =>
+        Effect.gen(function* () {
+          const key = `${event.aggregate.id}:${event.payload.step}`;
+          const transient =
+            key === "a:1" && (yield* Ref.getAndUpdate(failuresLeft, (n) => n - 1)) > 0;
+          if (transient || key === "c:1") {
+            return yield* new BizErrors.Unavailable({ service: "contract" });
+          }
+          return yield* Ref.update(log, Arr.append(key));
+        }),
+      );
+      const dispatcher = yield* Dispatcher.make([flaky], contractDispatch);
+      yield* Effect.forEach(
+        [
+          ["a", 1],
+          ["a", 2],
+          ["b", 1],
+          ["a", 3],
+          ["c", 1],
+          ["b", 2],
+          ["c", 2],
+        ] as const,
+        ([aggregate, step]) => recordStep(aggregate, step),
+        { concurrency: 1, discard: true },
+      );
+      yield* dispatcher.drain;
+      yield* ensure((yield* logged(log, "a")) === "a:1,a:2,a:3", "a's events arrive in order");
+      yield* ensure((yield* logged(log, "b")) === "b:1,b:2", "b's events arrive in order");
+      yield* ensure(
+        (yield* logged(log, "c")) === "c:2",
+        "c's later event follows once its first is dead-lettered",
+      );
+      const entries = yield* Ref.get(log);
+      yield* ensure(
+        entries.indexOf("b:2") < entries.indexOf("a:1"),
+        "b is not held back while a's first event waits for its retry",
+      );
+    }),
+  ],
+];
+
+/**
+ * The events contract's cases for a subject: recording is atomic with the
+ * command's state change (a failed command records nothing); a redelivered
+ * event, including one delivered twice at once, is handled once per
+ * subscriber; a failing subscriber blocks no other, is retried, and is
+ * dead-lettered with the failure's tag and message after its last attempt;
+ * and each subscriber gets an aggregate's events in the order recorded,
+ * while an aggregate waiting for a retry holds back no other. The subject is
+ * a repository subject the cases write through; provide with it the
+ * `Outbox`, `Subscriber.Inbox`, `UnitOfWork` and `EventRecorder` under
+ * test. Like {@link unitOfWorkContract}, each case runs under a tenant of
+ * its own; give each a fresh store, outbox and inbox, on a live clock.
+ *
+ * @example
+ * ```ts
+ * import { Effect, Layer, Option, Struct } from "effect";
+ * import * as Audit from "@thomasfosterau/effect-biz/Audit";
+ * import * as Company from "@thomasfosterau/effect-biz/Company";
+ * import * as Currency from "@thomasfosterau/effect-biz/Currency";
+ * import * as EventRecorder from "@thomasfosterau/effect-biz/EventRecorder";
+ * import * as Id from "@thomasfosterau/effect-biz/Id";
+ * import * as Outbox from "@thomasfosterau/effect-biz/Outbox";
+ * import * as Rounding from "@thomasfosterau/effect-biz/Rounding";
+ * import * as Subscriber from "@thomasfosterau/effect-biz/Subscriber";
+ * import * as Tenancy from "@thomasfosterau/effect-biz/Tenancy";
+ * import * as Testing from "@thomasfosterau/effect-biz/testing";
+ * import * as UnitOfWork from "@thomasfosterau/effect-biz/UnitOfWork";
+ *
+ * const cases = Testing.eventsContract({
+ *   repository: Effect.service(Company.CompanyRepository),
+ *   make: Effect.gen(function* () {
+ *     return new Company.Company({
+ *       id: yield* Id.generate(Tenancy.CompanyId),
+ *       legalName: "Example Pty Ltd",
+ *       tradingName: Option.none(),
+ *       registrations: [],
+ *       baseCurrency: Currency.make("AUD"),
+ *       country: Company.CountryCode.make("AU"),
+ *       locale: "en-AU",
+ *       timeZone: "Australia/Sydney",
+ *       fiscalYearStart: new Company.FiscalYearStart({ month: 7, day: 1 }),
+ *       rounding: new Rounding.RoundingPolicy({ mode: "half-even", scale: 2 }),
+ *       audit: yield* Audit.created,
+ *     });
+ *   }),
+ *   change: (company) =>
+ *     new Company.Company({ ...Struct.omit(company, ["legalName"]), legalName: "Renamed Pty Ltd" }),
+ * });
+ *
+ * // Each case against a fresh store, outbox and inbox.
+ * const layer = () =>
+ *   EventRecorder.layer.pipe(
+ *     Layer.provideMerge(
+ *       Layer.mergeAll(
+ *         Company.layerMemory,
+ *         Outbox.layerMemory,
+ *         Subscriber.layerInboxMemory,
+ *         UnitOfWork.layerMemory,
+ *         Id.layerSequential,
+ *       ),
+ *     ),
+ *   );
+ * const program = Effect.forEach(cases, (contractCase) => Effect.provide(contractCase.run, layer()), {
+ *   concurrency: 1,
+ * });
+ * Effect.runPromise(program).then(() => console.log(cases.length)); // 4
+ * ```
+ */
+export const eventsContract = <
+  I extends string,
+  A extends Audit.Audited & { readonly id: I },
+  R,
+  RMake,
+>(
+  subject: Subject<I, A, R, RMake>,
+): ReadonlyArray<Case<Provided<R | RMake | EventServices>>> =>
+  casesOf(
+    eventCases<I, A, R | RMake>(),
+    2000,
+    (port, other) => ({ port, subject, other }),
+    subject.repository,
+  );
