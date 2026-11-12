@@ -16,7 +16,7 @@
  */
 
 import * as Effect from "effect/Effect";
-import type * as Option from "effect/Option";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { PaymentInvalidRequestError } from "./Payments.PaymentsError.js";
 
@@ -69,7 +69,7 @@ const KEY_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
  *
  * @example
  * ```typescript
- * import { Effect, Schedule } from "effect";
+ * import { Effect, Option, Schedule } from "effect";
  * import * as IdempotencyKey from "@thomasfosterau/effect-biz/Payments.IdempotencyKey";
  * import * as Refund from "@thomasfosterau/effect-biz/Payments.Refund";
  *
@@ -82,7 +82,7 @@ const KEY_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
  *         while: (error) =>
  *           error._tag === "PaymentNetworkError" ||
  *           error._tag === "PaymentRateLimitError" ||
- *           (error._tag === "PaymentProviderError" && (error.statusCode ?? 0) >= 500),
+ *           (error._tag === "PaymentProviderError" && Option.exists(error.statusCode, (status) => status >= 500)),
  *         schedule: Schedule.exponential("200 millis"),
  *         times: 3,
  *       }),
@@ -125,7 +125,7 @@ export const validate = (
           () =>
             new PaymentInvalidRequestError({
               message: "idempotencyKey must be 1 to 64 characters from A-Z, a-z, 0-9, _ and -",
-              param: "idempotencyKey",
+              param: Option.some("idempotencyKey"),
             }),
         ),
       );

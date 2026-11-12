@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as BigDecimal from "effect/BigDecimal";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
@@ -46,7 +47,7 @@ describe("Money arithmetic", () => {
       const violation = failed(result);
       expect(violation).toBeInstanceOf(BizError.BusinessRuleViolation);
       expect(violation.code).toBe("core.currency-mismatch");
-      expect(violation.details).toEqual({ left: "AUD", right: "USD" });
+      expect(violation.details).toEqual(Option.some({ left: "AUD", right: "USD" }));
     },
   );
 
@@ -60,7 +61,7 @@ describe("Money arithmetic", () => {
       counterexample(triples, ({ a, b }) =>
         Money.Equivalence(succeeded(Money.add(m(a), m(b))), succeeded(Money.add(m(b), m(a)))),
       ),
-    ).toBeUndefined();
+    ).toEqual(Option.none());
     expect(
       counterexample(triples, ({ a, b, c }) =>
         Money.Equivalence(
@@ -68,7 +69,7 @@ describe("Money arithmetic", () => {
           succeeded(Money.add(m(a), succeeded(Money.add(m(b), m(c))))),
         ),
       ),
-    ).toBeUndefined();
+    ).toEqual(Option.none());
   });
 
   it("zero, isZero and isNegative", () => {
@@ -124,7 +125,7 @@ describe("minor units", () => {
   it("fails with core.money-scale when the amount is finer than the minor unit", () => {
     const violation = failed(Money.toMinorUnits(money("12.345")));
     expect(violation.code).toBe("core.money-scale");
-    expect(violation.details).toEqual({ amount: "12.345", currency: "AUD" });
+    expect(violation.details).toEqual(Option.some({ amount: "12.345", currency: "AUD" }));
     expect(failed(Money.toMinorUnits(money("0.5", jpy))).code).toBe("core.money-scale");
   });
 
@@ -135,7 +136,7 @@ describe("minor units", () => {
         (minor) =>
           Result.getOrUndefined(Money.toMinorUnits(Money.fromMinorUnits(minor, aud))) === minor,
       ),
-    ).toBeUndefined();
+    ).toEqual(Option.none());
   });
 });
 
@@ -189,7 +190,7 @@ describe("Money.allocate", () => {
           ) === true
         );
       }),
-    ).toBeUndefined();
+    ).toEqual(Option.none());
   });
 });
 

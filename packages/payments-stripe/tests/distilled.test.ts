@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { PaymentProviderError } from "@thomasfosterau/effect-biz/Payments";
@@ -47,7 +48,7 @@ describe("StripeHttp", () => {
     expect(error).toBeInstanceOf(PaymentProviderError);
     expect(error).toMatchObject({
       provider: "stripe",
-      code: "DistilledOnlyError",
+      code: Option.some("DistilledOnlyError"),
       message: "schema mismatch",
     });
     expect(calls).toHaveLength(0);
@@ -57,7 +58,7 @@ describe("StripeHttp", () => {
     const error = await callWith({}).result;
     expect(error).toMatchObject({
       _tag: "PaymentProviderError",
-      code: "StripeUnknownError",
+      code: Option.some("StripeUnknownError"),
       message: "The Stripe request failed",
     });
   });

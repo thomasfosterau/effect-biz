@@ -278,8 +278,8 @@ describe("Webhook", () => {
 
       expect(result).toBeInstanceOf(SignatureVerificationError);
       expect(result.message).toBeDefined();
-      expect(result.header).toBe(signature);
-      expect(result.payload).toBe(payload);
+      expect(result.header).toEqual(Option.some(signature));
+      expect(result.payload).toEqual(Option.some(payload));
     });
 
     // Each SDK wrapper maps whatever the SDK throws the same way: the thrown
@@ -340,8 +340,8 @@ describe("Webhook", () => {
         );
         expect(error).toBeInstanceOf(SignatureVerificationError);
         expect(error.message).toBe("sdk refused");
-        expect(error.header).toBe(Option.getOrUndefined(header));
-        expect(error.payload).toBe('{"id":"evt_1"}');
+        expect(error.header).toEqual(header);
+        expect(error.payload).toEqual(Option.some('{"id":"evt_1"}'));
       });
 
       it(`${name} maps a thrown non-Error by its string form`, async () => {

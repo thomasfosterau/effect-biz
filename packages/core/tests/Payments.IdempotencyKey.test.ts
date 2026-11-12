@@ -55,7 +55,7 @@ describe("IdempotencyKey", () => {
     );
     Arr.forEach(errors, (error) => {
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error).toMatchObject({ param: "idempotencyKey" });
+      expect(error).toMatchObject({ param: Option.some("idempotencyKey") });
     });
     // The refused value is not echoed back (every message contains "").
     const echoed = Arr.filter(

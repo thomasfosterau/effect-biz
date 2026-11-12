@@ -13,6 +13,7 @@
 
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import type * as Schema from "effect/Schema";
@@ -63,7 +64,7 @@ const checkIds = (
     : Effect.fail(
         new PaymentInvalidRequestError({
           message: `Path segment ${invalid + 1} of ${route.path} must be a non-empty string`,
-          param: route.ids[invalid],
+          param: Option.fromNullishOr(route.ids[invalid]),
         }),
       );
 };

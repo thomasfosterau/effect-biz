@@ -3,6 +3,7 @@
  * Effect's own `Arbitrary`, so no extra dependency) and small result helpers.
  */
 import * as Arbitrary from "effect/Arbitrary";
+import * as Option from "effect/Option";
 import * as BigDecimal from "effect/BigDecimal";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
@@ -35,15 +36,17 @@ export const allocations = Arbitrary.all({
 
 /**
  * Runs a property over 300 generated values with a fixed seed. Returns
- * `undefined` when it holds for all of them, else a description of the
+ * `None` when it holds for all of them, else `Some` description of the
  * (shrunk) counterexample.
  */
 export const counterexample = <A>(
   arbitrary: Arbitrary.Arbitrary<A>,
   property: (value: A) => boolean,
-): string | undefined =>
-  Arbitrary.formatCheckFailure(
-    Effect.runSync(Arbitrary.checkEffect(arbitrary, property, { runs: 300, seed: 42 })),
+): Option.Option<string> =>
+  Option.fromNullishOr(
+    Arbitrary.formatCheckFailure(
+      Effect.runSync(Arbitrary.checkEffect(arbitrary, property, { runs: 300, seed: 42 })),
+    ),
   );
 
 /** The success of a result; throws the violation otherwise, which fails the test with its message. */
@@ -58,7 +61,5 @@ export const failed = <A>(result: Result.Result<A, BusinessRuleViolation>): Busi
   );
 
 /** Whether decoding the input (JSON, or one of the non-JSON values a test feeds: a bigint, undefined) against the schema fails. */
-export const rejects = (
-  schema: Schema.Decoder<unknown>,
-  input: Schema.Json | bigint | undefined,
-): boolean => Schema.decodeUnknownExit(schema)(input)._tag === "Failure";
+export const rejects = (schema: Schema.Decoder<unknown>, input?: Schema.Json | bigint): boolean =>
+  Schema.decodeUnknownExit(schema)(input)._tag === "Failure";

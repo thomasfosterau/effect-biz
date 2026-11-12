@@ -317,7 +317,7 @@ describe("checkMinorUnits", () => {
     );
     Arr.forEach(errors, (error) => {
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error.param).toBe("amount");
+      expect(error.param).toEqual(Option.some("amount"));
     });
   });
 });
@@ -428,7 +428,7 @@ describe("send", () => {
       },
     );
     expect(error).toBeInstanceOf(PaymentNetworkError);
-    expect(error.cause).toBe(boom);
+    expect(error.cause).toEqual(Option.some(boom));
     expect(reachableFrom(error).strings.filter((value) => value.includes(SECRET))).toEqual([]);
     expect(reachableFrom(error).objects.filter(HttpClientRequest.isHttpClientRequest)).toEqual([]);
   });
@@ -450,7 +450,7 @@ describe("send", () => {
         reason: new HttpClientError.TransportError({ request, cause }),
       }),
     );
-    expect(error.cause).toBe(cause);
+    expect(error.cause).toEqual(Option.some(cause));
     expect(reachableFrom(error).objects.filter(HttpClientRequest.isHttpClientRequest)).toEqual([]);
   });
 });
@@ -532,7 +532,7 @@ describe("checkId", () => {
     Arr.forEach(errors, (error) => {
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
       expect(error.message).toBe("The customer id must be a non-empty string");
-      expect(error.param).toBe("id");
+      expect(error.param).toEqual(Option.some("id"));
     });
   });
 });
@@ -597,14 +597,14 @@ describe("rejectedError", () => {
     const error = rejectedError(failure, "acme", fallback);
     expect(error).toBeInstanceOf(PaymentProviderError);
     expect(error.provider).toBe("acme");
-    expect(error.code).toBe("ConfigError");
+    expect(error.code).toEqual(Option.some("ConfigError"));
     expect(error.message).toBe("missing credentials");
-    expect(error.cause).toBe(failure);
+    expect(error.cause).toEqual(Option.some(failure));
   });
 
   it("falls back on a failure without a tag or message", () => {
     const error = rejectedError(42, "acme", fallback);
-    expect(error.code).toBe("UnknownAcmeError");
+    expect(error.code).toEqual(Option.some("UnknownAcmeError"));
     expect(error.message).toBe("The Acme request failed");
   });
 });
@@ -624,7 +624,7 @@ describe("responseDecoder", () => {
     expect(error).toBeInstanceOf(PaymentProviderError);
     expect(error.provider).toBe("acme");
     expect(error.message).toBe("Acme returned a malformed thing response");
-    expect(error.cause).toBeDefined();
+    expect(Option.isSome(error.cause)).toBe(true);
   });
 });
 
@@ -649,29 +649,29 @@ describe("errorFromStatus", () => {
     Arr.forEach([401, 403], (status) => {
       const error = errorFromStatus(status, details);
       expect(error).toBeInstanceOf(PaymentAuthenticationError);
-      expect(error).toMatchObject({ message: "boom", statusCode: status });
+      expect(error).toMatchObject({ message: "boom", statusCode: Option.some(status) });
     });
   });
 
   it("classifies 429 as a rate limit", () => {
     const error = errorFromStatus(429, details);
     expect(error).toBeInstanceOf(PaymentRateLimitError);
-    expect(error).toMatchObject({ message: "boom", retryAfter: undefined });
+    expect(error).toMatchObject({ message: "boom", retryAfter: Option.none() });
   });
 
   it("reads a rate limit's Retry-After as whole seconds", () => {
     expect(errorFromStatus(429, { ...details, retryAfter: "30" })).toMatchObject({
-      retryAfter: 30,
+      retryAfter: Option.some(30),
     });
     expect(errorFromStatus(429, { ...details, retryAfter: " 0 " })).toMatchObject({
-      retryAfter: 0,
+      retryAfter: Option.some(0),
     });
   });
 
   it("leaves retryAfter out for a Retry-After that is not whole seconds", () => {
     Arr.forEach(["Wed, 21 Oct 2026 07:28:00 GMT", "1.5", "-3", "", "soon"], (retryAfter) => {
       expect(errorFromStatus(429, { ...details, retryAfter })).toMatchObject({
-        retryAfter: undefined,
+        retryAfter: Option.none(),
       });
     });
   });
@@ -680,7 +680,11 @@ describe("errorFromStatus", () => {
     Arr.forEach([400, 404, 422], (status) => {
       const error = errorFromStatus(status, details);
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error).toMatchObject({ message: "boom", param: "amount", statusCode: status });
+      expect(error).toMatchObject({
+        message: "boom",
+        param: Option.some("amount"),
+        statusCode: Option.some(status),
+      });
     });
   });
 
@@ -691,18 +695,18 @@ describe("errorFromStatus", () => {
       expect(error).toMatchObject({
         message: "boom",
         provider: "acme",
-        code: "E_ACME",
-        statusCode: status,
+        code: Option.some("E_ACME"),
+        statusCode: Option.some(status),
       });
     });
   });
 
   it("leaves the param and code out when the body named none", () => {
     expect(errorFromStatus(400, { provider: "acme", message: "m" })).toMatchObject({
-      param: undefined,
+      param: Option.none(),
     });
     expect(errorFromStatus(500, { provider: "acme", message: "m" })).toMatchObject({
-      code: undefined,
+      code: Option.none(),
     });
   });
 });
@@ -770,7 +774,7 @@ describe("pageNumberedList", () => {
       const { error, asked } = await failure(cursor);
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
       expect(error).toMatchObject({
-        param: "startingAfter",
+        param: Option.some("startingAfter"),
         message: "Acme startingAfter must be the nextCursor of a previous page, not an item id",
       });
       expect(asked).toEqual([]);
@@ -786,7 +790,7 @@ describe("pageNumberedList", () => {
     async (cursor, limit) => {
       const { error } = await failure(cursor, limit);
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error).toMatchObject({ param: "startingAfter" });
+      expect(error).toMatchObject({ param: Option.some("startingAfter") });
     },
   );
 });

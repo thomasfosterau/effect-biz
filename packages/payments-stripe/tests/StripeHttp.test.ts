@@ -1,5 +1,6 @@
 import { assert, describe, it, expect } from "vite-plus/test";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -171,7 +172,7 @@ describe("resource modules over StripeHttp", () => {
     expect(failed.message).toBe(
       "Path segment 1 of /v1/customers/{customer} must be a non-empty string",
     );
-    expect(failed).toMatchObject({ param: "customer" });
+    expect(failed).toMatchObject({ param: Option.some("customer") });
     expect(calls).toHaveLength(0);
   });
 
@@ -181,7 +182,7 @@ describe("resource modules over StripeHttp", () => {
       _tag: "PaymentInvalidRequestError",
       message:
         "Path segment 2 of /v1/accounts/{account}/persons/{person} must be a non-empty string",
-      param: "person",
+      param: Option.some("person"),
     });
     expect(calls).toHaveLength(0);
   });
@@ -319,7 +320,7 @@ describe("RequestOptions on a resource-module operation", () => {
       expect(await error).toMatchObject({
         _tag: "PaymentInvalidRequestError",
         message: `${name} must not be empty`,
-        param: name,
+        param: Option.some(name),
       });
       expect(calls).toHaveLength(0);
     },

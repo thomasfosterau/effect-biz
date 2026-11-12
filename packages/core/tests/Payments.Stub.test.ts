@@ -1,5 +1,6 @@
 import { assert, describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Layer from "effect/Layer";
 import * as BillingPortal from "../src/Payments.BillingPortal.ts";
 import * as CheckoutSession from "../src/Payments.CheckoutSession.ts";
@@ -82,7 +83,7 @@ describe("Stub", () => {
     );
     expect(error).toBeInstanceOf(PaymentsUnavailable);
     expect(error).toMatchObject({
-      provider: "stripe",
+      provider: Option.some("stripe"),
       message: "stripe is not configured in this environment",
     });
   });
@@ -104,6 +105,6 @@ describe("Stub", () => {
     expect(error).toBeInstanceOf(PaymentsUnavailable);
     expect(error).toMatchObject({ message: "Payments are not configured in this environment" });
     assert(error instanceof PaymentsUnavailable);
-    expect(error.provider).toBeUndefined();
+    expect(error.provider).toEqual(Option.none());
   });
 });

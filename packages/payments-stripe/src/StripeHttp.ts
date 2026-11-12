@@ -459,7 +459,11 @@ export const layerFromContext: Layer.Layer<StripeHttp, never, Credentials | Http
         // unconfigured key, which the neutral channel calls unavailable.
         credentials: Effect.mapError(
           credentials,
-          (error) => new PaymentsUnavailable({ message: error.message, provider: PROVIDER }),
+          (error) =>
+            new PaymentsUnavailable({
+              message: error.message,
+              provider: Option.some(PROVIDER),
+            }),
         ),
       }),
     ),
@@ -579,7 +583,7 @@ export const layerConfig = ({
         () =>
           new PaymentsUnavailable({
             message: `Stripe is not configured in this environment (${envVar} is not set or is empty)`,
-            provider: PROVIDER,
+            provider: Option.some(PROVIDER),
           }),
       );
       const credentials = Effect.flatMap(ConfigProvider.ConfigProvider, (caller) =>

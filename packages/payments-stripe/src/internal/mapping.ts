@@ -54,7 +54,7 @@ export const malformed = (what: string, cause?: unknown): PaymentProviderError =
   new PaymentProviderError({
     message: `Stripe returned a malformed ${what} response`,
     provider: PROVIDER,
-    cause,
+    cause: Option.fromNullishOr(cause),
   });
 
 /** The vendor data was decoded just before construction. */

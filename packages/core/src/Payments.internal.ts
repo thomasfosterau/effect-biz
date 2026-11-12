@@ -282,7 +282,7 @@ export const checkMinorUnits = (
     : Effect.fail(
         new PaymentInvalidRequestError({
           message: `\`${param}\` must be a non-negative whole number of minor units within the safe-integer range`,
-          param,
+          param: Option.some(param),
         }),
       );
 
@@ -348,7 +348,7 @@ const causeOf = (error: HttpClientError.HttpClientError): unknown =>
  * Internal, and exempt from semver: see the module documentation.
  */
 export const networkError = (error: HttpClientError.HttpClientError): PaymentNetworkError =>
-  new PaymentNetworkError({ message: error.message, cause: causeOf(error) });
+  new PaymentNetworkError({ message: error.message, cause: Option.fromNullishOr(causeOf(error)) });
 
 /**
  * The failure of a `provider` exchange (`what`: `"login"`, `"request"`)
@@ -525,7 +525,7 @@ export const checkId = (
     : Effect.fail(
         new PaymentInvalidRequestError({
           message: `The ${resource} id must be a non-empty string`,
-          param: "id",
+          param: Option.some("id"),
         }),
       );
 
@@ -607,8 +607,8 @@ export const rejectedError = (
   new PaymentProviderError({
     message: Option.getOrElse(stringField(cause, "message"), () => fallback.message),
     provider,
-    code: Option.getOrElse(stringField(cause, "_tag"), () => fallback.code),
-    cause,
+    code: Option.some(Option.getOrElse(stringField(cause, "_tag"), () => fallback.code)),
+    cause: Option.fromNullishOr(cause),
   });
 
 // ---------------------------------------------------------------------------
@@ -644,7 +644,7 @@ export const responseDecoder =
           new PaymentProviderError({
             message: `${options.name} returned a malformed ${what} response`,
             provider: options.provider,
-            cause,
+            cause: Option.some(cause),
           }),
       ),
       Effect.map(map),
@@ -709,22 +709,26 @@ export const errorFromStatus = (
 ): PaymentsError => {
   const { message } = details;
   if (status === 401 || status === 403) {
-    return new PaymentAuthenticationError({ message, statusCode: status });
+    return new PaymentAuthenticationError({ message, statusCode: Option.some(status) });
   }
   if (status === 429) {
     return new PaymentRateLimitError({
       message,
-      retryAfter: Option.getOrUndefined(retryAfterSeconds(details.retryAfter)),
+      retryAfter: retryAfterSeconds(details.retryAfter),
     });
   }
   if (status === 400 || status === 404 || status === 422) {
-    return new PaymentInvalidRequestError({ message, param: details.param, statusCode: status });
+    return new PaymentInvalidRequestError({
+      message,
+      param: Option.fromNullishOr(details.param),
+      statusCode: Option.some(status),
+    });
   }
   return new PaymentProviderError({
     message,
     provider: details.provider,
-    code: details.code,
-    statusCode: status,
+    code: Option.fromNullishOr(details.code),
+    statusCode: Option.some(status),
   });
 };
 
@@ -737,7 +741,7 @@ const PAGE_CURSOR = /^page=(\d+)(?:&size=(\d+))?$/;
 
 /** Refuse a `startingAfter` that is not a cursor this listing can resume. */
 const refuseCursor = (message: string) =>
-  Effect.fail(new PaymentInvalidRequestError({ message, param: "startingAfter" }));
+  Effect.fail(new PaymentInvalidRequestError({ message, param: Option.some("startingAfter") }));
 
 /**
  * The vendor page number `startingAfter` (a `nextCursor` from

@@ -25,7 +25,10 @@ export const checkOptions = (options: {
       onNone: () => Effect.void,
       onSome: (name) =>
         Effect.fail(
-          new PaymentInvalidRequestError({ message: `${name} must not be empty`, param: name }),
+          new PaymentInvalidRequestError({
+            message: `${name} must not be empty`,
+            param: Option.some(name),
+          }),
         ),
     },
   );

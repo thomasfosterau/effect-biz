@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
+import * as Option from "effect/Option";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as BizError from "../src/BizError.ts";
@@ -54,7 +55,7 @@ const cases: ReadonlyArray<readonly [BizError.BizError, number, boolean, string]
     new BizError.BusinessRuleViolation({
       code: "sales.credit-limit-exceeded",
       reason: "The order exceeds the customer's credit limit",
-      details: { limit: "5000.00", exposure: "5200.00" },
+      details: Option.some({ limit: "5000.00", exposure: "5200.00" }),
     }),
     422,
     false,

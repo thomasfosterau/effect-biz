@@ -6,10 +6,22 @@
  * into these variants, so a program never depends on one vendor's error
  * taxonomy.
  *
+ * A field that may be absent (`code`, `statusCode`, `param`, `retryAfter`,
+ * `cause`, `provider`, `header`, `payload`) is an `Option`: `None` in memory,
+ * an omitted key on the wire and over RPC, and left out of a constructor call.
+ *
  * @module
  */
 
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+
+/**
+ * A field that may be absent: an `Option` in memory, an omitted key on the
+ * wire (and over RPC). Left out of a constructor call, it is `None`.
+ */
+const Maybe = <S extends Schema.Constraint>(schema: S) =>
+  Schema.OptionFromOptionalKey(schema).pipe(Schema.withConstructorDefault(Effect.succeedNone));
 
 /**
  * Raised when the payment provider rejects a request for a reason that does
@@ -23,11 +35,11 @@ export class PaymentProviderError extends Schema.TaggedError<
   /** The provider that produced the error, e.g. `"stripe"`. */
   provider: Schema.String,
   /** Provider-specific error code, when available. */
-  code: Schema.optional(Schema.String),
+  code: Maybe(Schema.String),
   /** HTTP status code returned by the provider, when available. */
-  statusCode: Schema.optional(Schema.Number),
+  statusCode: Maybe(Schema.Number),
   /** The original, provider-specific error object. */
-  cause: Schema.optional(Schema.Defect()),
+  cause: Maybe(Schema.Defect()),
 }) {}
 
 /**
@@ -39,7 +51,7 @@ export class PaymentAuthenticationError extends Schema.TaggedError<
   { readonly brand: unique symbol }
 >()("PaymentAuthenticationError", {
   message: Schema.String,
-  statusCode: Schema.optional(Schema.Number),
+  statusCode: Maybe(Schema.Number),
 }) {}
 
 /**
@@ -52,7 +64,7 @@ export class PaymentRateLimitError extends Schema.TaggedError<
 >()("PaymentRateLimitError", {
   message: Schema.String,
   /** Seconds to wait before retrying, when the provider advertises it. */
-  retryAfter: Schema.optional(Schema.Number),
+  retryAfter: Maybe(Schema.Number),
 }) {}
 
 /**
@@ -64,8 +76,8 @@ export class PaymentInvalidRequestError extends Schema.TaggedError<
 >()("PaymentInvalidRequestError", {
   message: Schema.String,
   /** The offending parameter, when the provider identifies one. */
-  param: Schema.optional(Schema.String),
-  statusCode: Schema.optional(Schema.Number),
+  param: Maybe(Schema.String),
+  statusCode: Maybe(Schema.Number),
 }) {}
 
 /**
@@ -77,7 +89,7 @@ export class PaymentNetworkError extends Schema.TaggedError<
   { readonly brand: unique symbol }
 >()("PaymentNetworkError", {
   message: Schema.String,
-  cause: Schema.optional(Schema.Defect()),
+  cause: Maybe(Schema.Defect()),
 }) {}
 
 /**
@@ -94,7 +106,7 @@ export class PaymentsUnavailable extends Schema.TaggedError<
 >()("PaymentsUnavailable", {
   message: Schema.String,
   /** The provider that is unavailable, e.g. `"stripe"`, when known. */
-  provider: Schema.optional(Schema.String),
+  provider: Maybe(Schema.String),
 }) {}
 
 /**
@@ -117,8 +129,8 @@ export class SignatureVerificationError extends Schema.TaggedError<
   { readonly brand: unique symbol }
 >()("SignatureVerificationError", {
   message: Schema.String,
-  header: Schema.optional(Schema.String),
-  payload: Schema.optional(Schema.String),
+  header: Maybe(Schema.String),
+  payload: Maybe(Schema.String),
 }) {}
 
 /**

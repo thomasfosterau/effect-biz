@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vite-plus/test";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -222,7 +223,7 @@ describe("StripePayments request policy", () => {
       );
       const error = await result;
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error).toMatchObject({ param: "id" });
+      expect(error).toMatchObject({ param: Option.some("id") });
       expect(error.message).toBe(`The ${resource} id must be a non-empty string`);
       expect(calls).toHaveLength(0);
     },
@@ -259,7 +260,7 @@ describe("StripePayments request policy", () => {
     const error = await result;
     expect(calls).toHaveLength(2);
     expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-    expect(error).toMatchObject({ statusCode: 409 });
+    expect(error).toMatchObject({ statusCode: Option.some(409) });
   });
 
   it("defers to Stripe-Should-Retry", async () => {
@@ -286,7 +287,10 @@ describe("StripePayments request policy", () => {
     const { result, calls } = over(Effect.flip(Customer.retrieve("cus_x")), () =>
       jsonResponse(404, { error: { type: "invalid_request_error", message: "No such customer" } }),
     );
-    expect(await result).toMatchObject({ _tag: "PaymentInvalidRequestError", statusCode: 404 });
+    expect(await result).toMatchObject({
+      _tag: "PaymentInvalidRequestError",
+      statusCode: Option.some(404),
+    });
     expect(calls).toHaveLength(1);
   });
 
@@ -354,8 +358,8 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
     expect(error).toBeInstanceOf(PaymentInvalidRequestError);
     expect(error).toMatchObject({
       message: "You passed an empty string for 'email'.",
-      param: "email",
-      statusCode: 400,
+      param: Option.some("email"),
+      statusCode: Option.some(400),
     });
   });
 
@@ -370,12 +374,12 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
     const error = await failure(402, { error: vendor });
     expect(error).toBeInstanceOf(PaymentProviderError);
     expect(error).toMatchObject({
-      code: "card_declined",
-      statusCode: 402,
+      code: Option.some("card_declined"),
+      statusCode: Option.some(402),
       provider: "stripe",
       message: "Your card has insufficient funds.",
     });
-    expect(error).toHaveProperty("cause", vendor);
+    expect(error).toHaveProperty("cause", Option.some(vendor));
   });
 
   it("IdempotencyError → PaymentProviderError coded as the SDK's error kind", async () => {
@@ -383,16 +387,19 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
       error: { type: "idempotency_error", message: "Keys can only be reused with the same body" },
     });
     expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error).toMatchObject({ code: "StripeIdempotencyError", statusCode: 400 });
+    expect(error).toMatchObject({
+      code: Option.some("StripeIdempotencyError"),
+      statusCode: Option.some(400),
+    });
   });
 
   it("ApiError → PaymentProviderError", async () => {
     const error = await failure(500, { error: { type: "api_error", message: "Something broke" } });
     expect(error).toBeInstanceOf(PaymentProviderError);
     expect(error).toMatchObject({
-      code: "StripeAPIError",
+      code: Option.some("StripeAPIError"),
       message: "Something broke",
-      statusCode: 500,
+      statusCode: Option.some(500),
     });
   });
 
@@ -401,7 +408,10 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
       error: { type: "payment_error", code: "payment_failed", message: "Payment failed" },
     });
     expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error).toMatchObject({ code: "payment_failed", statusCode: 402 });
+    expect(error).toMatchObject({
+      code: Option.some("payment_failed"),
+      statusCode: Option.some(402),
+    });
   });
 
   it("ExternalDependencyFailed (a 424) → PaymentProviderError", async () => {
@@ -409,14 +419,20 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
       error: { type: "external_dependency_error", message: "Upstream failed" },
     });
     expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error).toMatchObject({ code: "StripeUnknownError", statusCode: 424 });
+    expect(error).toMatchObject({
+      code: Option.some("StripeUnknownError"),
+      statusCode: Option.some(424),
+    });
   });
 
   it("UnknownStripeError (no error envelope) → PaymentProviderError from the status", async () => {
     const error = await failure(503, "<html>gateway</html>");
     expect(error).toBeInstanceOf(PaymentProviderError);
     expect(error.message).toContain("503");
-    expect(error).toMatchObject({ statusCode: 503, code: "StripeAPIError" });
+    expect(error).toMatchObject({
+      statusCode: Option.some(503),
+      code: Option.some("StripeAPIError"),
+    });
   });
 
   it.each(["authentication_error", "invalid_request_error"])(
@@ -426,7 +442,7 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
         error: { type, message: "Invalid API Key provided: sk_test_****4242" },
       });
       expect(error).toBeInstanceOf(PaymentAuthenticationError);
-      expect(error).toMatchObject({ statusCode: 401 });
+      expect(error).toMatchObject({ statusCode: Option.some(401) });
     },
   );
 
@@ -435,7 +451,10 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
       error: { type: "invalid_request_error", message: "The provided key does not have access" },
     });
     expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error).toMatchObject({ code: "StripePermissionError", statusCode: 403 });
+    expect(error).toMatchObject({
+      code: Option.some("StripePermissionError"),
+      statusCode: Option.some(403),
+    });
   });
 
   it("TooManyRequests → PaymentRateLimitError with Retry-After", async () => {
@@ -445,7 +464,7 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
       { "retry-after": "7" },
     );
     expect(error).toBeInstanceOf(PaymentRateLimitError);
-    expect(error).toMatchObject({ message: "Too many requests", retryAfter: 7 });
+    expect(error).toMatchObject({ message: "Too many requests", retryAfter: Option.some(7) });
   });
 
   it("NotFound → PaymentInvalidRequestError (Stripe's resource_missing)", async () => {
@@ -457,7 +476,7 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
       },
     });
     expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-    expect(error).toMatchObject({ statusCode: 404 });
+    expect(error).toMatchObject({ statusCode: Option.some(404) });
   });
 
   it("an operation's own error class (ProductHasPrices) → PaymentInvalidRequestError", async () => {

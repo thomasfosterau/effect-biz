@@ -219,7 +219,7 @@ export const classifyResponse = (
  */
 export const toPaymentsError = (failure: StripeFailure): PaymentsError => {
   const { kind, message } = failure;
-  const statusCode = Option.getOrUndefined(failure.statusCode);
+  const { statusCode } = failure;
   return Match.value(kind).pipe(
     Match.when(
       "StripeAuthenticationError",
@@ -230,7 +230,7 @@ export const toPaymentsError = (failure: StripeFailure): PaymentsError => {
       (): PaymentsError =>
         new PaymentRateLimitError({
           message,
-          retryAfter: Option.getOrUndefined(failure.retryAfter),
+          retryAfter: failure.retryAfter,
         }),
     ),
     Match.when(
@@ -238,22 +238,23 @@ export const toPaymentsError = (failure: StripeFailure): PaymentsError => {
       (): PaymentsError =>
         new PaymentInvalidRequestError({
           message,
-          param: Option.getOrUndefined(failure.param),
+          param: failure.param,
           statusCode,
         }),
     ),
     Match.when(
       "StripeConnectionError",
-      (): PaymentsError => new PaymentNetworkError({ message, cause: failure.raw }),
+      (): PaymentsError =>
+        new PaymentNetworkError({ message, cause: Option.fromNullishOr(failure.raw) }),
     ),
     Match.orElse(
       (): PaymentsError =>
         new PaymentProviderError({
           message,
           provider: PROVIDER,
-          code: Option.getOrElse(failure.code, () => kind),
+          code: Option.some(Option.getOrElse(failure.code, () => kind)),
           statusCode,
-          cause: failure.raw,
+          cause: Option.fromNullishOr(failure.raw),
         }),
     ),
   );

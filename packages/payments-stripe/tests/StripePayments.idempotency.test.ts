@@ -227,7 +227,8 @@ describe("a retried write after a lost response is one logical write (effect-fin
       Customer.create({ email: "a@example.com", idempotencyKey: key }).pipe(
         Effect.retry({
           while: (error) =>
-            P.isTagged(error, "PaymentProviderError") && (error.statusCode ?? 0) >= 500,
+            P.isTagged(error, "PaymentProviderError") &&
+            Option.exists(error.statusCode, (status) => status >= 500),
           times: 1,
         }),
         Effect.provide(

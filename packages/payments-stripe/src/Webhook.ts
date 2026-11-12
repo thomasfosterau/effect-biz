@@ -71,7 +71,7 @@ export interface VerifyOptions {
 }
 
 const refuse = (message: string, header?: string) =>
-  new SignatureVerificationError(omitUndefined({ message, header }));
+  new SignatureVerificationError({ message, header: Option.fromNullishOr(header) });
 
 /** `message` of a refusal for a missing header, or one without a `t=` and a `v1=`. */
 export const MALFORMED_HEADER_MESSAGE = "Missing or malformed Stripe-Signature header";
@@ -521,8 +521,8 @@ const sdkFailure = (
     // The thrown error's message; the value as a string when it carries none.
     message:
       P.hasProperty(cause, "message") && P.isString(cause.message) ? cause.message : String(cause),
-    header,
-    payload: payloadText(payload),
+    header: Option.fromNullishOr(header),
+    payload: Option.some(payloadText(payload)),
   });
 
 /**

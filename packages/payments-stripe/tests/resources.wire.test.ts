@@ -1,5 +1,6 @@
 import { assert, describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Exit from "effect/Exit";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
@@ -106,7 +107,7 @@ describe.each(R.toEntries(modules))("%s", (subpath, operations) => {
     expect(result._tag).toBe("Failure");
     const error = Exit.isFailure(result) ? result.cause.reasons[0] : undefined;
     expect(error).toMatchObject({ _tag: "Fail", error: expect.any(PaymentInvalidRequestError) });
-    expect(error).toMatchObject({ error: { message: "No such thing", param: "id" } });
+    expect(error).toMatchObject({ error: { message: "No such thing", param: Option.some("id") } });
   });
 
   it(`fails a malformed 2xx from ${first?.exported} with PaymentProviderError`, async () => {
@@ -125,7 +126,7 @@ describe.each(R.toEntries(modules))("%s", (subpath, operations) => {
       error: expect.any(PaymentProviderError),
     });
     expect(error).toMatchObject({
-      error: { message: "Invalid JSON received from the Stripe API", statusCode: 200 },
+      error: { message: "Invalid JSON received from the Stripe API", statusCode: Option.some(200) },
     });
   });
 });

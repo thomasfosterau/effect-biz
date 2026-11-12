@@ -1,6 +1,7 @@
 import type * as Schema from "effect/Schema";
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -141,7 +142,10 @@ describe("StripePayments checkoutSessionsLayer", () => {
     }).result;
     expect(error).toBeInstanceOf(PaymentInvalidRequestError);
     expect(error.message).toContain("No such price");
-    expect(error).toMatchObject({ param: "line_items[0][price]", statusCode: 400 });
+    expect(error).toMatchObject({
+      param: Option.some("line_items[0][price]"),
+      statusCode: Option.some(400),
+    });
   });
 });
 

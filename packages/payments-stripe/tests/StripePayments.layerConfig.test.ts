@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vite-plus/test";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Option from "effect/Option";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
@@ -106,7 +107,7 @@ describe("StripePayments.layerConfig", () => {
       );
       expect(error).toBeInstanceOf(PaymentsUnavailable);
       expect(error).toMatchObject({
-        provider: "stripe",
+        provider: Option.some("stripe"),
         message:
           "Stripe is not configured in this environment (STRIPE_API_KEY is not set or is empty)",
       });

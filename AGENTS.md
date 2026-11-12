@@ -55,6 +55,7 @@ Package-local terms, invariants and import boundaries live in each package's `AG
   - An optional `Option`-valued property is `readonly x?: Option.Option<T>`, with no `| undefined`. A result record whose member is always known to be present or absent (`Page.nextCursor`) declares it required, `readonly x: Option.Option<T>`.
   - An options-object member (a parameter bag such as `CreateParams`, `ListParams`, a layer's config) is `readonly x?: T`: no `| undefined` and no `Option`.
   - An optional function parameter is `x?: T`.
+  - A `Schema.TaggedError` / `Schema.Class` field that may be absent is `Schema.OptionFromOptionalKey(X)` with `Schema.withConstructorDefault(Effect.succeedNone)`: an `Option` in memory, an omitted key on the wire and over RPC, and left out of a constructor call it is `None` (`x?: Option<T>` there).
   - A wire-shape schema (a vendor JSON body, such as `internal/mapping.ts` and the `Webhook.ts` envelopes) keeps native optionals (`Schema.optional(Schema.NullOr(X))`); the mapping layer turns them into `Option`s.
   - Where a vendor type needs a `T | undefined` member the rule cannot be satisfied for (a vitest or vite option), the file carries a scoped override in `vite.config.ts` with its reason.
 - **Relative imports in `src/` carry `.js`** (`./Party.js`); tests import the module under test as `../src/<Module>.ts`.

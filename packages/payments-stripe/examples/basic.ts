@@ -1,6 +1,7 @@
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import { FetchHttpClient } from "effect/http";
 import * as Customer from "@thomasfosterau/effect-biz/Payments.Customer";
@@ -53,7 +54,10 @@ export const program = Effect.gen(function* () {
     Console.error("Authentication failed:", error.message),
   ),
   Effect.tapErrorTag("PaymentProviderError", (error) =>
-    Console.error(`Provider error from ${error.provider} (${error.code ?? "?"}):`, error.message),
+    Console.error(
+      `Provider error from ${error.provider} (${Option.getOrElse(error.code, () => "?")}):`,
+      error.message,
+    ),
   ),
 );
 

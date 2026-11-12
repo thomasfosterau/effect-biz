@@ -47,10 +47,10 @@ describe("Decimal schema", () => {
   it("round-trips any generated decimal", () => {
     expect(
       counterexample(decimals, (value) => BigDecimal.equals(decode(encode(value)), value)),
-    ).toBeUndefined();
+    ).toEqual(Option.none());
     expect(
       counterexample(decimals, (value) => encode(decode(encode(value))) === encode(value)),
-    ).toBeUndefined();
+    ).toEqual(Option.none());
   });
 });
 
@@ -93,7 +93,7 @@ describe("Decimal helpers", () => {
       counterexample(triples, ({ a, b }) =>
         BigDecimal.equals(BigDecimal.sum(a, b), BigDecimal.sum(b, a)),
       ),
-    ).toBeUndefined();
+    ).toEqual(Option.none());
     expect(
       counterexample(triples, ({ a, b, c }) =>
         BigDecimal.equals(
@@ -101,7 +101,7 @@ describe("Decimal helpers", () => {
           BigDecimal.sum(a, BigDecimal.sum(b, c)),
         ),
       ),
-    ).toBeUndefined();
+    ).toEqual(Option.none());
   });
 
   it("multiplication is commutative", () => {
@@ -109,6 +109,6 @@ describe("Decimal helpers", () => {
       counterexample(triples, ({ a, b }) =>
         BigDecimal.equals(BigDecimal.multiply(a, b), BigDecimal.multiply(b, a)),
       ),
-    ).toBeUndefined();
+    ).toEqual(Option.none());
   });
 });

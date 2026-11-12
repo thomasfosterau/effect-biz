@@ -185,7 +185,7 @@ describe("Webhook.verifySignature", () => {
       Effect.flip(Webhook.verifySignature({ payload: BODY, secret: Redacted.make(SECRET) })),
     );
     expect(error.message).toBe(Webhook.MALFORMED_HEADER_MESSAGE);
-    expect(error.header).toBeUndefined();
+    expect(error.header).toEqual(Option.none());
   });
 
   it("accepts when any one of several v1 candidates matches (secret rotation)", async () => {
@@ -245,7 +245,7 @@ describe("Webhook.verifySignature", () => {
     );
     expect(error).toBeInstanceOf(SignatureVerificationError);
     expect(error.message).toBe(Webhook.SIGNATURE_UNAVAILABLE_MESSAGE);
-    expect(error.header).toBe(header);
+    expect(error.header).toEqual(Option.some(header));
   });
 
   it("never puts the secret or the payload in the error", async () => {
@@ -255,8 +255,8 @@ describe("Webhook.verifySignature", () => {
     const serialised = toJson(result) + String(result);
     expect(serialised).not.toContain(SECRET);
     assert(Result.isFailure(result));
-    expect(result.failure.header).toBe(header);
-    expect(result.failure.payload).toBeUndefined();
+    expect(result.failure.header).toEqual(Option.some(header));
+    expect(result.failure.payload).toEqual(Option.none());
   });
 });
 
