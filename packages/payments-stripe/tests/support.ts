@@ -48,10 +48,7 @@ export interface StripeCall {
 const isJsonArray = (value: Schema.Json): value is Schema.JsonArray => Array.isArray(value);
 
 /** One parameter flattened into its bracketed form fields. */
-const fieldsOf = (
-  key: string,
-  value: Schema.Json | undefined,
-): ReadonlyArray<readonly [string, string]> =>
+const fieldsOf = (key: string, value?: Schema.Json): ReadonlyArray<readonly [string, string]> =>
   value === undefined || value === null
     ? []
     : P.isString(value) || P.isNumber(value) || P.isBoolean(value)
@@ -66,9 +63,7 @@ const fieldsOf = (
  * "pro" }` becomes `"metadata[tier]": "pro"` and `items: [{ price }]`
  * becomes `"items[0][price]"`.
  */
-export const formOf = (
-  params: Readonly<Record<string, Schema.Json | undefined>>,
-): Record<string, string> =>
+export const formOf = (params: Readonly<Record<string, Schema.Json>>): Record<string, string> =>
   R.fromEntries(Arr.flatMap(R.toEntries(params), ([key, value]) => fieldsOf(key, value)));
 
 /**
@@ -96,7 +91,7 @@ export const capabilitiesOverStub = Layer.provideMerge(StripePayments.capabiliti
  * `FetchHttpClient.Fetch` over {@link stripeBackend}.
  */
 export const stubStripe = (
-  answer: (call: StripeCall, attempt: number) => Schema.Json | undefined | Response,
+  answer: (call: StripeCall, attempt: number) => Schema.Json | Response,
 ) => {
   const stub = stubApi(
     (request): StripeCall => ({

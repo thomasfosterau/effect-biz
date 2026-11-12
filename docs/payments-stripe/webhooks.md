@@ -25,11 +25,12 @@ const handle = Effect.fn("handleStripeWebhook")(
         catch: () => new UnreadableBodyError(),
       }),
     );
-    const event = yield* Webhook.verify({
-      payload,
-      header: request.headers.get(Webhook.SIGNATURE_HEADER),
-      secret,
-    });
+    // `Headers.get` answers `null` for an absent header; `verify` takes a
+    // missing header as the member left out.
+    const signature = request.headers.get(Webhook.SIGNATURE_HEADER);
+    const event = yield* signature === null
+      ? Webhook.verify({ payload, secret })
+      : Webhook.verify({ payload, secret, header: signature });
     return yield* Webhook.decodeHandledEvent(event).pipe(
       Effect.flatMap((handled) => {
         if (Option.isSome(handled)) {

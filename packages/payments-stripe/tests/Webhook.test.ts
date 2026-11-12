@@ -4,6 +4,7 @@ import * as Clock from "effect/Clock";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Webhook from "../src/Webhook.ts";
 import { StripeService } from "../src/Webhook.ts";
@@ -305,8 +306,8 @@ layer(testLayer, { excludeTestServices: true })("Webhook", (it) => {
 
         expect(result).toBeInstanceOf(SignatureVerificationError);
         expect(result.message).toBeDefined();
-        expect(result.header).toBe(signature);
-        expect(result.payload).toBe(payload);
+        expect(result.header).toEqual(Option.some(signature));
+        expect(result.payload).toEqual(Option.some(payload));
       }),
     );
   });
@@ -337,20 +338,28 @@ describe("error handling", () => {
     readonly [
       string,
       Effect.Effect<unknown, SignatureVerificationError, StripeService>,
-      string | undefined,
+      Option.Option<string>,
     ]
   > = [
-    ["constructEvent", Webhook.constructEvent(payload, "t=1,v1=x", "whsec_s"), "t=1,v1=x"],
+    [
+      "constructEvent",
+      Webhook.constructEvent(payload, "t=1,v1=x", "whsec_s"),
+      Option.some("t=1,v1=x"),
+    ],
     [
       "constructEventAsync",
       Webhook.constructEventAsync(payload, "t=1,v1=x", "whsec_s"),
-      "t=1,v1=x",
+      Option.some("t=1,v1=x"),
     ],
-    ["generateTestHeaderString", Webhook.generateTestHeaderString(payload, "whsec_s"), undefined],
+    [
+      "generateTestHeaderString",
+      Webhook.generateTestHeaderString(payload, "whsec_s"),
+      Option.none(),
+    ],
     [
       "generateTestHeaderStringAsync",
       Webhook.generateTestHeaderStringAsync(payload, "whsec_s"),
-      undefined,
+      Option.none(),
     ],
   ];
 
@@ -361,8 +370,8 @@ describe("error handling", () => {
           const error = yield* Effect.flip(Effect.asVoid(program));
           expect(error).toBeInstanceOf(SignatureVerificationError);
           expect(error.message).toBe("sdk refused");
-          expect(error.header).toBe(header);
-          expect(error.payload).toBe('{"id":"evt_1"}');
+          expect(error.header).toEqual(header);
+          expect(error.payload).toEqual(Option.some('{"id":"evt_1"}'));
         }),
       );
     });

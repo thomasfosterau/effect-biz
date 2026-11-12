@@ -50,10 +50,10 @@ describe("Decimal schema", () => {
     Effect.gen(function* () {
       expect(
         yield* counterexample(decimals, (value) => BigDecimal.equals(decode(encode(value)), value)),
-      ).toBeUndefined();
+      ).toEqual(Option.none());
       expect(
         yield* counterexample(decimals, (value) => encode(decode(encode(value))) === encode(value)),
-      ).toBeUndefined();
+      ).toEqual(Option.none());
     }),
   );
 });
@@ -98,7 +98,7 @@ describe("Decimal helpers", () => {
         yield* counterexample(triples, ({ a, b }) =>
           BigDecimal.equals(BigDecimal.sum(a, b), BigDecimal.sum(b, a)),
         ),
-      ).toBeUndefined();
+      ).toEqual(Option.none());
       expect(
         yield* counterexample(triples, ({ a, b, c }) =>
           BigDecimal.equals(
@@ -106,7 +106,7 @@ describe("Decimal helpers", () => {
             BigDecimal.sum(a, BigDecimal.sum(b, c)),
           ),
         ),
-      ).toBeUndefined();
+      ).toEqual(Option.none());
     }),
   );
 
@@ -116,7 +116,7 @@ describe("Decimal helpers", () => {
         yield* counterexample(triples, ({ a, b }) =>
           BigDecimal.equals(BigDecimal.multiply(a, b), BigDecimal.multiply(b, a)),
         ),
-      ).toBeUndefined();
+      ).toEqual(Option.none());
     }),
   );
 });

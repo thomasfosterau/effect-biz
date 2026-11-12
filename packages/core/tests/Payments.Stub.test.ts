@@ -1,6 +1,7 @@
 import { assert, expect } from "vite-plus/test";
 import { layer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Layer from "effect/Layer";
 import * as BillingPortal from "../src/Payments.BillingPortal.ts";
 import * as CheckoutSession from "../src/Payments.CheckoutSession.ts";
@@ -85,7 +86,7 @@ layer(Stub.unavailable("stripe"))("Stub.unavailable", (it) => {
       const error = yield* Effect.flip(Effect.asVoid(call));
       expect(error).toBeInstanceOf(PaymentsUnavailable);
       expect(error).toMatchObject({
-        provider: "stripe",
+        provider: Option.some("stripe"),
         message: "stripe is not configured in this environment",
       });
     }),
@@ -112,7 +113,7 @@ layer(Stub.unavailable())("Stub.unavailable without a provider", (it) => {
       expect(error).toBeInstanceOf(PaymentsUnavailable);
       expect(error).toMatchObject({ message: "Payments are not configured in this environment" });
       assert(error instanceof PaymentsUnavailable);
-      expect(error.provider).toBeUndefined();
+      expect(error.provider).toEqual(Option.none());
     }),
   );
 });

@@ -3,6 +3,7 @@ import { layer as testLayer } from "@effect/vitest";
 import { FetchHttpClient } from "effect/http";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { PaymentProviderError } from "@thomasfosterau/effect-biz/Payments";
@@ -51,7 +52,7 @@ testLayer(
       expect(error).toBeInstanceOf(PaymentProviderError);
       expect(error).toMatchObject({
         provider: "stripe",
-        code: "DistilledOnlyError",
+        code: Option.some("DistilledOnlyError"),
         message: "schema mismatch",
       });
       expect(calls).toHaveLength(0);
@@ -63,7 +64,7 @@ testLayer(
       const error = yield* callWith({}).result;
       expect(error).toMatchObject({
         _tag: "PaymentProviderError",
-        code: "StripeUnknownError",
+        code: Option.some("StripeUnknownError"),
         message: "The Stripe request failed",
       });
     }),

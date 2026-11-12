@@ -22,6 +22,7 @@ import * as BigDecimal from "effect/BigDecimal";
 import * as Eq from "effect/Equivalence";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Order";
+import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { BusinessRuleViolation } from "./BizError.js";
@@ -81,7 +82,7 @@ const currencyMismatch = (left: CurrencyCode, right: CurrencyCode): BusinessRule
   new BusinessRuleViolation({
     code: "core.currency-mismatch",
     reason: `Cannot combine amounts in ${left} and ${right}`,
-    details: { left, right },
+    details: Option.some({ left, right }),
   });
 
 /** Combines two amounts, or fails when their currencies differ. */
@@ -138,7 +139,10 @@ const moneyScale = (money: Money): BusinessRuleViolation =>
   new BusinessRuleViolation({
     code: "core.money-scale",
     reason: `${money.currency} has ${minorUnits(money.currency)} minor-unit digits`,
-    details: { amount: BigDecimal.format(money.amount), currency: money.currency },
+    details: Option.some({
+      amount: BigDecimal.format(money.amount),
+      currency: money.currency,
+    }),
   });
 
 /**

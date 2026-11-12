@@ -81,9 +81,8 @@ const runExample = <A, E, R>(
 const noNetwork: typeof globalThis.fetch = () =>
   Promise.reject(new Error("an offline example called fetch"));
 
-/** The typed failure of an exit expected to fail; `undefined` for a success or a defect. */
-const failureOf = <A, E>(exit: Exit.Exit<A, E>): E | undefined =>
-  Option.getOrUndefined(Exit.findErrorOption(exit));
+/** The typed failure of an exit expected to fail; `None` for a success or a defect. */
+const failureOf = <A, E>(exit: Exit.Exit<A, E>): Option.Option<E> => Exit.findErrorOption(exit);
 
 const customer = {
   id: "cus_1",
@@ -207,7 +206,9 @@ const suites = {
             });
             const { exit, lines } = yield* runExample(basic.program, stripe.fetch);
 
-            expect(failureOf(exit)).toMatchObject({ _tag: "PaymentAuthenticationError" });
+            expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({
+              _tag: "PaymentAuthenticationError",
+            });
             expect(stripe.calls).toHaveLength(1);
             expect(lines.at(-1)).toMatch(/^Authentication failed: /);
           }),
@@ -225,7 +226,9 @@ const suites = {
           });
           const { exit, lines } = yield* runExample(basic.program, stripe.fetch);
 
-          expect(failureOf(exit)).toMatchObject({ _tag: "PaymentProviderError" });
+          expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({
+            _tag: "PaymentProviderError",
+          });
           expect(lines.at(-1)).toMatch(/^Provider error from stripe \(card_declined\): /);
         }),
       );
@@ -317,7 +320,9 @@ const suites = {
           stripe.fetch,
         );
 
-        expect(failureOf(exit)).toMatchObject({ _tag: "PaymentConfigError" });
+        expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({
+          _tag: "PaymentConfigError",
+        });
         expect(stripe.calls).toHaveLength(0);
       }),
     );
@@ -367,7 +372,7 @@ const suites = {
             noNetwork,
           );
 
-          expect(failureOf(exit)).toMatchObject({ _tag: "ConfigError" });
+          expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({ _tag: "ConfigError" });
         }),
     );
   },

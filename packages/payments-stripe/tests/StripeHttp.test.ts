@@ -2,6 +2,7 @@ import { assert, expect } from "vite-plus/test";
 import { layer } from "@effect/vitest";
 import { FetchHttpClient } from "effect/http";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -136,7 +137,7 @@ layer(stripeHttp())("resource modules over StripeHttp", (it) => {
           "&expand[0]=latest_invoice&invoice_now=true&prorate=false",
       );
       expect(calls[0]?.body).toBeUndefined();
-      expect(calls[0]?.init?.body).toBeUndefined();
+      expect(calls[0]?.init.body).toBeUndefined();
       expect(calls[0]?.headers.get("content-type")).toBeNull();
     }),
   );
@@ -151,7 +152,7 @@ layer(stripeHttp())("resource modules over StripeHttp", (it) => {
       expect(calls[0]?.url.toString()).toBe(
         "https://api.stripe.com/v1/customers/cus_1/sources/card_1?expand[0]=customer",
       );
-      expect(calls[0]?.init?.body).toBeUndefined();
+      expect(calls[0]?.init.body).toBeUndefined();
       expect(calls[0]?.headers.get("content-type")).toBeNull();
     }),
   );
@@ -161,7 +162,7 @@ layer(stripeHttp())("resource modules over StripeHttp", (it) => {
       const { result, calls } = over(Subscription.cancel("sub_1"));
       yield* result;
       expect(calls[0]?.url.toString()).toBe("https://api.stripe.com/v1/subscriptions/sub_1");
-      expect(calls[0]?.init?.body).toBeUndefined();
+      expect(calls[0]?.init.body).toBeUndefined();
       expect(calls[0]?.headers.get("content-type")).toBeNull();
     }),
   );
@@ -196,7 +197,7 @@ layer(stripeHttp())("resource modules over StripeHttp", (it) => {
       expect(failed.message).toBe(
         "Path segment 1 of /v1/customers/{customer} must be a non-empty string",
       );
-      expect(failed).toMatchObject({ param: "customer" });
+      expect(failed).toMatchObject({ param: Option.some("customer") });
       expect(calls).toHaveLength(0);
     }),
   );
@@ -208,7 +209,7 @@ layer(stripeHttp())("resource modules over StripeHttp", (it) => {
         _tag: "PaymentInvalidRequestError",
         message:
           "Path segment 2 of /v1/accounts/{account}/persons/{person} must be a non-empty string",
-        param: "person",
+        param: Option.some("person"),
       });
       expect(calls).toHaveLength(0);
     }),
@@ -370,7 +371,7 @@ layer(stripeHttp())("RequestOptions on a resource-module operation", (it) => {
         expect(yield* error).toMatchObject({
           _tag: "PaymentInvalidRequestError",
           message: `${name} must not be empty`,
-          param: name,
+          param: Option.some(name),
         });
         expect(calls).toHaveLength(0);
       }),

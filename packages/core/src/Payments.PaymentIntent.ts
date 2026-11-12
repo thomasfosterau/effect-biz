@@ -49,11 +49,11 @@ export class PaymentIntent extends Schema.Class<PaymentIntent, { readonly brand:
   amount: Schema.Int,
   currency: Schema.String,
   status: PaymentStatus,
-  customerId: Schema.NullOr(Schema.String),
-  paymentMethodId: Schema.NullOr(Schema.String),
+  customerId: Schema.OptionFromNullOr(Schema.String),
+  paymentMethodId: Schema.OptionFromNullOr(Schema.String),
   /** Client secret used to complete the payment on the client side. */
-  clientSecret: Schema.NullOr(Schema.String),
-  description: Schema.NullOr(Schema.String),
+  clientSecret: Schema.OptionFromNullOr(Schema.String),
+  description: Schema.OptionFromNullOr(Schema.String),
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
   created: Schema.Int,
@@ -65,46 +65,46 @@ export interface CreateParams {
   readonly amount: number;
   /** Lower-cased ISO 4217 currency code, e.g. `"usd"`. */
   readonly currency: string;
-  readonly customer?: string | undefined;
-  readonly paymentMethod?: string | undefined;
-  readonly description?: string | undefined;
-  readonly metadata?: Record<string, string> | undefined;
+  readonly customer?: string;
+  readonly paymentMethod?: string;
+  readonly description?: string;
+  readonly metadata?: Record<string, string>;
   /**
    * Makes this write safe to repeat: create one with `IdempotencyKey.generate`
    * before the first attempt and pass the same key on every retry (see
    * `IdempotencyKey` for the contract).
    */
-  readonly idempotencyKey?: IdempotencyKey | undefined;
+  readonly idempotencyKey?: IdempotencyKey;
 }
 
 /** Parameters for updating a payment intent. */
 export interface UpdateParams {
   /** Amount in the smallest currency unit (e.g. `2000` = $20.00). */
-  readonly amount?: number | undefined;
-  readonly description?: string | undefined;
-  readonly metadata?: Record<string, string> | undefined;
+  readonly amount?: number;
+  readonly description?: string;
+  readonly metadata?: Record<string, string>;
 }
 
 /** Parameters for confirming a payment intent. */
 export interface ConfirmParams {
-  readonly paymentMethod?: string | undefined;
+  readonly paymentMethod?: string;
   /**
    * Makes this write safe to repeat: create one with `IdempotencyKey.generate`
    * before the first attempt and pass the same key on every retry (see
    * `IdempotencyKey` for the contract).
    */
-  readonly idempotencyKey?: IdempotencyKey | undefined;
+  readonly idempotencyKey?: IdempotencyKey;
 }
 
 /** Parameters for listing payment intents. */
 export interface ListParams {
-  readonly limit?: number | undefined;
-  readonly customer?: string | undefined;
+  readonly limit?: number;
+  readonly customer?: string;
   /**
    * The previous page's `nextCursor`, to list the page after it. A provider
    * whose cursor is an item id also takes any item id here.
    */
-  readonly startingAfter?: string | undefined;
+  readonly startingAfter?: string;
 }
 
 /**

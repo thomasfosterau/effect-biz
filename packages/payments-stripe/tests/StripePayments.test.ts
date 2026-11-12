@@ -3,6 +3,7 @@ import { expect } from "vite-plus/test";
 import { layer } from "@effect/vitest";
 import { FetchHttpClient } from "effect/http";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Customer from "@thomasfosterau/effect-biz/Payments.Customer";
 import * as Product from "@thomasfosterau/effect-biz/Payments.Product";
 import * as Price from "@thomasfosterau/effect-biz/Payments.Price";
@@ -141,7 +142,7 @@ layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
       const customer = yield* result;
       expect(customer).toBeInstanceOf(Customer.Customer);
       expect(customer.id).toBe("cus_1");
-      expect(customer.email).toBe("jane@example.com");
+      expect(customer.email).toEqual(Option.some("jane@example.com"));
       expect(customer.metadata.tier).toBe("pro");
       // Neutral params translated to Stripe's snake_case shape.
       expect(calls[0]).toMatchObject({
@@ -167,7 +168,7 @@ layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
       });
       const customer = yield* result;
       expect(customer.id).toBe("cus_1");
-      expect(customer.email).toBeNull();
+      expect(customer.email).toEqual(Option.none());
       expect(customer.created).toBe(0);
     }),
   );
@@ -185,7 +186,7 @@ layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
         params: formOf({ limit: 1, starting_after: "cus_0" }),
       });
       // The next page's cursor is the last item's id.
-      expect(page.nextCursor).toBe("cus_2");
+      expect(page.nextCursor).toEqual(Option.some("cus_2"));
     }),
   );
 
@@ -195,8 +196,7 @@ layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
         "GET /v1/customers": { object: "list", data: [], has_more: false },
       });
       const page = yield* result;
-      expect(page).toEqual({ data: [], hasMore: false });
-      expect(page).not.toHaveProperty("nextCursor");
+      expect(page).toEqual({ data: [], hasMore: false, nextCursor: Option.none() });
     }),
   );
 
@@ -219,10 +219,14 @@ layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
         }),
       );
       const price = yield* result;
-      expect(price.unitAmount).toBe(1999);
+      expect(price.unitAmount).toEqual(Option.some(1999));
       expect(price.type).toBe("recurring");
-      expect(price.recurring?.interval).toBe("month");
-      expect(price.recurring?.intervalCount).toBe(3);
+      expect(Option.map(price.recurring, (recurring) => recurring.interval)).toEqual(
+        Option.some("month"),
+      );
+      expect(Option.map(price.recurring, (recurring) => recurring.intervalCount)).toEqual(
+        Option.some(3),
+      );
       expect(calls[0]?.params).toMatchObject(
         formOf({
           product: "prod_1",
@@ -233,11 +237,10 @@ layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
     }),
   );
 
-  it.effect("sends no schedule for a forwarded `recurring: undefined`", () =>
+  it.effect("sends no schedule for a price created without `recurring`", () =>
     Effect.gen(function* () {
-      const recurring: Price.CreateParams["recurring"] = undefined;
       const { result, calls } = run(
-        Price.create({ product: "prod_1", currency: "usd", unitAmount: 1999, recurring }),
+        Price.create({ product: "prod_1", currency: "usd", unitAmount: 1999 }),
       );
       yield* result;
       expect(calls[0]?.params).toEqual(
@@ -250,9 +253,9 @@ layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
     Effect.gen(function* () {
       const intent = yield* run(PaymentIntent.create({ amount: 2000, currency: "usd" })).result;
       expect(intent.status).toBe("requires_confirmation");
-      expect(intent.customerId).toBe("cus_1");
-      expect(intent.paymentMethodId).toBe("pm_1");
-      expect(intent.clientSecret).toBe("pi_1_secret");
+      expect(intent.customerId).toEqual(Option.some("cus_1"));
+      expect(intent.paymentMethodId).toEqual(Option.some("pm_1"));
+      expect(intent.clientSecret).toEqual(Option.some("pi_1_secret"));
     }),
   );
 
@@ -290,7 +293,7 @@ layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
       expect(subscription.status).toBe("active");
       expect(subscription.items).toHaveLength(1);
       expect(subscription.items[0].priceId).toBe("price_1");
-      expect(subscription.items[0].quantity).toBe(2);
+      expect(subscription.items[0].quantity).toEqual(Option.some(2));
       expect(subscription.currentPeriodStart).toBe(100);
       expect(subscription.currentPeriodEnd).toBe(200);
       expect(calls[0]?.params).toMatchObject(
@@ -325,7 +328,7 @@ layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
       expect(subscription.currentPeriodStart).toBe(1_750_000_000);
       expect(subscription.currentPeriodEnd).toBe(1_760_000_000);
       expect(subscription.cancelAtPeriodEnd).toBe(true);
-      expect(subscription.items[0].quantity).toBeNull();
+      expect(subscription.items[0].quantity).toEqual(Option.none());
     }),
   );
 
@@ -377,7 +380,12 @@ layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
           Price.list({ limit: 2, product: "prod_1", active: false, startingAfter: "price_0" }),
           answers,
         );
-        expect((yield* prices.result).data[0].recurring?.intervalCount).toBe(3);
+        expect(
+          Option.map(
+            (yield* prices.result).data[0].recurring,
+            (recurring) => recurring.intervalCount,
+          ),
+        ).toEqual(Option.some(3));
         expect(prices.calls[0]?.params).toEqual(
           formOf({
             limit: 2,
@@ -447,8 +455,8 @@ layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
     Effect.gen(function* () {
       const refund = yield* run(Refund.create({ paymentIntent: "pi_1", amount: 500 })).result;
       expect(refund.status).toBe("succeeded");
-      expect(refund.paymentIntentId).toBe("pi_1");
-      expect(refund.chargeId).toBeNull();
+      expect(refund.paymentIntentId).toEqual(Option.some("pi_1"));
+      expect(refund.chargeId).toEqual(Option.none());
     }),
   );
 
