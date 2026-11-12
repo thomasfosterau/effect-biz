@@ -129,7 +129,6 @@ export default defineConfig({
       // a caller forward an optional of its own into — the spelling AGENTS.md
       // mandates — and on the `NullOr` columns a SQL row decodes to.
       "effect/prefer-option-over-null": "off",
-      "effect/no-unknown-returns": "warn",
       "effect/no-unsafe-dictionary-type": "warn",
       "typescript/no-explicit-any": "off",
       "typescript/no-empty-object-type": "off",

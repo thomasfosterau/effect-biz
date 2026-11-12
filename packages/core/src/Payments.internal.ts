@@ -331,13 +331,6 @@ export const timeoutOf = (
       );
 
 /**
- * The underlying failure of an `HttpClientError`, without the request it
- * carries, whose headers hold the credentials.
- */
-const causeOf = (error: HttpClientError.HttpClientError): unknown =>
-  "cause" in error.reason ? error.reason.cause : undefined;
-
-/**
  * An `HttpClientError` as a {@link PaymentNetworkError}, keeping only its
  * message and underlying cause: never the request, whose headers carry the
  * credentials.
@@ -345,7 +338,11 @@ const causeOf = (error: HttpClientError.HttpClientError): unknown =>
  * Internal, and exempt from semver: see the module documentation.
  */
 export const networkError = (error: HttpClientError.HttpClientError): PaymentNetworkError =>
-  new PaymentNetworkError({ message: error.message, cause: causeOf(error) });
+  new PaymentNetworkError({
+    message: error.message,
+    // The underlying failure, without the request the error carries.
+    cause: "cause" in error.reason ? error.reason.cause : undefined,
+  });
 
 /**
  * The failure of a `provider` exchange (`what`: `"login"`, `"request"`)
