@@ -42,6 +42,10 @@
       "types": "./dist/Audit.d.ts",
       "default": "./dist/Audit.js"
     },
+    "./Authorization": {
+      "types": "./dist/Authorization.d.ts",
+      "default": "./dist/Authorization.js"
+    },
     "./BizError": {
       "types": "./dist/BizError.d.ts",
       "default": "./dist/BizError.js"
@@ -200,14 +204,22 @@
   },
   "devDependencies": {
     "@effect/language-service": "catalog:",
+    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
+    "@thomasfosterau/effect-auth": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-istanbul": "catalog:",
     "effect": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
+    "@thomasfosterau/effect-auth": "catalog:peers",
     "effect": "catalog:peers"
+  },
+  "peerDependenciesMeta": {
+    "@thomasfosterau/effect-auth": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=22"

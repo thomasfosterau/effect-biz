@@ -164,9 +164,44 @@ export class InvalidTransition extends Schema.TaggedError<
 }
 
 /**
+ * One policy that determined a denial: its id, whether it permits or forbids,
+ * and how it evaluated (`"error"` for a policy that failed to evaluate, which
+ * denies fail-closed). Policy ids are the host's own names; no error text, no
+ * attribute value and no principal is kept.
+ */
+export class DeterminingPolicy extends Schema.Class<
+  DeterminingPolicy,
+  { readonly brand: unique symbol }
+>("@effect-biz/BizError/DeterminingPolicy")({
+  /** The policy's id, as its author named it. */
+  policyId: Schema.String,
+  /** What the policy does when it matches. */
+  effect: Schema.Literals(["permit", "forbid"]),
+  /** How it evaluated against the request. */
+  result: Schema.Literals(["matched", "not-matched", "error"]),
+}) {}
+
+/**
+ * Why a {@link Forbidden} decision denied, for audit: `"forbid"` when a forbid
+ * policy matched (or errored), `"default-deny"` when no permit matched, and
+ * the policies that determined it. It names policies only, never the
+ * principal or an attribute value.
+ */
+export class DecisionTrace extends Schema.Class<DecisionTrace, { readonly brand: unique symbol }>(
+  "@effect-biz/BizError/DecisionTrace",
+)({
+  /** Why the request was denied. */
+  reason: Schema.Literals(["forbid", "default-deny"]),
+  /** The policies that determined the denial (empty for a default deny). */
+  determining: Schema.Array(DeterminingPolicy),
+}) {}
+
+/**
  * Raised when the current principal may not perform an action on a resource.
- * The decision itself comes from effect-auth's `Authorizer`; effect-biz has
- * no policy engine of its own.
+ * The decision itself comes from effect-auth's `Authorizer`
+ * (`./Authorization`'s `authorize`); effect-biz has no policy engine of its
+ * own. `trace` is the decision's {@link DecisionTrace} when one was made
+ * (`None` otherwise; an omitted key on the wire).
  */
 export class Forbidden extends Schema.TaggedError<Forbidden, { readonly brand: unique symbol }>()(
   "Forbidden",
@@ -175,6 +210,10 @@ export class Forbidden extends Schema.TaggedError<Forbidden, { readonly brand: u
     action: Schema.String,
     /** The resource, as an entity reference, e.g. `SalesOrder::"<id>"`. */
     resource: Schema.String,
+    /** Why the decision denied, for audit. */
+    trace: Schema.OptionFromOptionalKey(DecisionTrace).pipe(
+      Schema.withConstructorDefault(Effect.succeedNone),
+    ),
   },
 ) {
   /** A message built from the action and resource. */
