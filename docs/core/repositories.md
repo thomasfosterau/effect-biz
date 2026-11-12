@@ -93,7 +93,7 @@ console.log(names); // ["Cleo", "Ben", "Ava"]
 
 ## The in-memory store (`./Memory`)
 
-`Memory.makeStore` is a tenant-partitioned `Ref` of maps; `Memory.rows` reads the current tenant's rows and `Memory.modify` is the one write primitive: a pure decision over the tenant's rows, committed in one `Ref.modify`, so concurrent writes serialise exactly as version-guarded batches do. `Memory.repository(store, options)` builds a whole port (`entity` names the kind in errors; `withAudit` rebuilds an entity with new audit fields; `searchable` lists the fields `search` matches). A domain package adds its own methods over the same store, as `Company.layerMemory` adds `list`.
+`Memory.makeStore` is a tenant-partitioned `TxRef` of maps; `Memory.rows` reads the current tenant's committed rows and `Memory.put` is the one write primitive: one row, guarded by the version it must still be at (0 for an insert), staged into the open [unit of work](unit-of-work.md)'s batch or, outside one, committed at once. A batch commits in one `Effect.tx`, so of two writes from one version exactly one commits, as with a SQL layer's version-guarded batches. `Memory.makeLog` / `append` / `entries` is an append-only companion store, the shape of an outbox. `Memory.repository(store, options)` builds a whole port (`entity` names the kind in errors; `withAudit` rebuilds an entity with new audit fields; `searchable` lists the fields `search` matches). A domain package adds its own methods over the same store, as `Company.layerMemory` adds `list`.
 
 ## The contract suite (`./testing`)
 

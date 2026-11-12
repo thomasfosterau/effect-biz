@@ -1,16 +1,20 @@
 /**
  * The in-memory store domain packages build their in-memory repository
- * layers on: a tenant-partitioned `Ref` of maps, written by one atomic
- * decide-and-commit.
+ * layers on: a tenant-partitioned `TxRef` of maps, written through
+ * `./UnitOfWork`.
  *
  * A {@link Store} holds every tenant's rows, keyed by id; a call reads and
  * writes only the rows of the `Tenancy.TenantContext` it runs under.
- * {@link modify} is the one write primitive: a pure decision over the
- * tenant's rows, applied in a single `Ref.modify`, so concurrent writes
- * serialise and of two writes from the same version exactly one succeeds
- * (the shape every command has, #128). {@link repository} builds a whole
- * `Repository.Port` from a store; a domain package adds its own methods over
- * the same store.
+ * {@link put} is the one write primitive: a write of one row guarded by the
+ * version it must still be at, staged into the open
+ * `UnitOfWork.transaction`'s batch (or committed at once outside one). A
+ * batch commits in one `Effect.tx`, so its writes to several stores apply
+ * all or none, and of two writes from the same version exactly one commits
+ * (the shape every command has, #128). {@link Log} is an append-only
+ * companion store, the shape of an outbox. Reads see committed rows only:
+ * a transaction does not read its own staged writes. {@link repository}
+ * builds a whole `Repository.Port` from a store; a domain package adds its
+ * own methods over the same store.
  *
  * See {@link repository} for an example.
  *
@@ -22,13 +26,14 @@ import type * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
-import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
+import * as TxRef from "effect/TxRef";
 import * as Audit from "./Audit.js";
 import * as BizError from "./BizError.js";
 import * as Query from "./Query.js";
 import type * as Repository from "./Repository.js";
 import * as Tenancy from "./Tenancy.js";
+import * as UnitOfWork from "./UnitOfWork.js";
 
 /** One tenant's rows, by id. */
 export type Rows<I extends string, A> = HashMap.HashMap<I, A>;
@@ -38,50 +43,139 @@ export type Partitions<I extends string, A> = HashMap.HashMap<Tenancy.TenantId, 
 
 /** An in-memory, tenant-partitioned store of entities `A` with ids `I`. */
 export interface Store<I extends string, A> {
-  /** The rows of every tenant. */
-  readonly partitions: Ref.Ref<Partitions<I, A>>;
+  /** The rows of every tenant, transactional so one batch can write several stores. */
+  readonly partitions: TxRef.TxRef<Partitions<I, A>>;
 }
 
 /** An empty store. */
 export const makeStore = <I extends string, A>(): Effect.Effect<Store<I, A>> =>
-  Effect.map(Ref.make<Partitions<I, A>>(HashMap.empty()), (partitions) => ({ partitions }));
+  Effect.map(TxRef.make<Partitions<I, A>>(HashMap.empty()), (partitions) => ({ partitions }));
 
 const rowsOf = <I extends string, A>(
   partitions: Partitions<I, A>,
   tenantId: Tenancy.TenantId,
 ): Rows<I, A> => Option.getOrElse(HashMap.get(partitions, tenantId), () => HashMap.empty());
 
-/** The current tenant's rows. */
+/** The current tenant's committed rows (never the writes a transaction has staged). */
 export const rows = <I extends string, A>(
   store: Store<I, A>,
 ): Effect.Effect<Rows<I, A>, never, Tenancy.TenantContext> =>
   Effect.flatMap(Tenancy.currentTenant, (tenantId) =>
-    Effect.map(Ref.get(store.partitions), (partitions) => rowsOf(partitions, tenantId)),
+    Effect.map(TxRef.get(store.partitions), (partitions) => rowsOf(partitions, tenantId)),
   );
 
-/** A write's decision: its failure, or its result and the tenant's rows after it. */
-export type Decision<I extends string, A, B, E> = Result.Result<readonly [B, Rows<I, A>], E>;
+/** Stages an in-memory write into the open transaction, or commits it at once outside one. */
+const stage = (write: UnitOfWork.MemoryWrite): Effect.Effect<void, BizError.ConcurrencyConflict> =>
+  UnitOfWork.stage(UnitOfWork.memoryJournal, write, UnitOfWork.commitMemory);
+
+/** A version-guarded write of one row, as {@link put} takes it. */
+export interface Put<I extends string, A> {
+  /** The entity kind a conflict names, e.g. `"Company"`. */
+  readonly entity: string;
+  /** The row's id. */
+  readonly id: I;
+  /** The version the row must be stored at when the write commits: 0 for no row yet (an insert). */
+  readonly expected: number;
+  /** The row to store in its place. */
+  readonly row: A;
+}
 
 /**
- * Decides and commits a write to the current tenant's rows in one atomic
- * `Ref.modify`: the rows change only when `decide` succeeds, and the effect
- * fails with its failure otherwise.
+ * Stages a version-guarded write of one row of the current tenant, through
+ * `UnitOfWork`: inside a transaction it joins the transaction's batch,
+ * outside one it commits at once. At commit, the stored row must still be at
+ * `expected` (no row for 0), or the batch aborts with `ConcurrencyConflict`
+ * and nothing in it is applied. Decide (and refuse) before staging, against
+ * the rows {@link rows} reads: the guard only re-checks the version.
  */
-export const modify = <I extends string, A, B, E>(
+export const put = <I extends string, A extends Audit.Audited>(
   store: Store<I, A>,
-  decide: (current: Rows<I, A>) => Decision<I, A, B, E>,
-): Effect.Effect<B, E, Tenancy.TenantContext> =>
+  write: Put<I, A>,
+): Effect.Effect<void, BizError.ConcurrencyConflict, Tenancy.TenantContext> =>
   Effect.flatMap(Tenancy.currentTenant, (tenantId) =>
-    Effect.flatMap(
-      Ref.modify(store.partitions, (partitions) => {
-        const decided = decide(rowsOf(partitions, tenantId));
-        const after = Result.match(decided, {
-          onFailure: () => partitions,
-          onSuccess: ([, next]) => HashMap.set(partitions, tenantId, next),
-        });
-        return [Result.map(decided, ([result]) => result), after] as const;
-      }),
-      Effect.fromResult,
+    stage(
+      Effect.flatMap(
+        TxRef.modify(
+          store.partitions,
+          (partitions): [Result.Result<void, BizError.ConcurrencyConflict>, Partitions<I, A>] => {
+            const current = rowsOf(partitions, tenantId);
+            const actual = Option.match(HashMap.get(current, write.id), {
+              onNone: () => 0,
+              onSome: (stored) => stored.audit.version,
+            });
+            return actual === write.expected
+              ? [
+                  Result.succeed(undefined),
+                  HashMap.set(partitions, tenantId, HashMap.set(current, write.id, write.row)),
+                ]
+              : [
+                  Result.fail(
+                    new BizError.ConcurrencyConflict({
+                      entity: write.entity,
+                      id: write.id,
+                      expected: write.expected,
+                      actual,
+                    }),
+                  ),
+                  partitions,
+                ];
+          },
+        ),
+        Effect.fromResult,
+      ),
+    ),
+  );
+
+/**
+ * An in-memory, tenant-partitioned, append-only log of items `A`: the
+ * shape an outbox takes, so a command can record what happened in the same
+ * batch as its state change.
+ */
+export interface Log<A> {
+  /** The items of every tenant, in the order appended. */
+  readonly entries: TxRef.TxRef<HashMap.HashMap<Tenancy.TenantId, ReadonlyArray<A>>>;
+}
+
+/** An empty log. */
+export const makeLog = <A>(): Effect.Effect<Log<A>> =>
+  Effect.map(
+    TxRef.make<HashMap.HashMap<Tenancy.TenantId, ReadonlyArray<A>>>(HashMap.empty()),
+    (entries) => ({
+      entries,
+    }),
+  );
+
+/** The current tenant's committed items, in the order appended. */
+export const entries = <A>(
+  log: Log<A>,
+): Effect.Effect<ReadonlyArray<A>, never, Tenancy.TenantContext> =>
+  Effect.flatMap(Tenancy.currentTenant, (tenantId) =>
+    Effect.map(TxRef.get(log.entries), (all) =>
+      Option.getOrElse(HashMap.get(all, tenantId), (): ReadonlyArray<A> => []),
+    ),
+  );
+
+/**
+ * Stages an append of `item` to the current tenant's log, through
+ * `UnitOfWork` like {@link put}: it lands only if the transaction's batch
+ * commits. An append has no guard of its own.
+ */
+export const append = <A>(
+  log: Log<A>,
+  item: A,
+): Effect.Effect<void, BizError.ConcurrencyConflict, Tenancy.TenantContext> =>
+  Effect.flatMap(Tenancy.currentTenant, (tenantId) =>
+    stage(
+      TxRef.update(log.entries, (all) =>
+        HashMap.modifyAt(all, tenantId, (items) =>
+          Option.some(
+            Arr.append(
+              Option.getOrElse(items, (): ReadonlyArray<A> => []),
+              item,
+            ),
+          ),
+        ),
+      ),
     ),
   );
 
@@ -109,12 +203,12 @@ const decideWrite = <I extends string, A extends Entity<I>, E>(
   id: I,
   version: number,
   change: Change<A, E>,
-): Decision<I, A, A, BizError.NotFound | BizError.ConcurrencyConflict | E> =>
+): Result.Result<A, BizError.NotFound | BizError.ConcurrencyConflict | E> =>
   Option.match(HashMap.get(current, id), {
     onNone: () => Result.fail(new BizError.NotFound({ entity, id })),
-    onSome: (stored): Decision<I, A, A, BizError.NotFound | BizError.ConcurrencyConflict | E> =>
+    onSome: (stored): Result.Result<A, BizError.NotFound | BizError.ConcurrencyConflict | E> =>
       stored.audit.version === version
-        ? Result.map(change(stored), (next) => [next, HashMap.set(current, id, next)] as const)
+        ? change(stored)
         : Result.fail(
             new BizError.ConcurrencyConflict({
               entity,
@@ -130,7 +224,7 @@ const decideInsert = <I extends string, A extends Entity<I>>(
   entity: string,
   current: Rows<I, A>,
   row: A,
-): Decision<I, A, void, BizError.AlreadyExists | BizError.ConcurrencyConflict> => {
+): Result.Result<A, BizError.AlreadyExists | BizError.ConcurrencyConflict> => {
   if (row.audit.version !== 1) {
     return Result.fail(
       new BizError.ConcurrencyConflict({
@@ -143,7 +237,7 @@ const decideInsert = <I extends string, A extends Entity<I>>(
   }
   return HashMap.has(current, row.id)
     ? Result.fail(new BizError.AlreadyExists({ entity, key: row.id }))
-    : Result.succeed([undefined, HashMap.set(current, row.id, row)] as const);
+    : Result.succeed(row);
 };
 
 /** The archive change: `archivedAt` set when `archive`, cleared otherwise; refused from the same state. */
@@ -170,8 +264,10 @@ const archiveChange =
 
 /**
  * A `Repository.Port` over a store: every method scoped to the current
- * tenant, every write one atomic decide-and-commit, `find` run by
- * `Query.run`.
+ * tenant, `find` run by `Query.run`. Each write decides eagerly against
+ * the committed rows (so a stale version or a used id fails at once, with
+ * its own error) and then stages the decided row with {@link put}, whose
+ * guard re-checks the version at commit.
  *
  * @example
  * ```ts
@@ -212,9 +308,16 @@ export const repository = <I extends string, A extends Entity<I>>(
   options: Options<A>,
 ): Repository.Port<A, I> => {
   const { entity } = options;
+  /** Decides against the committed rows, then stages the decided row, guarded by `expected`. */
+  const decided = <E>(expected: number, decide: (current: Rows<I, A>) => Result.Result<A, E>) =>
+    Effect.flatMap(rows(store), (current) =>
+      Effect.tap(Effect.fromResult(decide(current)), (row) =>
+        put(store, { entity, id: row.id, expected, row }),
+      ),
+    );
   const write = <E>(id: I, version: number, change: (stamp: Audit.Stamp) => Change<A, E>) =>
     Effect.flatMap(Audit.stamp, (stamp) =>
-      modify(store, (current) => decideWrite(entity, current, id, version, change(stamp))),
+      decided(version, (current) => decideWrite(entity, current, id, version, change(stamp))),
     );
   return {
     get: (id) =>
@@ -229,7 +332,7 @@ export const repository = <I extends string, A extends Entity<I>>(
       Effect.flatMap(rows(store), (current) =>
         Effect.fromResult(Query.run(HashMap.values(current), query, request, options)),
       ),
-    insert: (row) => modify(store, (current) => decideInsert(entity, current, row)),
+    insert: (row) => Effect.asVoid(decided(0, (current) => decideInsert(entity, current, row))),
     update: (row) =>
       write(
         row.id,

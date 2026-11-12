@@ -1,12 +1,10 @@
-import { describe, expect } from "vite-plus/test";
-import { it, layer } from "@effect/vitest";
+import { expect } from "vite-plus/test";
+import { layer } from "@effect/vitest";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
-import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as Struct from "effect/Struct";
 import * as Actor from "../src/Actor.ts";
@@ -15,7 +13,6 @@ import * as BizError from "../src/BizError.ts";
 import * as Company from "../src/Company.ts";
 import * as Currency from "../src/Currency.ts";
 import * as Id from "../src/Id.ts";
-import * as Memory from "../src/Memory.ts";
 import * as Rounding from "../src/Rounding.ts";
 import * as Tenancy from "../src/Tenancy.ts";
 import * as Testing from "../src/testing.ts";
@@ -112,26 +109,6 @@ layer(Layer.mergeAll(brokenLayer, Id.layerSequential), { buildPerTest: true })(
 );
 
 const tenant = Tenancy.TenantId.make("0190a6e4-1c2d-7abc-8def-0000000000a1");
-
-describe("Memory", () => {
-  it.effect("modify leaves the store unchanged when the decision fails", () =>
-    Effect.gen(function* () {
-      const store = yield* Memory.makeStore<string, string>();
-      const error = yield* Effect.flip(
-        Memory.modify<string, string, void, BizError.Unavailable>(store, () =>
-          Result.fail(new BizError.Unavailable({ service: "Test" })),
-        ),
-      );
-      expect(error).toBeInstanceOf(BizError.Unavailable);
-      expect(HashMap.size(yield* Memory.rows(store))).toBe(0);
-      const written = yield* Memory.modify<string, string, string, never>(store, (rows) =>
-        Result.succeed(["written", HashMap.set(rows, "a", "A")] as const),
-      );
-      expect(written).toBe("written");
-      expect(HashMap.get(yield* Memory.rows(store), "a")).toEqual(Option.some("A"));
-    }).pipe(Tenancy.withTenant(tenant)),
-  );
-});
 
 layer(Layer.mergeAll(widgetsLayer, actorLayer), { buildPerTest: true })(
   "Memory.repository",

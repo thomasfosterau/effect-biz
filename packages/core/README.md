@@ -2,7 +2,7 @@
 
 **Disclaimer:** This is an experiment. Don't use it in production.
 
-The foundation of the effect-biz package family: the identifiers, error channel, tenancy context, repository conventions and exact numbers (decimals, rounding, quantities, rates, money) every effect-biz domain package builds on, and the vendor-neutral payments core (`@thomasfosterau/effect-biz/Payments`). More foundation modules (domain events) land as the roadmap does.
+The foundation of the effect-biz package family: the identifiers, error channel, tenancy context, repository conventions, the unit of work and exact numbers (decimals, rounding, quantities, rates, money) every effect-biz domain package builds on, and the vendor-neutral payments core (`@thomasfosterau/effect-biz/Payments`). More foundation modules (domain events) land as the roadmap does.
 
 ## Install
 
@@ -44,7 +44,8 @@ Each module is its own subpath. Guides are in [`docs/core`](https://github.com/t
 | `./Query` | A typed filter and sort spec (`eq`, `in`, `range`, `search`, `archived`, `sort`) and its pure interpreter. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
 | `./Page` | Cursor paging: `Page<A>`, opaque keyset cursors and the `limit` bounds. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
 | `./Memory` | The tenant-partitioned in-memory store in-memory repository layers are built on. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
-| `./testing` | The repository contract suite every implementation runs, runner-agnostic. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
+| `./UnitOfWork` | The transaction boundary of a command: staged, version-guarded writes committed as one batch, retried from load on a conflict. | [Unit of work](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/unit-of-work.md) |
+| `./testing` | The repository and unit-of-work contract suites every implementation runs, runner-agnostic. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md), [unit of work](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/unit-of-work.md) |
 | `./Decimal` | Exact decimals (`BigDecimal`) and their canonical string codec. | [Exact numbers](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/exact-numbers.md) |
 | `./Rounding` | Rounding policies, required wherever a value is rounded. | [Exact numbers](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/exact-numbers.md) |
 | `./Quantity` | Exact quantities. | [Exact numbers](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/exact-numbers.md) |

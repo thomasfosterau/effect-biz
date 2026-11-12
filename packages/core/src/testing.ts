@@ -18,11 +18,14 @@
  */
 
 import * as Arr from "effect/Array";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as Fiber from "effect/Fiber";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as Actor from "./Actor.js";
@@ -31,6 +34,7 @@ import type * as BizError from "./BizError.js";
 import * as Page from "./Page.js";
 import type * as Repository from "./Repository.js";
 import * as Tenancy from "./Tenancy.js";
+import * as UnitOfWork from "./UnitOfWork.js";
 
 /** Raised when an implementation breaks a rule of the repository contract. */
 export class ContractFailure extends Schema.TaggedError<
@@ -342,6 +346,30 @@ const failureOf = (name: string, error: Failure): ContractFailure =>
   });
 
 /**
+ * The runnable cases of `bodies`: the case at `index` runs under the tenants
+ * `tenantsOf(offset + index)` and the contract's actor, with its failures
+ * named after it.
+ */
+const casesOf = <C, P, R>(
+  bodies: ReadonlyArray<readonly [string, (context: C) => Effect.Effect<void, Failure, R>]>,
+  offset: number,
+  contextOf: (port: P, other: Tenancy.TenantId) => C,
+  repository: Effect.Effect<P, never, R>,
+): ReadonlyArray<Case<Provided<R>>> =>
+  Arr.map(bodies, ([name, body], index) => {
+    const [tenant, other] = tenantsOf(offset + index);
+    return {
+      name,
+      run: repository.pipe(
+        Effect.flatMap((port) => body(contextOf(port, other))),
+        Effect.mapError((error) => failureOf(name, error)),
+        Tenancy.withTenant(tenant),
+        Actor.withActor(actor),
+      ),
+    };
+  });
+
+/**
  * The contract's cases for a subject. Each case runs under two tenants of
  * its own and the actor `system:repository-contract`, so its requirements
  * are the subject's, less the tenant and actor.
@@ -396,15 +424,320 @@ export const repositoryContract = <
 >(
   subject: Subject<I, A, R, RMake>,
 ): ReadonlyArray<Case<Provided<R | RMake>>> =>
-  Arr.map(cases<I, A, R | RMake>(), ([name, body], index) => {
-    const [tenant, other] = tenantsOf(index);
-    return {
-      name,
-      run: subject.repository.pipe(
-        Effect.flatMap((port) => body({ port, subject, other })),
-        Effect.mapError((error) => failureOf(name, error)),
-        Tenancy.withTenant(tenant),
-        Actor.withActor(actor),
-      ),
-    };
+  casesOf(
+    cases<I, A, R | RMake>(),
+    0,
+    (port, other) => ({ port, subject, other }),
+    subject.repository,
+  );
+
+/**
+ * The unit of work under test: a repository subject whose writes it stages,
+ * and a second store, the log a command records its events in.
+ */
+export interface UnitOfWorkSubject<
+  I extends string,
+  A extends Audit.Audited & { readonly id: I },
+  R,
+  RMake = R,
+> extends Subject<I, A, R, RMake> {
+  /** Records one event for the current tenant, staged into the open transaction's batch. */
+  readonly record: Effect.Effect<void, BizError.ConcurrencyConflict, R>;
+  /** How many events the current tenant has recorded (committed). */
+  readonly recorded: Effect.Effect<number, never, R>;
+}
+
+/** The deliberate failure a case's command ends with. */
+class Aborted extends Schema.TaggedError<Aborted, { readonly brand: unique symbol }>()(
+  "Aborted",
+  {},
+) {}
+
+/** What a unit-of-work case body gets: the port and the subject. */
+interface WorkContext<I extends string, A extends Audit.Audited & { readonly id: I }, R> {
+  readonly port: Repository.Port<A, I>;
+  readonly subject: UnitOfWorkSubject<I, A, R>;
+}
+
+type WorkBody<I extends string, A extends Audit.Audited & { readonly id: I }, R> = (
+  context: WorkContext<I, A, R>,
+) => Effect.Effect<void, Failure, R | Repository.WriteContext | UnitOfWork.UnitOfWork>;
+
+/**
+ * A command's writes across two stores: an update of `existing`, an insert
+ * of `fresh` and one recorded event.
+ */
+const writeAll = <I extends string, A extends Audit.Audited & { readonly id: I }, R>(
+  { port, subject }: WorkContext<I, A, R>,
+  existing: A,
+  fresh: A,
+) =>
+  Effect.gen(function* () {
+    yield* port.update(subject.change(existing));
+    yield* port.insert(fresh);
+    yield* subject.record;
   });
+
+/** Checks that none of {@link writeAll}'s writes was applied. */
+const untouched = <I extends string, A extends Audit.Audited & { readonly id: I }, R>(
+  { port, subject }: WorkContext<I, A, R>,
+  existing: A,
+  fresh: A,
+) =>
+  Effect.gen(function* () {
+    const stored = yield* port.get(existing.id);
+    yield* ensure(stored.audit.version === 1, "the updated aggregate is still at version 1");
+    yield* failsWith(port.get(fresh.id), "NotFound", "get of the inserted aggregate");
+    yield* ensure((yield* subject.recorded) === 0, "no event is recorded");
+  });
+
+/** Makes and inserts an entity outside any transaction, and makes another, not inserted. */
+const existingAndFresh = <I extends string, A extends Audit.Audited & { readonly id: I }, R>(
+  context: WorkContext<I, A, R>,
+) =>
+  Effect.all([Effect.tap(context.subject.make, context.port.insert), context.subject.make], {
+    concurrency: 1,
+  });
+
+/**
+ * One run of a command that loads the entity, stages an update, and, on its
+ * first run only, waits after staging until the other command has staged
+ * too, so both commit from the same version.
+ */
+const racing = <I extends string, A extends Audit.Audited & { readonly id: I }, R>(
+  { port, subject }: WorkContext<I, A, R>,
+  id: I,
+  runs: Ref.Ref<number>,
+  mine: Deferred.Deferred<void>,
+  theirs: Deferred.Deferred<void>,
+) =>
+  UnitOfWork.transaction(
+    Effect.gen(function* () {
+      yield* Ref.update(runs, (n) => n + 1);
+      const loaded = yield* port.get(id);
+      yield* port.update(subject.change(loaded));
+      if (!(yield* Deferred.isDone(mine))) {
+        yield* Deferred.succeed(mine, undefined);
+        yield* Deferred.await(theirs);
+      }
+    }),
+  );
+
+const workCases = <
+  I extends string,
+  A extends Audit.Audited & { readonly id: I },
+  R,
+>(): ReadonlyArray<readonly [string, WorkBody<I, A, R>]> => [
+  [
+    "a command commits its writes to every store in one batch, unseen by its own reads",
+    Effect.fnUntraced(function* (context) {
+      const [existing, fresh] = yield* existingAndFresh(context);
+      yield* UnitOfWork.transaction(
+        Effect.gen(function* () {
+          yield* writeAll(context, existing, fresh);
+          yield* failsWith(context.port.get(fresh.id), "NotFound", "a read of a staged insert");
+        }),
+      );
+      yield* ensure(
+        (yield* context.port.get(existing.id)).audit.version === 2,
+        "the update is committed",
+      );
+      yield* ensure(
+        (yield* context.port.get(fresh.id)).audit.version === 1,
+        "the insert is committed",
+      );
+      yield* ensure((yield* context.subject.recorded) === 1, "the event is recorded");
+    }),
+  ],
+  [
+    "a command that writes two aggregates and records an event, then fails, leaves every store untouched",
+    Effect.fnUntraced(function* (context) {
+      const [existing, fresh] = yield* existingAndFresh(context);
+      yield* failsWith(
+        UnitOfWork.transaction(
+          Effect.andThen(writeAll(context, existing, fresh), Effect.fail(new Aborted())),
+        ),
+        "Aborted",
+        "the failing command",
+      );
+      yield* untouched(context, existing, fresh);
+    }),
+  ],
+  [
+    "a command interrupted mid-transaction leaves every store untouched",
+    Effect.fnUntraced(function* (context) {
+      const [existing, fresh] = yield* existingAndFresh(context);
+      const staged = yield* Deferred.make<void>();
+      const fiber = yield* Effect.forkChild(
+        UnitOfWork.transaction(
+          Effect.andThen(
+            writeAll(context, existing, fresh),
+            Effect.andThen(Deferred.succeed(staged, undefined), Effect.never),
+          ),
+        ),
+      );
+      yield* Deferred.await(staged);
+      yield* Fiber.interrupt(fiber);
+      yield* untouched(context, existing, fresh);
+    }),
+  ],
+  [
+    "a nested transaction joins the outer one, and is rolled back with it",
+    Effect.fnUntraced(function* (context) {
+      const [existing, fresh] = yield* existingAndFresh(context);
+      yield* failsWith(
+        UnitOfWork.transaction(
+          Effect.andThen(
+            UnitOfWork.transaction(writeAll(context, existing, fresh)),
+            Effect.fail(new Aborted()),
+          ),
+        ),
+        "Aborted",
+        "the outer command",
+      );
+      yield* untouched(context, existing, fresh);
+    }),
+  ],
+  [
+    "a command whose commit conflicts with a concurrent one is retried from load and succeeds",
+    Effect.fnUntraced(function* (context) {
+      const entity = yield* Effect.tap(context.subject.make, context.port.insert);
+      const runs = yield* Ref.make(0);
+      const first = yield* Deferred.make<void>();
+      const second = yield* Deferred.make<void>();
+      yield* Effect.all(
+        [
+          racing(context, entity.id, runs, first, second),
+          racing(context, entity.id, runs, second, first),
+        ],
+        { concurrency: "unbounded" },
+      );
+      const stored = yield* context.port.get(entity.id);
+      yield* ensure(stored.audit.version === 3, "both commands are committed, one after the other");
+      yield* ensure((yield* Ref.get(runs)) === 3, "exactly one command ran again");
+    }),
+  ],
+  [
+    "a batch that always conflicts ends in ConcurrencyConflict after bounded retries, applying nothing",
+    Effect.fnUntraced(function* (context) {
+      const entity = yield* Effect.tap(context.subject.make, context.port.insert);
+      const runs = yield* Ref.make(0);
+      // Two updates from one version: each passes its eager check, the second guard fails.
+      yield* failsWith(
+        UnitOfWork.transaction(
+          Effect.gen(function* () {
+            yield* Ref.update(runs, (n) => n + 1);
+            yield* context.port.update(context.subject.change(entity));
+            yield* context.port.update(context.subject.change(entity));
+          }),
+        ),
+        "ConcurrencyConflict",
+        "the conflicting command",
+      );
+      const attempts = yield* Ref.get(runs);
+      yield* ensure(
+        attempts > 1 && attempts <= 10,
+        "the command is retried, a bounded number of times",
+      );
+      yield* ensure(
+        (yield* context.port.get(entity.id)).audit.version === 1,
+        "the entity is unchanged",
+      );
+    }),
+  ],
+  [
+    "a conflict the command itself fails with is returned, not retried",
+    Effect.fnUntraced(function* (context) {
+      const entity = yield* Effect.tap(context.subject.make, context.port.insert);
+      yield* context.port.update(context.subject.change(entity));
+      const runs = yield* Ref.make(0);
+      yield* failsWith(
+        UnitOfWork.transaction(
+          Effect.andThen(
+            Ref.update(runs, (n) => n + 1),
+            context.port.update(context.subject.change(entity)),
+          ),
+        ),
+        "ConcurrencyConflict",
+        "an update from a stale version",
+      );
+      yield* ensure((yield* Ref.get(runs)) === 1, "the command runs once");
+    }),
+  ],
+];
+
+/**
+ * The unit-of-work contract's cases for a subject: a command's writes to an
+ * aggregate store and an event log commit as one batch, or (on failure,
+ * interruption, or in a nested transaction that the outer one aborts) not
+ * at all; a commit conflict is retried from load, a bounded number of times;
+ * a conflict the command itself raises is not. Like
+ * {@link repositoryContract}, each case runs under a tenant of its own and
+ * the actor `system:repository-contract`; give each a fresh store and log.
+ * The retry cases sleep between attempts, so run them on a live clock.
+ *
+ * @example
+ * ```ts
+ * import { Context, Effect, Layer, Struct } from "effect";
+ * import * as Audit from "@thomasfosterau/effect-biz/Audit";
+ * import * as Id from "@thomasfosterau/effect-biz/Id";
+ * import * as Memory from "@thomasfosterau/effect-biz/Memory";
+ * import type * as Repository from "@thomasfosterau/effect-biz/Repository";
+ * import * as Testing from "@thomasfosterau/effect-biz/testing";
+ * import * as UnitOfWork from "@thomasfosterau/effect-biz/UnitOfWork";
+ *
+ * const NoteId = Id.make("NoteId");
+ * type NoteId = typeof NoteId.Type;
+ *
+ * interface Note {
+ *   readonly id: NoteId;
+ *   readonly text: string;
+ *   readonly audit: Audit.AuditFields;
+ * }
+ *
+ * class Notes extends Context.Service<
+ *   Notes,
+ *   { readonly port: Repository.Port<Note, NoteId>; readonly log: Memory.Log<string> }
+ * >()("example/Notes") {}
+ *
+ * const notesMemory = Layer.effect(
+ *   Notes,
+ *   Effect.gen(function* () {
+ *     const store = yield* Memory.makeStore<NoteId, Note>();
+ *     const port = Memory.repository(store, {
+ *       entity: "Note",
+ *       withAudit: (note, audit) => ({ ...Struct.omit(note, ["audit"]), audit }),
+ *       searchable: ["text"],
+ *     });
+ *     return { port, log: yield* Memory.makeLog<string>() };
+ *   }),
+ * );
+ *
+ * const cases = Testing.unitOfWorkContract({
+ *   repository: Effect.map(Effect.service(Notes), (notes) => notes.port),
+ *   make: Effect.gen(function* () {
+ *     return { id: yield* Id.generate(NoteId), text: "Call back", audit: yield* Audit.created };
+ *   }),
+ *   change: (note) => ({ ...note, text: `${note.text}!` }),
+ *   record: Effect.flatMap(Effect.service(Notes), (notes) => Memory.append(notes.log, "noted")),
+ *   recorded: Effect.flatMap(Effect.service(Notes), (notes) =>
+ *     Effect.map(Memory.entries(notes.log), (entries) => entries.length),
+ *   ),
+ * });
+ *
+ * const layer = Layer.mergeAll(notesMemory, UnitOfWork.layerMemory, Id.layerSequential);
+ * const program = Effect.forEach(cases, (contractCase) => Effect.provide(contractCase.run, layer), {
+ *   concurrency: 1,
+ * });
+ * Effect.runPromise(program).then(() => console.log(cases.length)); // 7
+ * ```
+ */
+export const unitOfWorkContract = <
+  I extends string,
+  A extends Audit.Audited & { readonly id: I },
+  R,
+  RMake,
+>(
+  subject: UnitOfWorkSubject<I, A, R, RMake>,
+): ReadonlyArray<Case<Provided<R | RMake | UnitOfWork.UnitOfWork>>> =>
+  casesOf(workCases<I, A, R | RMake>(), 1000, (port) => ({ port, subject }), subject.repository);
