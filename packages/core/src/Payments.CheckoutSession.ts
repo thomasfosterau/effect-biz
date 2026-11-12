@@ -43,7 +43,7 @@ export interface LineItemParams {
   /** The provider's price id. The amount is the price's, never the caller's. */
   readonly price: string;
   /** How many of the price. Defaults to 1. */
-  readonly quantity?: number | undefined;
+  readonly quantity?: number;
 }
 
 /** At least one line item: a checkout with nothing to buy is not a checkout. */
@@ -52,20 +52,20 @@ export type LineItems = readonly [LineItemParams, ...ReadonlyArray<LineItemParam
 /** The parameters every checkout session takes, whatever its mode. */
 export interface CommonParams {
   /** The customer to bill. Omitted, the provider collects the buyer's details. */
-  readonly customer?: string | undefined;
+  readonly customer?: string;
   readonly lineItems: LineItems;
   /** Where the provider sends the buyer after a completed checkout. */
   readonly successUrl: string;
   /** Where the provider sends the buyer after abandoning the checkout. */
   readonly cancelUrl: string;
   /** Metadata stored on the checkout session itself. */
-  readonly metadata?: Record<string, string> | undefined;
+  readonly metadata?: Record<string, string>;
   /**
    * Makes this write safe to repeat: create one with `IdempotencyKey.generate`
    * before the first attempt and pass the same key on every retry (see
    * `IdempotencyKey` for the contract).
    */
-  readonly idempotencyKey?: IdempotencyKey | undefined;
+  readonly idempotencyKey?: IdempotencyKey;
 }
 
 /** A checkout for a one-off payment. */
@@ -81,7 +81,7 @@ export interface SubscriptionParams extends CommonParams {
    * for that subscription can be attributed without reading the checkout
    * session back.
    */
-  readonly subscriptionMetadata?: Record<string, string> | undefined;
+  readonly subscriptionMetadata?: Record<string, string>;
 }
 
 /** Parameters for creating a checkout session, keyed on its `mode`. */

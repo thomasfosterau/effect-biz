@@ -2,6 +2,7 @@ import { describe, expect } from "vite-plus/test";
 import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
@@ -74,10 +75,11 @@ const strictly = (
   schema: Schema.Top,
   body: Schema.Json,
   options?: SchemaAST.ParseOptions,
-): unknown =>
+): void => {
   // SAFETY: Distilled's generated schemas are plain structs, unions and
   // suspensions over `effect/Schema` built-ins, which need no services.
   Schema.decodeSync(schema as Schema.Codec<unknown, unknown>, options)(body);
+};
 
 /**
  * Reject excess properties too. Only for the fixtures Distilled models in
@@ -232,10 +234,10 @@ describe("the default layer decodes endive responses", () => {
         amount: endivePaymentIntent.amount,
         currency: endivePaymentIntent.currency,
         status: "succeeded",
-        customerId: endivePaymentIntent.customer,
-        paymentMethodId: endivePaymentIntent.payment_method,
-        clientSecret: endivePaymentIntent.client_secret,
-        description: endivePaymentIntent.description,
+        customerId: Option.fromNullishOr(endivePaymentIntent.customer),
+        paymentMethodId: Option.fromNullishOr(endivePaymentIntent.payment_method),
+        clientSecret: Option.fromNullishOr(endivePaymentIntent.client_secret),
+        description: Option.fromNullishOr(endivePaymentIntent.description),
         metadata: endivePaymentIntent.metadata,
         created: endivePaymentIntent.created,
       });
@@ -253,7 +255,7 @@ describe("the default layer decodes endive responses", () => {
       expect(product).toMatchObject({
         id: endiveProduct.id,
         name: endiveProduct.name,
-        description: endiveProduct.description,
+        description: Option.fromNullishOr(endiveProduct.description),
         active: true,
         metadata: endiveProduct.metadata,
         created: endiveProduct.created,

@@ -48,11 +48,11 @@ const indexArrayQuery = (
  * `DELETE` without an `Idempotency-Key` gets `generatedKey` (stripe-node keys
  * every `/v2` `POST` and `DELETE`, `_defaultIdempotencyKey`), and a `/v2`
  * request's array query params are indexed. `generatedKey` is made once per
- * call, so every attempt of the call carries the same one; `undefined` adds
+ * call, so every attempt of the call carries the same one; omitting it adds
  * none. Any other request passes as it is.
  */
 export const v2RequestPolicy =
-  (apiBaseUrl: string, generatedKey: string | undefined) =>
+  (apiBaseUrl: string, generatedKey?: string) =>
   (request: HttpClientRequest.HttpClientRequest): HttpClientRequest.HttpClientRequest => {
     if (!request.url.startsWith(`${apiBaseUrl}/v2/`)) return request;
     const keyed =

@@ -44,10 +44,10 @@ export class Refund extends Schema.Class<Refund, { readonly brand: unique symbol
   currency: Schema.String,
   status: RefundStatus,
   /** The payment intent being refunded, if the refund targets one. */
-  paymentIntentId: Schema.NullOr(Schema.String),
+  paymentIntentId: Schema.OptionFromNullOr(Schema.String),
   /** The charge being refunded, if the refund targets one. */
-  chargeId: Schema.NullOr(Schema.String),
-  reason: Schema.NullOr(Schema.String),
+  chargeId: Schema.OptionFromNullOr(Schema.String),
+  reason: Schema.OptionFromNullOr(Schema.String),
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
   created: Schema.Int,
@@ -55,35 +55,35 @@ export class Refund extends Schema.Class<Refund, { readonly brand: unique symbol
 
 /** Parameters for creating a refund. Provide either a payment intent or charge. */
 export interface CreateParams {
-  readonly paymentIntent?: string | undefined;
-  readonly charge?: string | undefined;
+  readonly paymentIntent?: string;
+  readonly charge?: string;
   /** Amount to refund in the smallest currency unit; omit for a full refund. */
-  readonly amount?: number | undefined;
-  readonly reason?: string | undefined;
-  readonly metadata?: Record<string, string> | undefined;
+  readonly amount?: number;
+  readonly reason?: string;
+  readonly metadata?: Record<string, string>;
   /**
    * Makes this write safe to repeat: create one with `IdempotencyKey.generate`
    * before the first attempt and pass the same key on every retry (see
    * `IdempotencyKey` for the contract).
    */
-  readonly idempotencyKey?: IdempotencyKey | undefined;
+  readonly idempotencyKey?: IdempotencyKey;
 }
 
 /** Parameters for updating a refund. */
 export interface UpdateParams {
-  readonly metadata?: Record<string, string> | undefined;
+  readonly metadata?: Record<string, string>;
 }
 
 /** Parameters for listing refunds. */
 export interface ListParams {
-  readonly limit?: number | undefined;
-  readonly paymentIntent?: string | undefined;
-  readonly charge?: string | undefined;
+  readonly limit?: number;
+  readonly paymentIntent?: string;
+  readonly charge?: string;
   /**
    * The previous page's `nextCursor`, to list the page after it. A provider
    * whose cursor is an item id also takes any item id here.
    */
-  readonly startingAfter?: string | undefined;
+  readonly startingAfter?: string;
 }
 
 /**

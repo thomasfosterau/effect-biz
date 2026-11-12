@@ -1,6 +1,8 @@
 import { describe, expect } from "vite-plus/test";
 import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import {
   PaymentAuthenticationError,
   PaymentConfigError,
@@ -15,28 +17,28 @@ describe("PaymentsError", () => {
     const error = new PaymentProviderError({
       message: "boom",
       provider: "stripe",
-      code: "card_declined",
-      statusCode: 402,
+      code: Option.some("card_declined"),
+      statusCode: Option.some(402),
     });
     expect(error._tag).toBe("PaymentProviderError");
     expect(error.provider).toBe("stripe");
-    expect(error.code).toBe("card_declined");
-    expect(error.statusCode).toBe(402);
+    expect(error.code).toEqual(Option.some("card_declined"));
+    expect(error.statusCode).toEqual(Option.some(402));
   });
 
   it("tags an authentication error", () => {
     const error = new PaymentAuthenticationError({
       message: "bad key",
-      statusCode: 401,
+      statusCode: Option.some(401),
     });
     expect(error._tag).toBe("PaymentAuthenticationError");
-    expect(error.statusCode).toBe(401);
+    expect(error.statusCode).toEqual(Option.some(401));
   });
 
   it("tags a rate limit error", () => {
-    const error = new PaymentRateLimitError({ message: "slow down", retryAfter: 5 });
+    const error = new PaymentRateLimitError({ message: "slow down", retryAfter: Option.some(5) });
     expect(error._tag).toBe("PaymentRateLimitError");
-    expect(error.retryAfter).toBe(5);
+    expect(error.retryAfter).toEqual(Option.some(5));
   });
 
   it("tags a config error", () => {
@@ -45,14 +47,34 @@ describe("PaymentsError", () => {
   });
 
   it("tags an unavailable error and carries the provider", () => {
-    const error = new PaymentsUnavailable({ message: "not configured", provider: "stripe" });
+    const error = new PaymentsUnavailable({
+      message: "not configured",
+      provider: Option.some("stripe"),
+    });
     expect(error._tag).toBe("PaymentsUnavailable");
-    expect(error.provider).toBe("stripe");
+    expect(error.provider).toEqual(Option.some("stripe"));
   });
 
   it("tags a signature verification error", () => {
     const error = new SignatureVerificationError({ message: "no match" });
     expect(error._tag).toBe("SignatureVerificationError");
+  });
+
+  it("keeps an absent field an omitted key on the wire, and reads it back as None", () => {
+    const encode = Schema.encodeSync(PaymentProviderError);
+    const decode = Schema.decodeUnknownSync(PaymentProviderError);
+    const bare = new PaymentProviderError({ message: "boom", provider: "stripe" });
+    expect(bare.code).toEqual(Option.none());
+    const wire = encode(bare);
+    expect(wire).not.toHaveProperty("code");
+    expect(decode(wire).statusCode).toEqual(Option.none());
+    const full = new PaymentProviderError({
+      message: "boom",
+      provider: "stripe",
+      code: Option.some("card_declined"),
+    });
+    expect(encode(full)).toMatchObject({ code: "card_declined" });
+    expect(decode(encode(full)).code).toEqual(Option.some("card_declined"));
   });
 
   it.effect("is usable in the Effect error channel via catchTag", () =>

@@ -3,6 +3,7 @@ import { describe, expect } from "vite-plus/test";
 import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Price from "@thomasfosterau/effect-biz/Payments.Price";
 import * as PaymentIntent from "@thomasfosterau/effect-biz/Payments.PaymentIntent";
 import * as Subscription from "@thomasfosterau/effect-biz/Payments.Subscription";
@@ -97,7 +98,9 @@ describe("StripePayments lenient enumerations", () => {
     Effect.gen(function* () {
       const result = yield* run(Price.retrieve("price_1"), price("price_1", "metered", "decade"));
       expect(result.type).toEqual(other("metered"));
-      expect(result.recurring?.interval).toEqual(other("decade"));
+      expect(Option.map(result.recurring, (recurring) => recurring.interval)).toEqual(
+        Option.some(other("decade")),
+      );
     }),
   );
 
@@ -149,7 +152,9 @@ describe("StripePayments lenient enumerations", () => {
         page(price("price_1", "one_time", "month"), price("price_2", "metered", "decade")),
       );
       expect(result.data.map((item) => item.type)).toEqual(["one_time", other("metered")]);
-      expect(result.data[1]?.recurring?.interval).toEqual(other("decade"));
+      expect(
+        Option.map(result.data[1]?.recurring ?? Option.none(), (recurring) => recurring.interval),
+      ).toEqual(Option.some(other("decade")));
     }),
   );
 
@@ -208,11 +213,13 @@ describe("StripePayments lenient enumerations", () => {
         "recurring",
         "recurring",
       ]);
-      expect(prices.data.map((item) => item.recurring?.interval)).toEqual([
-        "day",
-        "week",
-        "month",
-        "year",
+      expect(
+        prices.data.map((item) => Option.map(item.recurring, (recurring) => recurring.interval)),
+      ).toEqual([
+        Option.some("day"),
+        Option.some("week"),
+        Option.some("month"),
+        Option.some("year"),
       ]);
     }),
   );

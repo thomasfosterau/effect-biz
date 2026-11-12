@@ -22,6 +22,7 @@
 import type * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import type * as Schema from "effect/Schema";
 import type { HttpClient } from "effect/http";
 import type { Credentials } from "@distilled.cloud/stripe/Credentials";
@@ -135,15 +136,22 @@ const call =
     input: I,
     decode: (body: Schema.Json) => Effect.Effect<A, PaymentsError>,
     options: {
-      readonly id?: readonly [resource: string, id: string] | undefined;
-      readonly idempotencyKey?: string | undefined;
+      readonly id?: readonly [resource: string, id: string];
+      readonly idempotencyKey?: string;
     } = {},
   ): Effect.Effect<A, PaymentsError> =>
     // The key is checked before anything is sent: the brand guarantees its
     // shape for typed callers, this refuses a raw string from untyped code.
     Effect.flatMap(IdempotencyKeyNS.validate(options.idempotencyKey), (key) =>
       (options.id === undefined ? Effect.void : checkId(...options.id)).pipe(
-        Effect.andThen(client.call(method, operation, input, { idempotencyKey: key })),
+        Effect.andThen(
+          client.call(
+            method,
+            operation,
+            input,
+            omitUndefined({ idempotencyKey: Option.getOrUndefined(key) }),
+          ),
+        ),
         Effect.flatMap(decode),
       ),
     );
@@ -178,9 +186,13 @@ const customerFields = (params: CustomerNS.UpdateParams) =>
 const customers = /* @__PURE__ */ over(CustomerNS.Customers, (request) => {
   return {
     create: (params) =>
-      request("POST", CreateCustomer, customerFields(params), decodeCustomer, {
-        idempotencyKey: params.idempotencyKey,
-      }),
+      request(
+        "POST",
+        CreateCustomer,
+        customerFields(params),
+        decodeCustomer,
+        omitUndefined({ idempotencyKey: params.idempotencyKey }),
+      ),
     retrieve: (id) =>
       request("GET", GetCustomer, { customer: id }, decodeCustomer, { id: ["customer", id] }),
     update: (id, params) =>
@@ -228,9 +240,7 @@ const products = /* @__PURE__ */ over(ProductNS.Products, (request) => {
         CreateProduct,
         { ...productFields(params), name: params.name },
         decodeProduct,
-        {
-          idempotencyKey: params.idempotencyKey,
-        },
+        omitUndefined({ idempotencyKey: params.idempotencyKey }),
       ),
     retrieve: (id) => request("GET", GetProduct, { id }, decodeProduct, { id: ["product", id] }),
     update: (id, params) =>
@@ -279,7 +289,7 @@ const prices = /* @__PURE__ */ over(PriceNS.Prices, (request) => ({
         metadata: params.metadata,
       }),
       decodePrice,
-      { idempotencyKey: params.idempotencyKey },
+      omitUndefined({ idempotencyKey: params.idempotencyKey }),
     ),
   retrieve: (id) => request("GET", GetPrice, { price: id }, decodePrice, { id: ["price", id] }),
   update: (id, params) =>
@@ -326,7 +336,7 @@ const paymentIntents = /* @__PURE__ */ over(PaymentIntentNS.PaymentIntents, (req
         metadata: params.metadata,
       }),
       decodePaymentIntent,
-      { idempotencyKey: params.idempotencyKey },
+      omitUndefined({ idempotencyKey: params.idempotencyKey }),
     ),
   retrieve: (id) =>
     request("GET", GetPaymentIntent, { intent: id }, decodePaymentIntent, {
@@ -353,7 +363,7 @@ const paymentIntents = /* @__PURE__ */ over(PaymentIntentNS.PaymentIntents, (req
       CreatePaymentIntentConfirm,
       { intent: id, ...omitUndefined({ payment_method: params?.paymentMethod }) },
       decodePaymentIntent,
-      { id: ["payment intent", id], idempotencyKey: params?.idempotencyKey },
+      { id: ["payment intent", id], ...omitUndefined({ idempotencyKey: params?.idempotencyKey }) },
     ),
   cancel: (id) =>
     request("POST", CreatePaymentIntentCancel, { intent: id }, decodePaymentIntent, {
@@ -394,7 +404,7 @@ const subscriptions = /* @__PURE__ */ over(SubscriptionNS.Subscriptions, (reques
         metadata: params.metadata,
       }),
       decodeSubscription,
-      { idempotencyKey: params.idempotencyKey },
+      omitUndefined({ idempotencyKey: params.idempotencyKey }),
     ),
   retrieve: (id) =>
     request("GET", GetSubscription, { subscription_exposed_id: id }, decodeSubscription, {
@@ -455,7 +465,7 @@ const refunds = /* @__PURE__ */ over(RefundNS.Refunds, (request) => ({
         metadata: params.metadata,
       }),
       decodeRefund,
-      { idempotencyKey: params.idempotencyKey },
+      omitUndefined({ idempotencyKey: params.idempotencyKey }),
     ),
   retrieve: (id) => request("GET", GetRefund, { refund: id }, decodeRefund, { id: ["refund", id] }),
   update: (id, params) =>
@@ -509,7 +519,7 @@ const checkoutSessions = /* @__PURE__ */ over(CheckoutSessionNS.CheckoutSessions
             : undefined,
       }),
       decodeCheckoutSession,
-      { idempotencyKey: params.idempotencyKey },
+      omitUndefined({ idempotencyKey: params.idempotencyKey }),
     ),
 }));
 
