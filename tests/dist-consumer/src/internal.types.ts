@@ -112,7 +112,7 @@ export const observed: Effect.Effect<{
 declare const response: ObservedResponse;
 export const responseStatus: number = response.status;
 export const responseHeaders: Readonly<Record<string, string | undefined>> = response.headers;
-export const responseBody: Option.Option<unknown> = response.body;
+export const responseBody: Option.Option<Schema.Json> = response.body;
 export const rejected: PaymentProviderError = rejectedError(new Error("boom"), "Provider", {
   message: "fallback",
   code: "Unknown",
@@ -120,7 +120,7 @@ export const rejected: PaymentProviderError = rejectedError(new Error("boom"), "
 
 /** The REST response helpers' declared shapes: a decoder keeps its map's result type. */
 declare const thingSchema: Schema.Struct<{ readonly id: Schema.String }>;
-export const decodeThing: (body: unknown) => Effect.Effect<number, PaymentProviderError> =
+export const decodeThing: (body: Schema.Json) => Effect.Effect<number, PaymentProviderError> =
   responseDecoder({ provider: "provider", name: "Provider" })(
     "thing",
     thingSchema,

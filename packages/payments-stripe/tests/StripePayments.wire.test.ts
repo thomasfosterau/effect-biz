@@ -79,7 +79,7 @@ const over = <A, E>(
 const toJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** The neutral failure of one `Customer.create` answered with `status` and `body`, not retried. */
-const failure = (status: number, body: unknown, headers: Record<string, string> = {}) =>
+const failure = (status: number, body: Schema.Json, headers: Record<string, string> = {}) =>
   over(
     Effect.flip(Customer.create({ email: "a@example.com" })),
     () =>

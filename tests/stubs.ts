@@ -35,12 +35,12 @@ const textOf = (raw: BodyInit | null | undefined): string | undefined =>
   P.isString(raw) ? raw : raw instanceof Uint8Array ? new TextDecoder().decode(raw) : undefined;
 
 /** Encode a value as JSON text, as `JSON.stringify` would. */
-const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Json));
 
 /** A JSON response with `status`, plus any extra headers. */
 export const jsonResponse = (
   status: number,
-  body: unknown,
+  body: Schema.Json | undefined,
   headers: Record<string, string> = {},
 ): Response =>
   // An `undefined` body has no JSON text: the response is sent without one.
@@ -87,7 +87,7 @@ export const stubFetch = (
  */
 export const stubApi = <Call>(
   read: (request: CapturedRequest) => Call,
-  answer: (call: Call, attempt: number) => unknown,
+  answer: (call: Call, attempt: number) => Schema.Json | undefined | Response,
 ) => {
   const calls: Array<Call> = [];
   const stub = stubFetch((request, attempt) => {
@@ -140,29 +140,12 @@ export const withTestClock = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<
   }).pipe(Effect.provide(TestClock.layer()));
 
 /**
- * The values an object holds directly: its `Map` / `Set` entries, its own
- * keys and its own data properties' values. None for a primitive.
+ * Every string and object reachable from `root` through the values an object
+ * holds directly: its `Map` / `Set` entries, its own keys and its own data
+ * properties' values (string- and symbol-keyed, enumerable or not, getters
+ * left unread), each object once.
  */
-const childrenOf = (value: unknown): Array<unknown> => {
-  if (!P.isObjectKeyword(value)) return [];
-  const entries = P.isMap(value)
-    ? [...value.keys(), ...value.values()]
-    : P.isSet(value)
-      ? [...value.values()]
-      : [];
-  const own = Reflect.ownKeys(value).flatMap((key) => {
-    const descriptor = Reflect.getOwnPropertyDescriptor(value, key);
-    return descriptor !== undefined && "value" in descriptor ? [key, descriptor.value] : [key];
-  });
-  return [...entries, ...own];
-};
-
-/**
- * Every string and object reachable from `root` through {@link childrenOf}
- * (string- and symbol-keyed properties, enumerable or not, getters left
- * unread), each object once.
- */
-export const reachableFrom = (root: unknown) => {
+export const reachableFrom = (root: Error) => {
   const strings: Array<string> = [];
   const objects: Array<object> = [];
   // Identity, not structural equality: each distinct object is visited once.
@@ -178,7 +161,18 @@ export const reachableFrom = (root: unknown) => {
             if (!P.isObjectKeyword(value) || seen.has(value)) return [];
             seen.add(value);
             objects.push(value);
-            return childrenOf(value);
+            const entries = P.isMap(value)
+              ? [...value.keys(), ...value.values()]
+              : P.isSet(value)
+                ? [...value.values()]
+                : [];
+            const own = Reflect.ownKeys(value).flatMap((key) => {
+              const descriptor = Reflect.getOwnPropertyDescriptor(value, key);
+              return descriptor !== undefined && "value" in descriptor
+                ? [key, descriptor.value]
+                : [key];
+            });
+            return [...entries, ...own];
           }),
         ),
     });

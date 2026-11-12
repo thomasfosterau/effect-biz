@@ -380,8 +380,8 @@ const decoder =
     schema: S,
     map: (value: S["Type"]) => A | undefined,
   ) =>
-  (body: unknown): Effect.Effect<A, PaymentProviderError> =>
-    Schema.decodeUnknownEffect(schema)(body).pipe(
+  (body: Schema.Json): Effect.Effect<A, PaymentProviderError> =>
+    Schema.decodeEffect(schema)(body).pipe(
       Effect.mapError((cause) => malformed(what, cause)),
       Effect.flatMap((value) => {
         const mapped = map(value);
