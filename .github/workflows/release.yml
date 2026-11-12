@@ -87,6 +87,7 @@ jobs:
       # devDependencies) and renamed its inputs from v1's `version` / `publish`
       # / `commit` / `title`.
       - name: Create release PR or publish to npm
+        id: changesets
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           version-script: pnpm run version
@@ -95,3 +96,14 @@ jobs:
           pr-title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # A PR opened with GITHUB_TOKEN triggers no workflow, so the owner is
+      # assigned to the "Version Packages" PR here, when the action opened or
+      # updated one (its `pr-number` output; empty on a publish run).
+      - name: Assign the owner to the version PR
+        if: steps.changesets.outputs.pr-number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.changesets.outputs.pr-number }}
+        run: gh pr edit "$PR_NUMBER" --add-assignee thomasfosterau
