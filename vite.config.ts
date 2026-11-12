@@ -137,7 +137,6 @@ export default defineConfig({
       // mandates — and on the `NullOr` columns a SQL row decodes to.
       "effect/prefer-option-over-null": "off",
       "effect/no-unknown-returns": "warn",
-      "effect/no-unsafe-dictionary-type": "warn",
       "typescript/no-explicit-any": "off",
       "typescript/no-empty-object-type": "off",
       "typescript/ban-ts-comment": "off",
