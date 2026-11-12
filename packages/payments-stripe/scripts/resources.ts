@@ -716,6 +716,15 @@ export const plan = (operations: ReadonlyArray<DistilledOperation>): Plan => {
 // Reading Distilled
 // ---------------------------------------------------------------------------
 
+/** The `Http()` trait every generated input carries: method, path template and content type. */
+const decodeHttp = Schema.decodeUnknownSync(
+  Schema.Struct({
+    method: Schema.Literals(["GET", "POST", "DELETE"]),
+    uri: Schema.String,
+    contentType: Schema.optionalKey(Schema.String),
+  }),
+);
+
 const OPERATION =
   /(?:\/\*\*(?<doc>[^\n]*?)\*\/\n)?export declare const (?<name>\w+): API\.(?:Paginated)?OperationMethod<(?<input>\w+), (?<output>\w+), \w+, StripeOpContext(?:, \w+)?>;/g;
 
@@ -774,12 +783,7 @@ export const readOperations = (
     // `.input` / `.output` (`@distilled.cloud/core/api`'s `make`).
     const operation = operationNamed(distilled, name);
     const inputAst = operation.input.ast;
-    // SAFETY: every generated input carries the `Http()` trait.
-    const http = getAnn(inputAst, httpSymbol) as {
-      readonly method: DistilledOperation["method"];
-      readonly uri: string;
-      readonly contentType?: string | undefined;
-    };
+    const http = decodeHttp(getAnn(inputAst, httpSymbol));
     const props = getProps(inputAst);
     const labels = props.filter((prop) => hasPropAnn(prop, labelSymbol));
     const tokens = labels.map((prop) => ({

@@ -58,7 +58,6 @@ export const installed = (): Installed => {
   return {
     module: Distilled,
     declarations: read("./services/stripe.d.ts"),
-    version: Schema.decodeUnknownSync(Schema.fromJsonString(Manifest))(read("../package.json"))
-      .version,
+    version: Schema.decodeSync(Schema.fromJsonString(Manifest))(read("../package.json")).version,
   };
 };

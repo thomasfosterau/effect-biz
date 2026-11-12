@@ -57,7 +57,7 @@ import {
 class LoginFailed extends Schema.TaggedError<LoginFailed, { readonly brand: unique symbol }>()(
   "LoginFailed",
   {
-    attempt: Schema.Number,
+    attempt: Schema.Finite,
   },
 ) {}
 

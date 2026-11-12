@@ -281,7 +281,7 @@ const Maybe = <S extends Schema.Top>(schema: S) => Schema.optional(Schema.NullOr
 export const WebhookEvent = Schema.Struct({
   id: Schema.String,
   type: Schema.String,
-  created: Schema.optional(Schema.Number),
+  created: Schema.optional(Schema.Int),
   livemode: Schema.optional(Schema.Boolean),
   api_version: Maybe(Schema.String),
   data: Schema.Struct({ object: Schema.Json }),
@@ -363,12 +363,12 @@ export const SubscriptionObject = Schema.Struct({
   status: Schema.String,
   // oxlint-disable-next-line effect/require-is-prefix-for-boolean-schema-field -- Stripe's own field name
   cancel_at_period_end: Schema.Boolean,
-  current_period_end: Maybe(Schema.Number),
+  current_period_end: Maybe(Schema.Int),
   metadata: Metadata,
   items: Schema.Struct({
     data: Schema.Array(
       Schema.Struct({
-        current_period_end: Maybe(Schema.Number),
+        current_period_end: Maybe(Schema.Int),
         price: Schema.Struct({ id: Schema.String }),
       }),
     ),

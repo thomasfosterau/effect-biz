@@ -38,7 +38,7 @@ const installedVersion = (): string => {
   const entry = createRequire(import.meta.url).resolve("@distilled.cloud/stripe");
   // oxlint-disable-next-line effect/avoid-sync-fs -- see the import
   const text = readFileSync(new URL("../package.json", pathToFileURL(entry)), "utf8");
-  return Schema.decodeUnknownSync(Schema.fromJsonString(Manifest))(text).version;
+  return Schema.decodeSync(Schema.fromJsonString(Manifest))(text).version;
 };
 
 describe("DISTILLED_API_VERSION", () => {
