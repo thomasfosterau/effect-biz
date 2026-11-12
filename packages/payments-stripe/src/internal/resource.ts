@@ -41,9 +41,7 @@ export interface Route {
  */
 const pickOptions = (options: unknown): RequestOptions => {
   const field = (key: keyof RequestOptions): string | undefined =>
-    Predicate.hasProperty(options, key) && Predicate.isString(options[key])
-      ? options[key]
-      : undefined;
+    P.hasProperty(options, key) && P.isString(options[key]) ? options[key] : undefined;
   return {
     idempotencyKey: field("idempotencyKey"),
     stripeAccount: field("stripeAccount"),

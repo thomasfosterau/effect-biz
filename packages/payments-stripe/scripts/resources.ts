@@ -725,10 +725,10 @@ interface WithAst {
 const hasSchemas = (
   value: unknown,
 ): value is { readonly input: WithAst; readonly output: WithAst } =>
-  Predicate.hasProperty(value, "input") &&
-  Predicate.hasProperty(value.input, "ast") &&
-  Predicate.hasProperty(value, "output") &&
-  Predicate.hasProperty(value.output, "ast");
+  P.hasProperty(value, "input") &&
+  P.hasProperty(value.input, "ast") &&
+  P.hasProperty(value, "output") &&
+  P.hasProperty(value.output, "ast");
 
 /** Decodes a Distilled export, failing when it carries no schemas. */
 const decodeOperation = Schema.decodeUnknownSync(Schema.declare(hasSchemas));

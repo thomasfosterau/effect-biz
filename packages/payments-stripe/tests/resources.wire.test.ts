@@ -1,7 +1,7 @@
 import { assert, describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import * as Redacted from "effect/Redacted";
@@ -39,7 +39,7 @@ const decodeModule = Schema.decodeUnknownSync(
   Schema.Record(
     Schema.String,
     // Every generated module exports its operations as functions of this shape.
-    Schema.declare((value): value is Exported => Predicate.isFunction(value)),
+    Schema.declare((value): value is Exported => P.isFunction(value)),
   ),
 );
 
