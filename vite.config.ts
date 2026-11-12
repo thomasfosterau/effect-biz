@@ -88,6 +88,10 @@ export default defineConfig({
         },
       ],
       "eslint/prefer-const": "warn",
+      // `@effect/tsgo` reads its own JSDoc tags: `@effect-leakable-service`
+      // marks a request-scoped context (the tenant, the actor) that every
+      // repository method is meant to require.
+      "jsdoc/check-tag-names": ["error", { definedTags: ["effect-leakable-service"] }],
 
       // Chained `Effect.provide(a), Effect.provide(b)` becomes one provide of a
       // composed layer (`Layer.provideMerge`, `Layer.mergeAll`).
@@ -267,6 +271,9 @@ export default defineConfig({
               ],
             },
           ],
+          // `layer(L)(name, (it) => …)` hands its cases the layer-aware `it`,
+          // which shadows the file's own (`@effect/vitest`'s documented form).
+          "eslint/no-shadow": ["error", { allow: ["it"] }],
           // A test is an application entry point: each case provides its own
           // stub layers, which is exactly where `Effect.provide` belongs.
           "effecttsgo/strict-effect-provide": "off",
