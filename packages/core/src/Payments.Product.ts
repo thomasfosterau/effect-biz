@@ -15,7 +15,9 @@ import type { PaymentsError } from "./Payments.PaymentsError.js";
 /**
  * A sellable product. Prices are attached to products (see `Price`).
  */
-export class Product extends Schema.Class<Product>("@effect-biz/payments/Product")({
+export class Product extends Schema.Class<Product, { readonly brand: unique symbol }>(
+  "@effect-biz/payments/Product",
+)({
   id: Schema.String,
   name: Schema.String,
   description: Schema.NullOr(Schema.String),

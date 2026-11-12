@@ -21,7 +21,9 @@ import type { PaymentsError } from "./Payments.PaymentsError.js";
 /**
  * A customer of the payments platform.
  */
-export class Customer extends Schema.Class<Customer>("@effect-biz/payments/Customer")({
+export class Customer extends Schema.Class<Customer, { readonly brand: unique symbol }>(
+  "@effect-biz/payments/Customer",
+)({
   id: Schema.String,
   email: Schema.NullOr(Schema.String),
   name: Schema.NullOr(Schema.String),

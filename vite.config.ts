@@ -78,6 +78,8 @@ export default defineConfig({
     rules: {
       // `Schema.Number` admits NaN and Infinity; use `Schema.Finite` / `Schema.Int`.
       "effecttsgo/schema-number": "error",
+      // Entities and errors are nominal: `Schema.Class<Self, { readonly brand: unique symbol }>`.
+      "effecttsgo/schema-class-missing-brand": "error",
       "eslint/no-unused-vars": [
         "warn",
         {
@@ -116,10 +118,6 @@ export default defineConfig({
       // `casting-awareness` is an awareness prompt, not a defect rule — it
       // fires on every `as`. Stays visible as a warning.
       "effect/casting-awareness": "warn",
-      // Hard-codes abbreviations (`Arr`, `P`, `R`, …) with no options, so it is
-      // unsatisfiable under the full-name convention (`import * as Option from
-      // "effect/Option"`) this family shares with its consumers.
-      "effect/prefer-namespace-imports": "off",
 
       // ---- Effect preset: rules this workspace's conventions cut across ----
       // `prefer-option-over-null` fires on `?: T | undefined`, which is the

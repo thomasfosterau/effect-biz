@@ -41,7 +41,7 @@ export type PaymentStatus = typeof PaymentStatus.Type;
 /**
  * An attempt to collect a payment of a given amount and currency.
  */
-export class PaymentIntent extends Schema.Class<PaymentIntent>(
+export class PaymentIntent extends Schema.Class<PaymentIntent, { readonly brand: unique symbol }>(
   "@effect-biz/payments/PaymentIntent",
 )({
   id: Schema.String,

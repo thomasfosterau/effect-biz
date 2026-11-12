@@ -36,7 +36,9 @@ export const PriceType = Enumeration.lenient(KnownPriceType);
 export type PriceType = typeof PriceType.Type;
 
 /** The recurring schedule of a price, when it is not a one-time price. */
-export class Recurring extends Schema.Class<Recurring>("@effect-biz/payments/Recurring")({
+export class Recurring extends Schema.Class<Recurring, { readonly brand: unique symbol }>(
+  "@effect-biz/payments/Recurring",
+)({
   interval: RecurringInterval,
   intervalCount: Schema.Int,
 }) {}
@@ -45,7 +47,9 @@ export class Recurring extends Schema.Class<Recurring>("@effect-biz/payments/Rec
  * The amount and currency a customer is charged for a product, optionally on a
  * recurring schedule.
  */
-export class Price extends Schema.Class<Price>("@effect-biz/payments/Price")({
+export class Price extends Schema.Class<Price, { readonly brand: unique symbol }>(
+  "@effect-biz/payments/Price",
+)({
   id: Schema.String,
   /** The id of the product this price is attached to, if any. */
   productId: Schema.NullOr(Schema.String),

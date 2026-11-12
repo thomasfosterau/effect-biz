@@ -37,9 +37,10 @@ export const SubscriptionStatus = Enumeration.lenient(KnownSubscriptionStatus);
 export type SubscriptionStatus = typeof SubscriptionStatus.Type;
 
 /** A single line item of a subscription, billed against a price. */
-export class SubscriptionItem extends Schema.Class<SubscriptionItem>(
-  "@effect-biz/payments/SubscriptionItem",
-)({
+export class SubscriptionItem extends Schema.Class<
+  SubscriptionItem,
+  { readonly brand: unique symbol }
+>("@effect-biz/payments/SubscriptionItem")({
   id: Schema.String,
   priceId: Schema.String,
   quantity: Schema.NullOr(Schema.Int),
@@ -48,7 +49,9 @@ export class SubscriptionItem extends Schema.Class<SubscriptionItem>(
 /**
  * A recurring agreement to bill a customer for one or more prices.
  */
-export class Subscription extends Schema.Class<Subscription>("@effect-biz/payments/Subscription")({
+export class Subscription extends Schema.Class<Subscription, { readonly brand: unique symbol }>(
+  "@effect-biz/payments/Subscription",
+)({
   id: Schema.String,
   customerId: Schema.String,
   status: SubscriptionStatus,
