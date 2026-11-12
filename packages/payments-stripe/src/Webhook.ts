@@ -182,7 +182,7 @@ export const verifySignature = (
  * import { Effect, Option, Redacted, Schema } from "effect";
  * import * as Webhook from "@thomasfosterau/effect-biz-payments-stripe/Webhook";
  *
- * class UnreadableBodyError extends Schema.TaggedError<UnreadableBodyError>()(
+ * class UnreadableBodyError extends Schema.TaggedError<UnreadableBodyError, { readonly brand: unique symbol }>()(
  *   "UnreadableBodyError",
  *   {},
  * ) {}
