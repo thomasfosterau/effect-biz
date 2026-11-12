@@ -1,4 +1,5 @@
-import { assert, describe, it, expect } from "vite-plus/test";
+import { assert, describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as BillingPortal from "../src/Payments.BillingPortal.ts";
@@ -68,42 +69,51 @@ const everyCall: ReadonlyArray<
 ];
 
 describe("Stub", () => {
-  it.each(everyCall)("layer fails %s with the given failure", async (_, call) => {
-    const failure = new PaymentInvalidRequestError({ message: "nope" });
-    const error = await Effect.runPromise(
-      Effect.flip(Effect.asVoid(call)).pipe(Effect.provide(Stub.layer(Effect.fail(failure)))),
-    );
-    expect(error).toBe(failure);
-  });
+  it.effect.each(everyCall)("layer fails %s with the given failure", ([_, call]) =>
+    Effect.gen(function* () {
+      const failure = new PaymentInvalidRequestError({ message: "nope" });
+      const error = yield* Effect.flip(Effect.asVoid(call)).pipe(
+        Effect.provide(Stub.layer(Effect.fail(failure))),
+      );
+      expect(error).toBe(failure);
+    }),
+  );
 
-  it.each(everyCall)("unavailable fails %s with PaymentsUnavailable", async (_, call) => {
-    const error = await Effect.runPromise(
-      Effect.flip(Effect.asVoid(call)).pipe(Effect.provide(Stub.unavailable("stripe"))),
-    );
-    expect(error).toBeInstanceOf(PaymentsUnavailable);
-    expect(error).toMatchObject({
-      provider: "stripe",
-      message: "stripe is not configured in this environment",
-    });
-  });
+  it.effect.each(everyCall)("unavailable fails %s with PaymentsUnavailable", ([_, call]) =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(Effect.asVoid(call)).pipe(
+        Effect.provide(Stub.unavailable("stripe")),
+      );
+      expect(error).toBeInstanceOf(PaymentsUnavailable);
+      expect(error).toMatchObject({
+        provider: "stripe",
+        message: "stripe is not configured in this environment",
+      });
+    }),
+  );
 
-  it("unavailable constructs a fresh error for each call", async () => {
-    const [first, second] = await Effect.runPromise(
-      Effect.all([Effect.flip(Customer.retrieve("a")), Effect.flip(Customer.retrieve("b"))], {
-        concurrency: 1,
-      }).pipe(Effect.provide(Stub.unavailable("stripe"))),
-    );
-    expect(first).toBeInstanceOf(PaymentsUnavailable);
-    expect(first).not.toBe(second);
-  });
+  it.effect("unavailable constructs a fresh error for each call", () =>
+    Effect.gen(function* () {
+      const [first, second] = yield* Effect.all(
+        [Effect.flip(Customer.retrieve("a")), Effect.flip(Customer.retrieve("b"))],
+        {
+          concurrency: 1,
+        },
+      ).pipe(Effect.provide(Stub.unavailable("stripe")));
+      expect(first).toBeInstanceOf(PaymentsUnavailable);
+      expect(first).not.toBe(second);
+    }),
+  );
 
-  it("unavailable without a provider names none", async () => {
-    const error = await Effect.runPromise(
-      Effect.flip(Customer.retrieve("cus_1")).pipe(Effect.provide(Stub.unavailable())),
-    );
-    expect(error).toBeInstanceOf(PaymentsUnavailable);
-    expect(error).toMatchObject({ message: "Payments are not configured in this environment" });
-    assert(error instanceof PaymentsUnavailable);
-    expect(error.provider).toBeUndefined();
-  });
+  it.effect("unavailable without a provider names none", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(Customer.retrieve("cus_1")).pipe(
+        Effect.provide(Stub.unavailable()),
+      );
+      expect(error).toBeInstanceOf(PaymentsUnavailable);
+      expect(error).toMatchObject({ message: "Payments are not configured in this environment" });
+      assert(error instanceof PaymentsUnavailable);
+      expect(error.provider).toBeUndefined();
+    }),
+  );
 });
