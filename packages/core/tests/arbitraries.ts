@@ -34,16 +34,17 @@ export const allocations = Arbitrary.all({
 });
 
 /**
- * Runs a property over 300 generated values with a fixed seed. Returns
+ * Runs a property over 300 generated values with a fixed seed. Succeeds with
  * `undefined` when it holds for all of them, else a description of the
  * (shrunk) counterexample.
  */
 export const counterexample = <A>(
   arbitrary: Arbitrary.Arbitrary<A>,
   property: (value: A) => boolean,
-): string | undefined =>
-  Arbitrary.formatCheckFailure(
-    Effect.runSync(Arbitrary.checkEffect(arbitrary, property, { runs: 300, seed: 42 })),
+): Effect.Effect<string | undefined> =>
+  Effect.map(
+    Arbitrary.checkEffect(arbitrary, property, { runs: 300, seed: 42 }),
+    Arbitrary.formatCheckFailure,
   );
 
 /** The success of a result; throws the violation otherwise, which fails the test with its message. */
