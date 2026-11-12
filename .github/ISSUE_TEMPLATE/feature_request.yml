@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Scope this as a vertical slice an agent can finish end-to-end (domain model → service → SQL adapter → HttpApi/RPC → tests → README), not a timid increment.
+        Scope this as a vertical slice an agent can finish end-to-end (domain model → service → SQL adapter → HttpApi/RPC → tests → doc comments and guide), not a timid increment.
   - type: textarea
     id: problem
     attributes:

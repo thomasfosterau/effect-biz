@@ -2,10 +2,10 @@
  * Hands README TypeScript code blocks to `@effect/docgen`.
  *
  * docgen only reads JSDoc under its `srcDir`, so this writes every fenced
- * `ts` / `typescript` block of each README named on the command line (default:
+ * `ts` / `typescript` block of each Markdown file (a README or a guide) named on the command line, or every `.md` file directly in a directory named there (default:
  * the `README.md` in the working directory, a package) into the doc comment of
  * one export of a generated module under `docs/readme/src/` (git-ignored, like
- * the rest of `docs/`), one module per README. The package's `docgen` task then
+ * the rest of `docs/`), one module per file. The package's `docgen` task then
  * runs docgen a second time over that directory, so each block is type-checked
  * and run exactly as a JSDoc example is: imports resolve by package name
  * through `exports` to `dist/`. payments-stripe's task also passes the root
@@ -18,10 +18,11 @@
  * module is named after the README's path from the workspace root
  * (`README.ts` for the root one, `packages.payments-stripe.README.ts`).
  */
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { relative, resolve } from "node:path";
+import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
+import * as Order from "effect/Order";
 
 const outDir = "docs/readme/src";
 const workspace = fileURLToPath(new URL("..", import.meta.url));
@@ -109,7 +110,18 @@ const writeReadme = ({ label, blocks }: Readme): void => {
 };
 
 const args = process.argv.slice(2);
-const readmes = (Arr.isReadonlyArrayNonEmpty(args) ? args : ["README.md"]).map(scanReadme);
+/** A file is itself; a directory is every Markdown file directly in it. */
+const expand = (path: string): ReadonlyArray<string> =>
+  statSync(path).isDirectory()
+    ? Arr.sort(
+        readdirSync(path).filter((name) => name.endsWith(".md")),
+        Order.String,
+      ).map((name) => join(path, name))
+    : [path];
+
+const readmes = (Arr.isReadonlyArrayNonEmpty(args) ? args : ["README.md"])
+  .flatMap(expand)
+  .map(scanReadme);
 const errors = readmes.flatMap((readme) => readme.errors);
 if (Arr.isReadonlyArrayNonEmpty(errors)) {
   console.error(errors.join("\n"));
