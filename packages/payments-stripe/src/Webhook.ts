@@ -54,12 +54,11 @@ export interface VerifyOptions {
    */
   readonly payload: string | Uint8Array;
   /**
-   * The `Stripe-Signature` header value; `null` / `undefined` when the request
-   * carried none (so `request.headers.get(SIGNATURE_HEADER)` can be passed
-   * straight through), which is refused as malformed.
+   * The `Stripe-Signature` header value. Omit it when the request carried
+   * none (which is refused as malformed): a web `Headers.get` answers `null`
+   * for an absent header, so spread `{ header }` only when it is a string.
    */
-  // oxlint-disable-next-line effect/prefer-option-over-null -- mirrors `Headers.get`, which answers a literal `null`
-  readonly header: string | null | undefined;
+  readonly header?: string;
   /** The webhook endpoint's signing secret (`whsec_…`). */
   readonly secret: Redacted.Redacted;
   /**
@@ -69,11 +68,11 @@ export interface VerifyOptions {
    * {@link constructEvent}, where `0` disables the check. There is no way to
    * disable it here.
    */
-  readonly tolerance?: number | undefined;
+  readonly tolerance?: number;
 }
 
-const refuse = (message: string, header: string | undefined) =>
-  new SignatureVerificationError(omitUndefined({ message, header }));
+const refuse = (message: string, header?: string) =>
+  new SignatureVerificationError({ message, header: Option.fromNullishOr(header) });
 
 /** `message` of a refusal for a missing header, or one without a `t=` and a `v1=`. */
 export const MALFORMED_HEADER_MESSAGE = "Missing or malformed Stripe-Signature header";
@@ -103,7 +102,7 @@ export const verifySignature = (
   options: VerifyOptions,
 ): Effect.Effect<void, SignatureVerificationError> =>
   Effect.gen(function* () {
-    const header = options.header ?? undefined;
+    const { header } = options;
     const tolerance = options.tolerance ?? DEFAULT_TOLERANCE;
     // Fail closed: a NaN tolerance would otherwise make every timestamp pass.
     if (!Number.isFinite(tolerance) || tolerance < 0) {
@@ -198,11 +197,10 @@ export const verifySignature = (
  *         catch: () => new UnreadableBodyError(),
  *       }),
  *     );
- *     const event = yield* Webhook.verify({
- *       payload,
- *       header: request.headers.get(Webhook.SIGNATURE_HEADER),
- *       secret,
- *     });
+ *     const signature = request.headers.get(Webhook.SIGNATURE_HEADER);
+ *     const event = yield* signature === null
+ *       ? Webhook.verify({ payload, secret })
+ *       : Webhook.verify({ payload, secret, header: signature });
  *     return yield* Webhook.decodeHandledEvent(event).pipe(
  *       Effect.flatMap((handled) => {
  *         if (Option.isSome(handled)) {
@@ -252,7 +250,7 @@ export const signatureHeader = (options: {
   readonly payload: string | Uint8Array;
   readonly secret: Redacted.Redacted;
   /** The signing time in UNIX seconds (default: now). */
-  readonly timestamp?: number | undefined;
+  readonly timestamp?: number;
 }): Effect.Effect<string, SignatureVerificationError> =>
   Effect.gen(function* () {
     const timestamp = options.timestamp ?? Math.floor((yield* Clock.currentTimeMillis) / 1000);
@@ -495,7 +493,7 @@ export interface WebhookConfig {
   /**
    * Tolerance in seconds for timestamp verification (default: 300)
    */
-  readonly tolerance?: number | undefined;
+  readonly tolerance?: number;
 }
 
 /**
@@ -503,8 +501,7 @@ export interface WebhookConfig {
  * means {@link DEFAULT_TOLERANCE}; a negative value (which skips the
  * timestamp check) and `undefined` (the SDK's own default) go as given.
  */
-const sdkTolerance = (tolerance: number | undefined): number | undefined =>
-  tolerance === 0 ? DEFAULT_TOLERANCE : tolerance;
+const sdkTolerance = (tolerance?: number) => (tolerance === 0 ? DEFAULT_TOLERANCE : tolerance);
 
 /** A payload the SDK takes as text: a `Buffer` is read as UTF-8. */
 const payloadText = (payload: string | Buffer): string =>
@@ -518,14 +515,14 @@ const payloadText = (payload: string | Buffer): string =>
 const sdkFailure = (
   cause: unknown,
   payload: string | Buffer,
-  header: string | undefined,
+  header?: string,
 ): SignatureVerificationError =>
   new SignatureVerificationError({
     // The thrown error's message; the value as a string when it carries none.
     message:
       P.hasProperty(cause, "message") && P.isString(cause.message) ? cause.message : String(cause),
-    header,
-    payload: payloadText(payload),
+    header: Option.fromNullishOr(header),
+    payload: Option.some(payloadText(payload)),
   });
 
 /**

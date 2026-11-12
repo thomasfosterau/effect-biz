@@ -1,7 +1,9 @@
-import { describe, expect } from "vite-plus/test";
-import { it } from "@effect/vitest";
+import { expect } from "vite-plus/test";
+import { layer as testLayer } from "@effect/vitest";
+import { FetchHttpClient } from "effect/http";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { PaymentProviderError } from "@thomasfosterau/effect-biz/Payments";
@@ -28,20 +30,21 @@ interface Untagged {
 }
 
 const callWith = (failure: DistilledOnlyError | Untagged) => {
-  const { http, calls } = stubFetch(() => jsonResponse(200, {}));
+  const { fetch, calls } = stubFetch(() => jsonResponse(200, {}));
   const result = Effect.flip(
     Effect.flatMap(StripeHttp, (client) =>
       Effect.asVoid(client.call("GET", () => Effect.fail(failure), {})),
-    ).pipe(
-      Effect.provide(
-        Layer.provideMerge(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }), http),
-      ),
-    ),
+    ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetch)),
   );
   return { result, calls };
 };
 
-describe("StripeHttp", () => {
+testLayer(
+  Layer.provideMerge(
+    layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }),
+    FetchHttpClient.layer,
+  ),
+)("StripeHttp", (it) => {
   it.effect("maps a Distilled failure with no response to PaymentProviderError by its tag", () =>
     Effect.gen(function* () {
       const { result, calls } = callWith(new DistilledOnlyError({ message: "schema mismatch" }));
@@ -49,7 +52,7 @@ describe("StripeHttp", () => {
       expect(error).toBeInstanceOf(PaymentProviderError);
       expect(error).toMatchObject({
         provider: "stripe",
-        code: "DistilledOnlyError",
+        code: Option.some("DistilledOnlyError"),
         message: "schema mismatch",
       });
       expect(calls).toHaveLength(0);
@@ -61,7 +64,7 @@ describe("StripeHttp", () => {
       const error = yield* callWith({}).result;
       expect(error).toMatchObject({
         _tag: "PaymentProviderError",
-        code: "StripeUnknownError",
+        code: Option.some("StripeUnknownError"),
         message: "The Stripe request failed",
       });
     }),

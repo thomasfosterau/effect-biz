@@ -22,6 +22,7 @@ import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync }
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 
 const outDir = "docs/readme/src";
@@ -34,7 +35,7 @@ interface Block {
 }
 interface Scan {
   readonly blocks: ReadonlyArray<Block>;
-  readonly open: Block | undefined;
+  readonly open: Option.Option<Block>;
   readonly errors: ReadonlyArray<string>;
 }
 interface Readme {
@@ -49,17 +50,18 @@ const outside = (scan: Scan, line: string, index: number): Scan => {
   const fence = /^```\s*((?:ts|typescript)\b.*)$/i.exec(line);
   return fence === null
     ? scan
-    : { ...scan, open: { line: index + 1, info: fence[1] ?? "", body: [] } };
+    : { ...scan, open: Option.some({ line: index + 1, info: fence[1] ?? "", body: [] }) };
 };
 
 /** Inside a block: a bare fence closes it, and any other line joins its body. */
 const inside = (label: string, scan: Scan, open: Block, line: string, index: number): Scan => {
-  if (/^```\s*$/.test(line)) return { ...scan, blocks: [...scan.blocks, open], open: undefined };
+  if (/^```\s*$/.test(line))
+    return { ...scan, blocks: [...scan.blocks, open], open: Option.none() };
   if (line.includes("*/")) {
     const error = `${label}:${index + 1}: "*/" would end the generated doc comment`;
     return { ...scan, errors: [...scan.errors, error] };
   }
-  return { ...scan, open: { ...open, body: [...open.body, line] } };
+  return { ...scan, open: Option.some({ ...open, body: [...open.body, line] }) };
 };
 
 /** Every TypeScript block of the README at `path`, plus what stops it being written. */
@@ -69,13 +71,14 @@ const scanReadme = (path: string): Readme => {
     .split("\n")
     .reduce<Scan>(
       (state, line, index) =>
-        state.open === undefined
+        Option.isNone(state.open)
           ? outside(state, line, index)
-          : inside(label, state, state.open, line, index),
-      { blocks: [], open: undefined, errors: [] },
+          : inside(label, state, state.open.value, line, index),
+      { blocks: [], open: Option.none(), errors: [] },
     );
-  const unclosed =
-    scan.open === undefined ? [] : [`${label}:${scan.open.line}: unclosed code fence`];
+  const unclosed = Option.isNone(scan.open)
+    ? []
+    : [`${label}:${scan.open.value.line}: unclosed code fence`];
   return { label, blocks: scan.blocks, errors: [...scan.errors, ...unclosed] };
 };
 

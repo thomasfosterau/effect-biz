@@ -43,7 +43,7 @@ export class SubscriptionItem extends Schema.Class<
 >("@effect-biz/payments/SubscriptionItem")({
   id: Schema.String,
   priceId: Schema.String,
-  quantity: Schema.NullOr(Schema.Int),
+  quantity: Schema.OptionFromNullOr(Schema.Int),
 }) {}
 
 /**
@@ -69,40 +69,40 @@ export class Subscription extends Schema.Class<Subscription, { readonly brand: u
 /** A price/quantity pair used when creating a subscription. */
 export interface ItemParams {
   readonly price: string;
-  readonly quantity?: number | undefined;
+  readonly quantity?: number;
 }
 
 /** Parameters for creating a subscription. */
 export interface CreateParams {
   readonly customer: string;
   readonly items: ReadonlyArray<ItemParams>;
-  readonly cancelAtPeriodEnd?: boolean | undefined;
-  readonly metadata?: Record<string, string> | undefined;
+  readonly cancelAtPeriodEnd?: boolean;
+  readonly metadata?: Record<string, string>;
   /**
    * Makes this write safe to repeat: create one with `IdempotencyKey.generate`
    * before the first attempt and pass the same key on every retry (see
    * `IdempotencyKey` for the contract).
    */
-  readonly idempotencyKey?: IdempotencyKey | undefined;
+  readonly idempotencyKey?: IdempotencyKey;
 }
 
 /** Parameters for updating a subscription. */
 export interface UpdateParams {
-  readonly cancelAtPeriodEnd?: boolean | undefined;
-  readonly metadata?: Record<string, string> | undefined;
+  readonly cancelAtPeriodEnd?: boolean;
+  readonly metadata?: Record<string, string>;
 }
 
 /** Parameters for listing subscriptions. */
 export interface ListParams {
-  readonly limit?: number | undefined;
-  readonly customer?: string | undefined;
+  readonly limit?: number;
+  readonly customer?: string;
   /** A status to filter by; only a known status can be requested. */
-  readonly status?: KnownSubscriptionStatus | undefined;
+  readonly status?: KnownSubscriptionStatus;
   /**
    * The previous page's `nextCursor`, to list the page after it. A provider
    * whose cursor is an item id also takes any item id here.
    */
-  readonly startingAfter?: string | undefined;
+  readonly startingAfter?: string;
 }
 
 /**

@@ -1,7 +1,9 @@
 import type * as Schema from "effect/Schema";
-import { describe, expect } from "vite-plus/test";
-import { it } from "@effect/vitest";
+import { expect } from "vite-plus/test";
+import { layer } from "@effect/vitest";
+import { FetchHttpClient } from "effect/http";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -12,7 +14,14 @@ import {
   PaymentProviderError,
 } from "@thomasfosterau/effect-biz/Payments";
 import * as StripePayments from "../src/StripePayments.ts";
-import { formOf, jsonResponse, stubFetch, stubStripeTable, withTestClock } from "./support.ts";
+import {
+  capabilitiesOverStub,
+  formOf,
+  jsonResponse,
+  stubFetch,
+  stubStripeTable,
+  withTestClock,
+} from "./support.ts";
 
 /**
  * The hosted-page capabilities (effect-finance#40): Checkout and the Billing Portal. The
@@ -37,20 +46,18 @@ const portal: BillingPortal.CreateParams = {
 };
 
 /** Run `effect` against the capabilities over a stubbed API answering from `answers`. */
-const run = <A, E>(
-  effect: Effect.Effect<A, E, Layer.Success<typeof StripePayments.capabilities>>,
+const run = <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
   answers: Record<string, Schema.Json | Response>,
 ) => {
   const stub = stubStripeTable(answers);
   return {
     calls: stub.calls,
-    result: withTestClock(
-      effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
-    ),
+    result: withTestClock(effect.pipe(Effect.provideService(FetchHttpClient.Fetch, stub.fetch))),
   };
 };
 
-describe("StripePayments checkoutSessionsLayer", () => {
+layer(capabilitiesOverStub)("StripePayments checkoutSessionsLayer", (it) => {
   it.effect("creates a hosted Checkout session and returns its URL", () =>
     Effect.gen(function* () {
       const { result, calls } = run(CheckoutSession.create(checkout), {
@@ -72,7 +79,6 @@ describe("StripePayments checkoutSessionsLayer", () => {
           line_items: [{ price: "price_monthly", quantity: 1 }],
           success_url: "https://example.test/account/billing?checkout=success",
           cancel_url: "https://example.test/pricing",
-          metadata: undefined,
           subscription_data: { metadata: { user_id: "user-1" } },
         }),
       );
@@ -97,7 +103,6 @@ describe("StripePayments checkoutSessionsLayer", () => {
         expect(calls[0]?.params).toEqual(
           formOf({
             mode: "payment",
-            customer: undefined,
             line_items: [
               { price: "price_a", quantity: 3 },
               { price: "price_b", quantity: 1 },
@@ -105,7 +110,6 @@ describe("StripePayments checkoutSessionsLayer", () => {
             success_url: "https://example.test/ok",
             cancel_url: "https://example.test/no",
             metadata: { order: "o-1" },
-            subscription_data: undefined,
           }),
         );
       }),
@@ -155,12 +159,15 @@ describe("StripePayments checkoutSessionsLayer", () => {
       }).result;
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
       expect(error.message).toContain("No such price");
-      expect(error).toMatchObject({ param: "line_items[0][price]", statusCode: 400 });
+      expect(error).toMatchObject({
+        param: Option.some("line_items[0][price]"),
+        statusCode: Option.some(400),
+      });
     }),
   );
 });
 
-describe("StripePayments billingPortalSessionsLayer", () => {
+layer(capabilitiesOverStub)("StripePayments billingPortalSessionsLayer", (it) => {
   it.effect("creates a portal session for the customer and returns its URL", () =>
     Effect.gen(function* () {
       const { result, calls } = run(BillingPortal.create(portal), {
@@ -194,22 +201,21 @@ describe("StripePayments billingPortalSessionsLayer", () => {
   );
 });
 
-describe("hosted sessions over StripePayments.layer", () => {
-  /** `StripePayments.layer` over a stubbed `fetch` answering `body` to every request. */
+layer(
+  StripePayments.layer({ apiKey: Redacted.make("sk_test_not_real") }).pipe(
+    Layer.provide(FetchHttpClient.layer),
+  ),
+)("hosted sessions over StripePayments.layer", (it) => {
+  /** A stubbed `fetch` answering `body` to every request, to serve as `FetchHttpClient.Fetch`. */
   const wire = (body: Schema.Json) => {
-    const { http, calls } = stubFetch(() => jsonResponse(200, body));
-    const layer = StripePayments.layer({ apiKey: Redacted.make("sk_test_not_real") }).pipe(
-      Layer.provide(http),
-    );
-    return { layer, calls };
+    const { fetch, calls } = stubFetch(() => jsonResponse(200, body));
+    return { served: Effect.provideService(FetchHttpClient.Fetch, fetch), calls };
   };
 
   it.effect("form-encodes a checkout the way Stripe expects, with no amount", () =>
     Effect.gen(function* () {
-      const { layer, calls } = wire({ id: "cs_1", url: "https://checkout.stripe.com/cs_1" });
-      const session = yield* withTestClock(
-        CheckoutSession.create(checkout).pipe(Effect.provide(layer)),
-      );
+      const { served, calls } = wire({ id: "cs_1", url: "https://checkout.stripe.com/cs_1" });
+      const session = yield* withTestClock(CheckoutSession.create(checkout).pipe(served));
       expect(session.url).toBe("https://checkout.stripe.com/cs_1");
       const call = calls[0];
       expect(call?.method).toBe("POST");
@@ -228,7 +234,7 @@ describe("hosted sessions over StripePayments.layer", () => {
 
   it.effect("form-encodes a payment checkout's metadata and sends no subscription data", () =>
     Effect.gen(function* () {
-      const { layer, calls } = wire({ id: "cs_2", url: "https://checkout.stripe.com/cs_2" });
+      const { served, calls } = wire({ id: "cs_2", url: "https://checkout.stripe.com/cs_2" });
       yield* withTestClock(
         CheckoutSession.create({
           mode: "payment",
@@ -236,7 +242,7 @@ describe("hosted sessions over StripePayments.layer", () => {
           successUrl: "https://example.test/ok",
           cancelUrl: "https://example.test/no",
           metadata: { order: "o-1" },
-        }).pipe(Effect.provide(layer)),
+        }).pipe(served),
       );
       const form = new URLSearchParams(calls[0]?.body);
       expect(form.get("mode")).toBe("payment");
@@ -251,10 +257,8 @@ describe("hosted sessions over StripePayments.layer", () => {
 
   it.effect("form-encodes a portal session", () =>
     Effect.gen(function* () {
-      const { layer, calls } = wire({ id: "bps_1", url: "https://billing.stripe.com/bps_1" });
-      const session = yield* withTestClock(
-        BillingPortal.create(portal).pipe(Effect.provide(layer)),
-      );
+      const { served, calls } = wire({ id: "bps_1", url: "https://billing.stripe.com/bps_1" });
+      const session = yield* withTestClock(BillingPortal.create(portal).pipe(served));
       expect(session.url).toBe("https://billing.stripe.com/bps_1");
       expect(calls[0]?.url.href).toBe("https://api.stripe.com/v1/billing_portal/sessions");
       const form = new URLSearchParams(calls[0]?.body);

@@ -15,6 +15,7 @@
 
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import { BillingPortalSessions } from "./Payments.BillingPortal.js";
 import { CheckoutSessions } from "./Payments.CheckoutSession.js";
 import { Customers } from "./Payments.Customer.js";
@@ -161,7 +162,7 @@ export const unavailable = (provider?: string): Layer.Layer<Capabilities> =>
         ? new PaymentsUnavailable({ message: "Payments are not configured in this environment" })
         : new PaymentsUnavailable({
             message: `${provider} is not configured in this environment`,
-            provider,
+            provider: Option.some(provider),
           }),
     ),
   );

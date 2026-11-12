@@ -13,6 +13,7 @@
  */
 
 import * as BigDecimal from "effect/BigDecimal";
+import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { BusinessRuleViolation } from "./BizError.js";
@@ -70,7 +71,7 @@ const unitMismatch = (left: UnitCode, right: UnitCode): BusinessRuleViolation =>
   new BusinessRuleViolation({
     code: "core.unit-mismatch",
     reason: `Cannot combine quantities in ${left} and ${right}`,
-    details: { left, right },
+    details: Option.some({ left, right }),
   });
 
 /** Combines two quantities' amounts, or fails when their units differ. */
