@@ -2,7 +2,7 @@
 
 **Disclaimer:** This is an experiment. Don't use it in production.
 
-The foundation of the effect-biz package family: the identifiers, error channel, tenancy context, repository conventions, the unit of work and exact numbers (decimals, rounding, quantities, rates, money) every effect-biz domain package builds on, and the vendor-neutral payments core (`@thomasfosterau/effect-biz/Payments`). More foundation modules (domain events) land as the roadmap does.
+The foundation of the effect-biz package family: the identifiers, error channel, tenancy context, repository conventions, the unit of work, domain events with their transactional outbox and idempotent subscribers, and exact numbers (decimals, rounding, quantities, rates, money) every effect-biz domain package builds on, and the vendor-neutral payments core (`@thomasfosterau/effect-biz/Payments`).
 
 ## Install
 
@@ -44,7 +44,12 @@ Each module is its own subpath. Guides are in [`docs/core`](https://github.com/t
 | `./Page` | Cursor paging: `Page<A>`, opaque keyset cursors and the `limit` bounds. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
 | `./Memory` | The tenant-partitioned in-memory store in-memory repository layers are built on. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md) |
 | `./UnitOfWork` | The transaction boundary of a command: staged, version-guarded writes committed as one batch, retried from load on a conflict. | [Unit of work](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/unit-of-work.md) |
-| `./testing` | The repository and unit-of-work contract suites every implementation runs, runner-agnostic. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md), [unit of work](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/unit-of-work.md) |
+| `./DomainEvent` | Defining events and their versions (`make`, `evolve` with an upcaster), the JSON-safe `Envelope`, correlation and causation. | [Domain events](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/events.md) |
+| `./EventRecorder` | `record`: stages an event into the outbox within the command's unit of work, its envelope filled from the context. | [Domain events](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/events.md) |
+| `./Outbox` | The outbox port: staged `append`, lease-based `claimBatch`, `markDispatched`, `markFailed`, `deadLetters`; `layerMemory`. | [Domain events](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/events.md) |
+| `./Subscriber` | Named handlers run exactly once per event through the `Inbox`, under the event's tenant and correlation. | [Domain events](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/events.md) |
+| `./Dispatcher` | The relay: per-subscriber, per-aggregate ordered delivery with backoff and dead letters; `runOnce`, `drain`, a scoped relay layer. | [Domain events](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/events.md) |
+| `./testing` | The repository, unit-of-work and events contract suites every implementation runs, runner-agnostic. | [Repositories](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/repositories.md), [unit of work](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/unit-of-work.md), [domain events](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/events.md) |
 | `./Decimal` | Exact decimals (`BigDecimal`) and their canonical string codec. | [Exact numbers](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/exact-numbers.md) |
 | `./Rounding` | Rounding policies, required wherever a value is rounded. | [Exact numbers](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/exact-numbers.md) |
 | `./Quantity` | Exact quantities. | [Exact numbers](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/core/exact-numbers.md) |
