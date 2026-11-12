@@ -284,7 +284,7 @@ describe("Webhook", () => {
     // Each SDK wrapper maps whatever the SDK throws the same way: the thrown
     // message (or the thrown value as a string), the header it was given, and
     // the payload decoded as UTF-8.
-    const throwing = (thrown: unknown) => {
+    const throwing = (thrown: Error | string) => {
       const fail = () => {
         throw thrown;
       };

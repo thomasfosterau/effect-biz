@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import type { HttpClient } from "effect/http";
 import type { Credentials } from "@distilled.cloud/stripe/Credentials";
@@ -52,8 +52,8 @@ const requestOf = async (
 ): Promise<{ readonly idempotencyKey: string | undefined; readonly count: number }> => {
   const stub = stubStripe(() => ({}));
   // The empty answer fails the decode; the request was recorded before that.
-  await Effect.runPromise(
-    Effect.exit(operation.pipe(Effect.provide(Layer.provideMerge(capabilities, stub.layer)))),
+  await Effect.runPromiseExit(
+    operation.pipe(Effect.provide(Layer.provideMerge(capabilities, stub.layer))),
   );
   return {
     idempotencyKey: stub.calls[0]?.headers.get("idempotency-key") ?? undefined,
@@ -125,13 +125,11 @@ describe("Stripe maps the neutral idempotencyKey to Idempotency-Key", () => {
 
   it("sends none on the cancel operations", async () => {
     const stub = stubStripe(() => ({}));
-    await Effect.runPromise(
-      Effect.exit(
-        Effect.gen(function* () {
-          yield* Effect.exit(Subscription.cancel("sub_1"));
-          yield* Effect.exit(PaymentIntent.cancel("pi_1"));
-        }).pipe(Effect.provide(Layer.provideMerge(noRetries, stub.layer))),
-      ),
+    await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        yield* Effect.exit(Subscription.cancel("sub_1"));
+        yield* Effect.exit(PaymentIntent.cancel("pi_1"));
+      }).pipe(Effect.provide(Layer.provideMerge(noRetries, stub.layer))),
     );
     expect(stub.calls.map((call) => [call.method, call.headers.get("idempotency-key")])).toEqual([
       ["DELETE", null],
@@ -187,7 +185,7 @@ describe("a retried write after a lost response is one logical write (effect-fin
   const createWithRetry = (key: IdempotencyKey.IdempotencyKey | undefined) =>
     Customer.create({ email: "a@example.com", idempotencyKey: key }).pipe(
       Effect.retry({
-        while: (error) => Predicate.isTagged(error, "PaymentNetworkError"),
+        while: (error) => P.isTagged(error, "PaymentNetworkError"),
         times: 1,
       }),
     );
@@ -224,7 +222,7 @@ describe("a retried write after a lost response is one logical write (effect-fin
       Customer.create({ email: "a@example.com", idempotencyKey: key }).pipe(
         Effect.retry({
           while: (error) =>
-            Predicate.isTagged(error, "PaymentProviderError") && (error.statusCode ?? 0) >= 500,
+            P.isTagged(error, "PaymentProviderError") && (error.statusCode ?? 0) >= 500,
           times: 1,
         }),
         Effect.provide(

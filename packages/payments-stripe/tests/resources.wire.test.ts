@@ -58,15 +58,10 @@ const run = (
   respond: (request: CapturedRequest) => Response,
 ) => {
   const { http, calls } = stubFetch(respond);
-  const exit = Effect.runPromise(
-    Effect.exit(
-      call.pipe(
-        Effect.provide(
-          Layer.provideMerge(
-            layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }),
-            http,
-          ),
-        ),
+  const exit = Effect.runPromiseExit(
+    call.pipe(
+      Effect.provide(
+        Layer.provideMerge(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }), http),
       ),
     ),
   );

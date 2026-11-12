@@ -61,6 +61,7 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Random from "effect/Random";
 import * as Redacted from "effect/Redacted";
+import type * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClient, HttpClientError } from "effect/http";
 import { ResponseValidation } from "@distilled.cloud/core/response-validation";
 import { Credentials, type Config as StripeCredentials } from "@distilled.cloud/stripe/Credentials";
@@ -184,7 +185,7 @@ export class StripeHttp extends Context.Service<
       operation: Operation<I, O, E>,
       input: I,
       options?: CallOptions,
-    ) => Effect.Effect<unknown, PaymentsError>;
+    ) => Effect.Effect<Schema.Json, PaymentsError>;
   }
 >()("@effect-biz/payments-stripe/StripeHttp") {}
 
@@ -193,8 +194,8 @@ type Observed = ObservedResponse;
 
 /** One attempt's outcome, before it is judged. */
 type Outcome = Data.TaggedEnum<{
-  /** Distilled succeeded on a 2xx with a JSON body. */
-  Success: { readonly body: unknown };
+  /** A 2xx with a JSON body, which Distilled took as a success. */
+  Success: { readonly body: Schema.Json };
   /** A response that decides the outcome: a non-2xx, or a 2xx that is not JSON. */
   Response: Observed;
   /** No response: a connection failure or a timeout. */
@@ -249,30 +250,39 @@ const backoff = (retries: number, retryAfter: number | undefined): Effect.Effect
  * A Distilled failure as an outcome. An `HttpClientError` means no response
  * arrived; its `cause` is kept, never the request, whose headers carry the key.
  */
-const failureOf = (error: unknown): Outcome => {
-  if (!HttpClientError.isHttpClientError(error)) return Outcome.Rejected({ error });
-  const reason = error.reason;
-  const cause = "cause" in reason ? reason.cause : undefined;
+const failureOf = (cause: unknown): Outcome => {
+  if (!HttpClientError.isHttpClientError(cause)) return Outcome.Rejected({ error: cause });
+  const { reason } = cause;
+  const reasonCause = "cause" in reason ? reason.cause : undefined;
   return Outcome.Transport({
-    message: stringField(reason, "description") ?? stringField(cause, "message") ?? reason._tag,
-    cause,
+    message:
+      stringField(reason, "description") ?? stringField(reasonCause, "message") ?? reason._tag,
+    cause: reasonCause,
   });
 };
 
 /**
  * The outcome of one attempt. A response, once seen, decides it whatever
  * Distilled made of it: a non-2xx is classified from its status, headers and
- * body, and a 2xx whose body is not JSON fails as one.
+ * body, and a 2xx whose body is not JSON fails as one. A 2xx with a JSON body
+ * succeeds with that body, unless Distilled failed on it (`failure`) or the
+ * attempt timed out.
  */
-const judge = (outcome: Outcome, observed: Option.Option<Observed>): Outcome =>
+const judge = (failure: Option.Option<Outcome>, observed: Option.Option<Observed>): Outcome =>
   Option.match(observed, {
-    onNone: () => outcome,
-    onSome: (response) => {
+    onNone: () =>
+      Option.getOrElse(failure, () =>
+        Outcome.Transport({ message: "no response was observed", cause: undefined }),
+      ),
+    onSome: (response) =>
       // A 2xx without a JSON body decides it whether Distilled succeeded or,
       // from 1.0.0-rc.18, failed with its own `StripeParseError`.
-      const decides = !isOk(response.status) || Option.isNone(response.body);
-      return decides ? Outcome.Response(response) : outcome;
-    },
+      isOk(response.status)
+        ? Option.match(response.body, {
+            onNone: () => Outcome.Response(response),
+            onSome: (body) => Option.getOrElse(failure, () => Outcome.Success({ body })),
+          })
+        : Outcome.Response(response),
   });
 
 /** A response that decides an outcome, as a neutral error. */
@@ -295,7 +305,7 @@ const responseError = ({ status, headers, body }: Observed): PaymentsError =>
 const REJECTED = { message: "The Stripe request failed", code: "StripeUnknownError" };
 
 /** Judge a final outcome, after `retries` retries: the JSON of a 2xx, or a neutral error. */
-const settle = (outcome: Outcome, retries: number): Effect.Effect<unknown, PaymentsError> =>
+const settle = (outcome: Outcome, retries: number): Effect.Effect<Schema.Json, PaymentsError> =>
   Outcome.$match(outcome, {
     Success: ({ body }) => Effect.succeed(body),
     Response: (response) => Effect.fail(responseError(response)),
@@ -351,11 +361,12 @@ const makeWith = (
           HttpClient.mapRequest(http, (request) => v2(deleteParamsToQuery(request))),
         );
         const init = yield* Effect.serviceOption(FetchHttpClient.RequestInit);
-        const outcome = yield* operation(input).pipe(
-          // Every typed failure becomes an outcome to judge; defects stay defects.
+        const failure = yield* operation(input).pipe(
+          // Every typed failure becomes an outcome to judge; defects stay
+          // defects. A success carries none: its body is the one observed.
           Effect.match({
-            onSuccess: (body) => Outcome.Success({ body }),
-            onFailure: failureOf,
+            onSuccess: () => Option.none<Outcome>(),
+            onFailure: (cause) => Option.some(failureOf(cause)),
           }),
           withRequestOptions(requestOptions),
           Effect.provideService(Credentials, Effect.succeed(credentials)),
@@ -367,15 +378,15 @@ const makeWith = (
             redirect: "error",
           }),
           Effect.timeoutOption(timeout),
-          Effect.map(Option.getOrElse(() => timedOut)),
+          Effect.map(Option.getOrElse(() => Option.some(timedOut))),
         );
-        return judge(outcome, yield* watched.last);
+        return judge(failure, yield* watched.last);
       });
 
     const run = (
       once: Effect.Effect<Outcome>,
       retries: number,
-    ): Effect.Effect<unknown, PaymentsError> =>
+    ): Effect.Effect<Schema.Json, PaymentsError> =>
       Effect.flatMap(once, (outcome) =>
         retries < maxRetries && isRetryable(outcome)
           ? Effect.andThen(backoff(retries, retryAfterOfOutcome(outcome)), run(once, retries + 1))
@@ -478,20 +489,21 @@ export const layerFromEnv = (
 ): Layer.Layer<StripeHttp, PaymentConfigError, HttpClient.HttpClient> =>
   Layer.effect(
     StripeHttp,
-    Effect.fn("StripeHttp.layerFromEnv")(function* () {
-      const apiKey = yield* Config.Redacted(envVar).pipe(Config.withDefault(Redacted.make("")));
+    Effect.gen(function* () {
+      const apiKey = yield* Config.Redacted(envVar).pipe(
+        Config.withDefault(Redacted.make("")),
+        Effect.catchTag("ConfigError", (error) =>
+          Effect.fail(new PaymentConfigError({ message: error.message })),
+        ),
+      );
       if (Redacted.value(apiKey) === "") {
         return yield* new PaymentConfigError({
           message: `Environment variable ${envVar} is not set`,
         });
       }
       return yield* make({ apiKey });
-    })().pipe(
-      Effect.catchTag("ConfigError", (error) =>
-        Effect.fail(new PaymentConfigError({ message: error.message })),
-      ),
-    ),
-  );
+    }),
+  ).pipe(Layer.withSpan("StripeHttp.layerFromEnv"));
 
 /** Options for {@link layerConfig}. */
 export interface LayerConfigOptions extends Omit<StripeHttpConfig, "apiKey"> {
@@ -555,10 +567,11 @@ export const layerConfig = ({
           }),
       );
       const credentials = Effect.flatMap(ConfigProvider.ConfigProvider, (caller) =>
-        Effect.flatMap(readKey(envVar, caller), (key) =>
-          Option.isSome(key) || caller === builtUnder
-            ? Effect.succeed(key)
-            : readKey(envVar, builtUnder),
+        readKey(envVar, caller).pipe(
+          Effect.filterOrElse(
+            (key) => Option.isSome(key) || caller === builtUnder,
+            () => readKey(envVar, builtUnder),
+          ),
         ),
       ).pipe(
         Effect.flatMap(

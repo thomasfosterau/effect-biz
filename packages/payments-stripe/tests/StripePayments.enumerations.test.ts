@@ -1,3 +1,4 @@
+import type * as Schema from "effect/Schema";
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -14,7 +15,7 @@ import { stubStripe } from "./support.ts";
  */
 const run = <A, E>(
   effect: Effect.Effect<A, E, Layer.Success<typeof StripePayments.capabilities>>,
-  body: unknown,
+  body: Schema.Json,
 ): Promise<A> => {
   const stub = stubStripe(() => body);
   return Effect.runPromise(
@@ -22,7 +23,7 @@ const run = <A, E>(
   );
 };
 
-const page = (...data: Array<unknown>) => ({ object: "list", has_more: false, data });
+const page = (...data: Array<Schema.Json>) => ({ object: "list", has_more: false, data });
 
 const intent = (id: string, status: string) => ({
   id,

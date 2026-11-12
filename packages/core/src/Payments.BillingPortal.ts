@@ -19,9 +19,10 @@ import * as Schema from "effect/Schema";
 import type { PaymentsError } from "./Payments.PaymentsError.js";
 
 /** A hosted billing portal session: the page to redirect the customer to. */
-export class BillingPortalSession extends Schema.Class<BillingPortalSession>(
-  "@effect-biz/payments/BillingPortalSession",
-)({
+export class BillingPortalSession extends Schema.Class<
+  BillingPortalSession,
+  { readonly brand: unique symbol }
+>("@effect-biz/payments/BillingPortalSession")({
   id: Schema.String,
   /** The hosted portal page. Redirect the customer here. */
   url: Schema.String,

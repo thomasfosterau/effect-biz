@@ -25,7 +25,7 @@
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 // `Schema` and the core's modules are imported by subpath, as namespaces, and
@@ -83,7 +83,7 @@ const Secret = /* @__PURE__ */ Schema.Union([
   Schema.String,
   /* @__PURE__ */ Schema.declare(
     (value): value is Redacted.Redacted =>
-      Redacted.isRedacted(value) && Predicate.isString(Redacted.value(value)),
+      Redacted.isRedacted(value) && P.isString(Redacted.value(value)),
   ),
 ]);
 
@@ -215,7 +215,7 @@ const StripeList = <S extends Schema.Top>(item: S) =>
 /** The id of a possibly-expanded reference. */
 const idOf = (value: typeof Ref.Type | null | undefined): string | null => {
   if (value == null) return null;
-  return Predicate.isString(value) ? value : value.id;
+  return P.isString(value) ? value : value.id;
 };
 
 const metadataOf = (metadata: typeof Metadata.Type) => ({
@@ -380,8 +380,8 @@ const decoder =
     schema: S,
     map: (value: S["Type"]) => A | undefined,
   ) =>
-  (body: unknown): Effect.Effect<A, PaymentProviderError> =>
-    Schema.decodeUnknownEffect(schema)(body).pipe(
+  (body: Schema.Json): Effect.Effect<A, PaymentProviderError> =>
+    Schema.decodeEffect(schema)(body).pipe(
       Effect.mapError((cause) => malformed(what, cause)),
       Effect.flatMap((value) => {
         const mapped = map(value);

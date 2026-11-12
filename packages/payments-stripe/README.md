@@ -204,10 +204,10 @@ Stripe treats every non-2xx answer as a failed delivery and retries it for a lim
 import { Effect, Option, Redacted, Schema } from "effect";
 import * as Webhook from "@thomasfosterau/effect-biz-payments-stripe/Webhook";
 
-class UnreadableBodyError extends Schema.TaggedError<UnreadableBodyError>()(
-  "UnreadableBodyError",
-  {},
-) {}
+class UnreadableBodyError extends Schema.TaggedError<
+  UnreadableBodyError,
+  { readonly brand: unique symbol }
+>()("UnreadableBodyError", {}) {}
 
 const status = (code: number) => Effect.succeed(new Response(null, { status: code }));
 

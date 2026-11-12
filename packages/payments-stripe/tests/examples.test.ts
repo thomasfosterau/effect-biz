@@ -17,7 +17,7 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
-import * as Rec from "effect/Record";
+import * as R from "effect/Record";
 import { FetchHttpClient } from "effect/http";
 import * as basic from "../examples/basic.ts";
 import * as subscription from "../examples/subscription.ts";
@@ -332,7 +332,7 @@ describe("examples", () => {
 
   it("examples covered: every file in examples/ has a suite here", () => {
     expect(exampleFiles.length).toBeGreaterThan(0);
-    expect(Arr.sort(Rec.keys(suites), Order.String)).toEqual(exampleFiles);
+    expect(Arr.sort(R.keys(suites), Order.String)).toEqual(exampleFiles);
   });
 
   it.each(exampleFiles)("importing %s runs nothing", async (file) => {
@@ -358,7 +358,7 @@ describe("examples", () => {
     expect(error).not.toHaveBeenCalled();
   });
 
-  Arr.forEach(Rec.toEntries(suites), ([file, suite]) => {
+  Arr.forEach(R.toEntries(suites), ([file, suite]) => {
     describe(`examples/${file}`, () => {
       suite();
     });

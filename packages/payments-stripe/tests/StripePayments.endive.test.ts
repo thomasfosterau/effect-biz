@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Rec from "effect/Record";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import type * as SchemaAST from "effect/SchemaAST";
@@ -51,7 +51,7 @@ const onDefaultLayer = <A, E>(
     | PaymentIntent.PaymentIntents
     | Product.Products
   >,
-  body: unknown,
+  body: Schema.Json,
 ) => {
   const { http, calls } = stubFetch(() => jsonResponse(200, body));
   const result = Effect.runPromise(
@@ -69,10 +69,14 @@ const onDefaultLayer = <A, E>(
  * still decodes. `Schema.Top` leaves the decoding services open; they need
  * none.
  */
-const strictly = (schema: Schema.Top, body: unknown, options?: SchemaAST.ParseOptions): unknown =>
+const strictly = (
+  schema: Schema.Top,
+  body: Schema.Json,
+  options?: SchemaAST.ParseOptions,
+): unknown =>
   // SAFETY: Distilled's generated schemas are plain structs, unions and
   // suspensions over `effect/Schema` built-ins, which need no services.
-  Schema.decodeUnknownSync(schema as Schema.Codec<unknown, unknown>, options)(body);
+  Schema.decodeSync(schema as Schema.Codec<unknown, unknown>, options)(body);
 
 /**
  * Reject excess properties too. Only for the fixtures Distilled models in
@@ -113,7 +117,7 @@ const failureAt = (issue: "Missing key" | "Expected no excess property", member:
 
 /** `fixture` without its `member`: the mutation the strict check must catch. */
 const without = (fixture: Readonly<Record<string, unknown>>, member: string) =>
-  Rec.remove(fixture, member);
+  R.remove(fixture, member);
 
 describe("endive fixtures", () => {
   it("the subscription is endive-shaped: Distilled's schema decodes it strictly", () => {

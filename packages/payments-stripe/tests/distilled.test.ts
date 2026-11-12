@@ -13,7 +13,10 @@ import { jsonResponse, stubFetch, TEST_KEY } from "./support.ts";
  * channel, as a `PaymentProviderError` coded by the failure's tag.
  */
 
-class DistilledOnlyError extends Schema.TaggedError<DistilledOnlyError>()("DistilledOnlyError", {
+class DistilledOnlyError extends Schema.TaggedError<
+  DistilledOnlyError,
+  { readonly brand: unique symbol }
+>()("DistilledOnlyError", {
   message: Schema.String,
 }) {}
 

@@ -22,7 +22,7 @@ import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import type Stripe from "stripe";
@@ -182,7 +182,7 @@ export const verifySignature = (
  * import { Effect, Option, Redacted, Schema } from "effect";
  * import * as Webhook from "@thomasfosterau/effect-biz-payments-stripe/Webhook";
  *
- * class UnreadableBodyError extends Schema.TaggedError<UnreadableBodyError>()(
+ * class UnreadableBodyError extends Schema.TaggedError<UnreadableBodyError, { readonly brand: unique symbol }>()(
  *   "UnreadableBodyError",
  *   {},
  * ) {}
@@ -274,7 +274,7 @@ const Maybe = <S extends Schema.Top>(schema: S) => Schema.optional(Schema.NullOr
 /**
  * The event envelope common to every Stripe event.
  *
- * `data.object` stays `Schema.Unknown`: its shape depends on the event type,
+ * `data.object` stays untyped JSON (`Schema.Json`): its shape depends on the event type,
  * and an event type nobody handles must never fail to decode. Unknown fields
  * are ignored.
  */
@@ -284,7 +284,7 @@ export const WebhookEvent = Schema.Struct({
   created: Schema.optional(Schema.Number),
   livemode: Schema.optional(Schema.Boolean),
   api_version: Maybe(Schema.String),
-  data: Schema.Struct({ object: Schema.Unknown }),
+  data: Schema.Struct({ object: Schema.Json }),
 });
 
 /** A decoded {@link WebhookEvent} envelope. */
@@ -301,7 +301,7 @@ const decodeEventJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Webhook
 export const decodeEvent = (
   payload: string | Uint8Array,
 ): Effect.Effect<WebhookEvent, Schema.SchemaError> =>
-  decodeEventJson(Predicate.isString(payload) ? payload : new TextDecoder().decode(payload));
+  decodeEventJson(P.isString(payload) ? payload : new TextDecoder().decode(payload));
 
 /**
  * The event types a subscription billing system acts on:
@@ -445,9 +445,7 @@ const decodeHandled = Schema.decodeUnknownEffect(HandledEvent);
 export const decodeHandledEvent = (
   event: WebhookEvent,
 ): Effect.Effect<Option.Option<HandledEvent>, Schema.SchemaError> =>
-  isHandledEventType(event.type)
-    ? Effect.map(decodeHandled(event), Option.some)
-    : Effect.succeedNone;
+  isHandledEventType(event.type) ? Effect.asSome(decodeHandled(event)) : Effect.succeedNone;
 
 const decodeCheckoutSessionObject = Schema.decodeUnknownEffect(CheckoutSessionObject);
 const decodeSubscriptionObject = Schema.decodeUnknownEffect(SubscriptionObject);
@@ -455,17 +453,18 @@ const decodeInvoiceObject = Schema.decodeUnknownEffect(InvoiceObject);
 
 /** Decode a `checkout.session.completed` event's `data.object`. */
 export const decodeCheckoutSession = (
-  object: unknown,
+  object: Schema.Json,
 ): Effect.Effect<CheckoutSessionObject, Schema.SchemaError> => decodeCheckoutSessionObject(object);
 
 /** Decode a `customer.subscription.*` event's `data.object`. */
 export const decodeSubscription = (
-  object: unknown,
+  object: Schema.Json,
 ): Effect.Effect<SubscriptionObject, Schema.SchemaError> => decodeSubscriptionObject(object);
 
 /** Decode an `invoice.payment_failed` event's `data.object`. */
-export const decodeInvoice = (object: unknown): Effect.Effect<InvoiceObject, Schema.SchemaError> =>
-  decodeInvoiceObject(object);
+export const decodeInvoice = (
+  object: Schema.Json,
+): Effect.Effect<InvoiceObject, Schema.SchemaError> => decodeInvoiceObject(object);
 
 // ---------------------------------------------------------------------------
 // SDK-based verifier (optional: needs an SDK client and the `stripe` peer)
@@ -509,7 +508,7 @@ const sdkTolerance = (tolerance: number | undefined): number | undefined =>
 
 /** A payload the SDK takes as text: a `Buffer` is read as UTF-8. */
 const payloadText = (payload: string | Buffer): string =>
-  Predicate.isString(payload) ? payload : payload.toString("utf8");
+  P.isString(payload) ? payload : payload.toString("utf8");
 
 /**
  * The `SignatureVerificationError` an SDK-based wrapper fails with when the
@@ -517,16 +516,14 @@ const payloadText = (payload: string | Buffer): string =>
  * and the payload as a string.
  */
 const sdkFailure = (
-  error: unknown,
+  cause: unknown,
   payload: string | Buffer,
   header: string | undefined,
 ): SignatureVerificationError =>
   new SignatureVerificationError({
     // The thrown error's message; the value as a string when it carries none.
     message:
-      Predicate.hasProperty(error, "message") && Predicate.isString(error.message)
-        ? error.message
-        : String(error),
+      P.hasProperty(cause, "message") && P.isString(cause.message) ? cause.message : String(cause),
     header,
     payload: payloadText(payload),
   });

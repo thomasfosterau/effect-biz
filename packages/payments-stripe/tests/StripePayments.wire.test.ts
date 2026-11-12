@@ -3,7 +3,7 @@ import * as Arr from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClientError, HttpClientRequest } from "effect/http";
@@ -79,11 +79,11 @@ const over = <A, E>(
 const toJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
 /** The neutral failure of one `Customer.create` answered with `status` and `body`, not retried. */
-const failure = (status: number, body: unknown, headers: Record<string, string> = {}) =>
+const failure = (status: number, body: Schema.Json, headers: Record<string, string> = {}) =>
   over(
     Effect.flip(Customer.create({ email: "a@example.com" })),
     () =>
-      Predicate.isString(body)
+      P.isString(body)
         ? new Response(body, { status, headers })
         : jsonResponse(status, body, headers),
     { maxNetworkRetries: 0 },
@@ -109,10 +109,8 @@ const everyCall: ReadonlyArray<
 describe("StripePayments pins the API version", () => {
   it.each(everyCall)("%s sends Stripe-Version: DISTILLED_API_VERSION", async (_, call, route) => {
     const stub = stubStripe(() => ({}));
-    await Effect.runPromise(
-      Effect.exit(
-        call.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
-      ),
+    await Effect.runPromiseExit(
+      call.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
     );
     expect(stub.calls).toHaveLength(1);
     expect(`${stub.calls[0]?.method} ${stub.calls[0]?.path}`).toBe(route);

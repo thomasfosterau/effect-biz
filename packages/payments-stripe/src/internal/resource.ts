@@ -13,8 +13,9 @@
 
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as Predicate from "effect/Predicate";
-import * as Record from "effect/Record";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import type * as Schema from "effect/Schema";
 import {
   PaymentInvalidRequestError,
   type PaymentsError,
@@ -54,7 +55,7 @@ const checkIds = (
   route: Route,
   values: ReadonlyArray<unknown>,
 ): Effect.Effect<void, PaymentInvalidRequestError> => {
-  const invalid = values.findIndex((value) => !Predicate.isString(value) || value === "");
+  const invalid = values.findIndex((value) => !P.isString(value) || value === "");
   return invalid === -1
     ? Effect.void
     : Effect.fail(
@@ -65,21 +66,34 @@ const checkIds = (
       );
 };
 
+/**
+ * A value a caller passes as an operation's params: JSON, or a file part of
+ * an upload, nested as deeply as the operation's input is.
+ */
+type Param =
+  | Schema.Json
+  | undefined
+  | Blob
+  | Uint8Array
+  | ArrayBuffer
+  | ReadonlyArray<Param>
+  | { readonly [key: string]: Param };
+
 /** The params argument as an object to spread: absent, or anything but an object, is none. */
-const paramsOf = (value: unknown): Readonly<Record<string, unknown>> =>
-  Predicate.isObject(value) ? value : {};
+const paramsOf = (value: Param): Readonly<Record<string, Param>> =>
+  P.isObject(value) && !isFile(value) && !Array.isArray(value) ? value : {};
 
 /** A file part of an upload: sent as itself, never flattened. */
-const isFile = (value: unknown): boolean =>
+const isFile = (value: Param): value is Blob | Uint8Array | ArrayBuffer =>
   value instanceof Blob || value instanceof Uint8Array || value instanceof ArrayBuffer;
 
 /** One upload parameter as Stripe's bracketed form fields (`file_link_data[create]`). */
-const fieldsOf = (key: string, value: unknown): ReadonlyArray<readonly [string, unknown]> => {
+const fieldsOf = (key: string, value: Param): ReadonlyArray<readonly [string, Param]> => {
   const entries = Array.isArray(value)
     ? value.map((item, index) => [String(index), item] as const)
-    : isFile(value) || !Predicate.isObject(value)
+    : isFile(value) || !P.isObject(value)
       ? undefined
-      : Record.toEntries(value);
+      : R.toEntries(value);
   if (entries === undefined) return [[key, value]];
   return entries.flatMap(([name, item]) => fieldsOf(`${key}[${name}]`, item));
 };
@@ -90,10 +104,8 @@ const fieldsOf = (key: string, value: unknown): ReadonlyArray<readonly [string, 
  * part (`file_link_data={"create":true}`), which Stripe does not read; a flat
  * key it does not know it sends as a text part, as Stripe expects.
  */
-const flattenUpload = (
-  params: Readonly<Record<string, unknown>>,
-): Readonly<Record<string, unknown>> =>
-  Record.fromEntries(Arr.flatMap(Record.toEntries(params), ([key, value]) => fieldsOf(key, value)));
+const flattenUpload = (params: Readonly<Record<string, Param>>): Readonly<Record<string, Param>> =>
+  R.fromEntries(Arr.flatMap(R.toEntries(params), ([key, value]) => fieldsOf(key, value)));
 
 /**
  * One resource-module operation: `(…ids, params?, options?)` calling
@@ -102,7 +114,7 @@ const flattenUpload = (
  */
 export const operation = <F>(distilled: Operation<never, unknown, unknown>, route: Route): F => {
   const call = (
-    ...args: ReadonlyArray<unknown>
+    ...args: ReadonlyArray<Param>
   ): Effect.Effect<unknown, PaymentsError, StripeHttp> => {
     const ids = args.slice(0, route.ids.length);
     const params = route.params ? args[route.ids.length] : undefined;
@@ -110,8 +122,8 @@ export const operation = <F>(distilled: Operation<never, unknown, unknown>, rout
     // signature; `pickOptions` reads only its three fields.
     const options = args[route.ids.length + (route.params ? 1 : 0)] as RequestOptions | undefined;
     const given = paramsOf(params);
-    const input = Record.fromEntries([
-      ...Record.toEntries(route.upload ? flattenUpload(given) : given),
+    const input = R.fromEntries([
+      ...R.toEntries(route.upload ? flattenUpload(given) : given),
       ...route.ids.map((name, index) => [name, ids[index]] as const),
     ]);
     return Effect.andThen(

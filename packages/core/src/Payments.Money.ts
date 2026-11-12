@@ -13,7 +13,9 @@ import * as Schema from "effect/Schema";
  * Using the smallest currency unit avoids floating-point rounding issues and
  * matches the representation used by most payment providers.
  */
-export class Money extends Schema.Class<Money>("@effect-biz/payments/Money")({
+export class Money extends Schema.Class<Money, { readonly brand: unique symbol }>(
+  "@effect-biz/payments/Money",
+)({
   /** The amount in the smallest currency unit (e.g. `2000` = $20.00). */
   amount: Schema.Number,
   /** The lower-cased ISO 4217 currency code, e.g. `"usd"`. */

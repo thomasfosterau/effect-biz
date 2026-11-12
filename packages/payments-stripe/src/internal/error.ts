@@ -8,8 +8,8 @@
 
 import * as Match from "effect/Match";
 import * as Option from "effect/Option";
-import * as Predicate from "effect/Predicate";
-import * as Record from "effect/Record";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import {
   PaymentAuthenticationError,
@@ -102,11 +102,11 @@ const decodeEnvelope = Schema.decodeUnknownOption(StripeErrorEnvelope);
 const orUndefined = (value: string | null | undefined): string | undefined => value ?? undefined;
 
 /** The error fields of a response body, normalising the OAuth form. */
-const errorFieldsOf = (body: unknown): StripeErrorFields | undefined =>
+const errorFieldsOf = (body: Schema.Json | undefined): StripeErrorFields | undefined =>
   Option.match(decodeEnvelope(body), {
     onNone: () => undefined,
     onSome: ({ error, error_description }): StripeErrorFields =>
-      Predicate.isString(error)
+      P.isString(error)
         ? {
             type: error,
             code: undefined,
@@ -119,12 +119,12 @@ const errorFieldsOf = (body: unknown): StripeErrorFields | undefined =>
             code: orUndefined(error.code),
             message: orUndefined(error.message),
             param: orUndefined(error.param),
-            raw: Predicate.hasProperty(body, "error") ? body.error : undefined,
+            raw: P.hasProperty(body, "error") ? body.error : undefined,
           },
   });
 
 /** The SDK's `type` → error class dispatch (`StripeError.generate`). */
-const KIND_BY_TYPE: Record.ReadonlyRecord<string, StripeErrorKind> = {
+const KIND_BY_TYPE: R.ReadonlyRecord<string, StripeErrorKind> = {
   card_error: "StripeCardError",
   invalid_request_error: "StripeInvalidRequestError",
   api_error: "StripeAPIError",
@@ -135,7 +135,7 @@ const KIND_BY_TYPE: Record.ReadonlyRecord<string, StripeErrorKind> = {
 };
 
 /** The statuses whose class the SDK's response handler fixes regardless of `type`. */
-const KIND_BY_STATUS: Record.ReadonlyRecord<string, StripeErrorKind> = {
+const KIND_BY_STATUS: R.ReadonlyRecord<string, StripeErrorKind> = {
   401: "StripeAuthenticationError",
   403: "StripePermissionError",
   429: "StripeRateLimitError",
@@ -146,9 +146,9 @@ const KIND_BY_STATUS: Record.ReadonlyRecord<string, StripeErrorKind> = {
  * response handler; otherwise the body's `type` decides.
  */
 const kindOf = (status: number, type: string | undefined): StripeErrorKind =>
-  Record.get(KIND_BY_STATUS, String(status)).pipe(
+  R.get(KIND_BY_STATUS, String(status)).pipe(
     Option.orElse(() =>
-      Option.flatMap(Option.fromNullishOr(type), (known) => Record.get(KIND_BY_TYPE, known)),
+      Option.flatMap(Option.fromNullishOr(type), (known) => R.get(KIND_BY_TYPE, known)),
     ),
     Option.getOrElse((): StripeErrorKind => "StripeUnknownError"),
   );
@@ -167,7 +167,7 @@ export const retryAfterOf = (header: string | undefined): number | undefined => 
 export const classifyResponse = (
   status: number,
   retryAfter: string | undefined,
-  body: unknown,
+  body: Schema.Json | undefined,
 ): StripeFailure => {
   const error = errorFieldsOf(body);
   if (error === undefined) {

@@ -76,6 +76,8 @@ export default defineConfig({
       perf: "error",
     },
     rules: {
+      // Entities and errors are nominal: `Schema.Class<Self, { readonly brand: unique symbol }>`.
+      "effecttsgo/schema-class-missing-brand": "error",
       "eslint/no-unused-vars": [
         "warn",
         {
@@ -115,13 +117,15 @@ export default defineConfig({
             "The `Buffer` global is typed `any` wherever @cloudflare/workers-types is loaded. Use Uint8Array / TextEncoder / DataView.",
         },
       ],
+      // `@effect/tsgo` lint rules held at `error` with zero sites.
+      "effecttsgo/run-of-exit-to-run-exit": "error",
+      "effecttsgo/effect-fn-iife": "error",
+      "effecttsgo/flat-map-conditional-to-filter-or-fail": "error",
+      "effecttsgo/map-some-to-as-some": "error",
+      "effecttsgo/effect-succeed-with-undefined": "error",
       // `casting-awareness` is an awareness prompt, not a defect rule — it
       // fires on every `as`. Stays visible as a warning.
       "effect/casting-awareness": "warn",
-      // Hard-codes abbreviations (`Arr`, `P`, `R`, …) with no options, so it is
-      // unsatisfiable under the full-name convention (`import * as Option from
-      // "effect/Option"`) this family shares with its consumers.
-      "effect/prefer-namespace-imports": "off",
 
       // ---- Effect preset: rules this workspace's conventions cut across ----
       // `prefer-option-over-null` fires on `?: T | undefined`, which is the
@@ -129,9 +133,6 @@ export default defineConfig({
       // a caller forward an optional of its own into — the spelling AGENTS.md
       // mandates — and on the `NullOr` columns a SQL row decodes to.
       "effect/prefer-option-over-null": "off",
-      // `unknown` is the honest type at a decoding boundary (a SQL row, an
-      // HTTP body) before `Schema` has decoded it.
-      "effect/no-unknown-parameters": "warn",
       "effect/no-unknown-returns": "warn",
       "effect/no-unsafe-dictionary-type": "warn",
       "typescript/no-explicit-any": "off",
