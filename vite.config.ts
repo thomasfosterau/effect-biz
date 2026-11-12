@@ -111,6 +111,8 @@ export default defineConfig({
             "The `Buffer` global is typed `any` wherever @cloudflare/workers-types is loaded. Use Uint8Array / TextEncoder / DataView.",
         },
       ],
+      // `@effect/tsgo` lint rules held at `error` with zero sites.
+      "effecttsgo/run-of-exit-to-run-exit": "error",
       // `casting-awareness` is an awareness prompt, not a defect rule — it
       // fires on every `as`. Stays visible as a warning.
       "effect/casting-awareness": "warn",

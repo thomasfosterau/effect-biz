@@ -52,8 +52,8 @@ const requestOf = async (
 ): Promise<{ readonly idempotencyKey: string | undefined; readonly count: number }> => {
   const stub = stubStripe(() => ({}));
   // The empty answer fails the decode; the request was recorded before that.
-  await Effect.runPromise(
-    Effect.exit(operation.pipe(Effect.provide(capabilities), Effect.provide(stub.layer))),
+  await Effect.runPromiseExit(
+    operation.pipe(Effect.provide(capabilities), Effect.provide(stub.layer)),
   );
   return {
     idempotencyKey: stub.calls[0]?.headers.get("idempotency-key") ?? undefined,
@@ -125,13 +125,11 @@ describe("Stripe maps the neutral idempotencyKey to Idempotency-Key", () => {
 
   it("sends none on the cancel operations", async () => {
     const stub = stubStripe(() => ({}));
-    await Effect.runPromise(
-      Effect.exit(
-        Effect.gen(function* () {
-          yield* Effect.exit(Subscription.cancel("sub_1"));
-          yield* Effect.exit(PaymentIntent.cancel("pi_1"));
-        }).pipe(Effect.provide(noRetries), Effect.provide(stub.layer)),
-      ),
+    await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        yield* Effect.exit(Subscription.cancel("sub_1"));
+        yield* Effect.exit(PaymentIntent.cancel("pi_1"));
+      }).pipe(Effect.provide(noRetries), Effect.provide(stub.layer)),
     );
     expect(stub.calls.map((call) => [call.method, call.headers.get("idempotency-key")])).toEqual([
       ["DELETE", null],
