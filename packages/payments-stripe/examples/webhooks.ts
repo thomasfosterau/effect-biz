@@ -81,10 +81,10 @@ const handleEvent = Match.type<Webhook.HandledEvent>().pipe(
 const status = (code: number) => Effect.succeed(new Response(null, { status: code }));
 
 /** The request body could not be read (the client went away mid-request). */
-class UnreadableBodyError extends Schema.TaggedError<UnreadableBodyError>()(
-  "UnreadableBodyError",
-  {},
-) {}
+class UnreadableBodyError extends Schema.TaggedError<
+  UnreadableBodyError,
+  { readonly brand: unique symbol }
+>()("UnreadableBodyError", {}) {}
 
 /**
  * A validly signed event of a handled type whose `data.object` does not match
@@ -92,10 +92,10 @@ class UnreadableBodyError extends Schema.TaggedError<UnreadableBodyError>()(
  * new API version), not a bad delivery. It carries only the event's id and
  * type, never the decode failure, whose text can echo payload fields.
  */
-class UndecodableEventError extends Schema.TaggedError<UndecodableEventError>()(
-  "UndecodableEventError",
-  { id: Schema.String, type: Schema.String },
-) {}
+class UndecodableEventError extends Schema.TaggedError<
+  UndecodableEventError,
+  { readonly brand: unique symbol }
+>()("UndecodableEventError", { id: Schema.String, type: Schema.String }) {}
 
 /**
  * Build the webhook endpoint: a web-standard `Request` → `Response` handler,

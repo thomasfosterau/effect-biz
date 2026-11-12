@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
-import * as Rec from "effect/Record";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import type * as SchemaAST from "effect/SchemaAST";
@@ -112,7 +112,7 @@ const failureAt = (issue: "Missing key" | "Expected no excess property", member:
 
 /** `fixture` without its `member`: the mutation the strict check must catch. */
 const without = (fixture: Readonly<Record<string, unknown>>, member: string) =>
-  Rec.remove(fixture, member);
+  R.remove(fixture, member);
 
 describe("endive fixtures", () => {
   it("the subscription is endive-shaped: Distilled's schema decodes it strictly", () => {

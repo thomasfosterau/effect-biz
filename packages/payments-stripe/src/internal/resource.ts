@@ -13,8 +13,8 @@
 
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as Predicate from "effect/Predicate";
-import * as Record from "effect/Record";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import {
   PaymentInvalidRequestError,
   type PaymentsError,
@@ -54,7 +54,7 @@ const checkIds = (
   route: Route,
   values: ReadonlyArray<unknown>,
 ): Effect.Effect<void, PaymentInvalidRequestError> => {
-  const invalid = values.findIndex((value) => !Predicate.isString(value) || value === "");
+  const invalid = values.findIndex((value) => !P.isString(value) || value === "");
   return invalid === -1
     ? Effect.void
     : Effect.fail(
@@ -67,7 +67,7 @@ const checkIds = (
 
 /** The params argument as an object to spread: absent, or anything but an object, is none. */
 const paramsOf = (value: unknown): Readonly<Record<string, unknown>> =>
-  Predicate.isObject(value) ? value : {};
+  P.isObject(value) ? value : {};
 
 /** A file part of an upload: sent as itself, never flattened. */
 const isFile = (value: unknown): boolean =>
@@ -77,9 +77,9 @@ const isFile = (value: unknown): boolean =>
 const fieldsOf = (key: string, value: unknown): ReadonlyArray<readonly [string, unknown]> => {
   const entries = Array.isArray(value)
     ? value.map((item, index) => [String(index), item] as const)
-    : isFile(value) || !Predicate.isObject(value)
+    : isFile(value) || !P.isObject(value)
       ? undefined
-      : Record.toEntries(value);
+      : R.toEntries(value);
   if (entries === undefined) return [[key, value]];
   return entries.flatMap(([name, item]) => fieldsOf(`${key}[${name}]`, item));
 };
@@ -93,7 +93,7 @@ const fieldsOf = (key: string, value: unknown): ReadonlyArray<readonly [string, 
 const flattenUpload = (
   params: Readonly<Record<string, unknown>>,
 ): Readonly<Record<string, unknown>> =>
-  Record.fromEntries(Arr.flatMap(Record.toEntries(params), ([key, value]) => fieldsOf(key, value)));
+  R.fromEntries(Arr.flatMap(R.toEntries(params), ([key, value]) => fieldsOf(key, value)));
 
 /**
  * One resource-module operation: `(…ids, params?, options?)` calling
@@ -110,8 +110,8 @@ export const operation = <F>(distilled: Operation<never, unknown, unknown>, rout
     // signature; `pickOptions` reads only its three fields.
     const options = args[route.ids.length + (route.params ? 1 : 0)] as RequestOptions | undefined;
     const given = paramsOf(params);
-    const input = Record.fromEntries([
-      ...Record.toEntries(route.upload ? flattenUpload(given) : given),
+    const input = R.fromEntries([
+      ...R.toEntries(route.upload ? flattenUpload(given) : given),
       ...route.ids.map((name, index) => [name, ids[index]] as const),
     ]);
     return Effect.andThen(

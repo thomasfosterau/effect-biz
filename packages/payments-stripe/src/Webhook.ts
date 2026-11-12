@@ -22,7 +22,7 @@ import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import type Stripe from "stripe";
@@ -182,7 +182,7 @@ export const verifySignature = (
  * import { Effect, Option, Redacted, Schema } from "effect";
  * import * as Webhook from "@thomasfosterau/effect-biz-payments-stripe/Webhook";
  *
- * class UnreadableBodyError extends Schema.TaggedError<UnreadableBodyError>()(
+ * class UnreadableBodyError extends Schema.TaggedError<UnreadableBodyError, { readonly brand: unique symbol }>()(
  *   "UnreadableBodyError",
  *   {},
  * ) {}
@@ -301,7 +301,7 @@ const decodeEventJson = Schema.decodeUnknownEffect(Schema.fromJsonString(Webhook
 export const decodeEvent = (
   payload: string | Uint8Array,
 ): Effect.Effect<WebhookEvent, Schema.SchemaError> =>
-  decodeEventJson(Predicate.isString(payload) ? payload : new TextDecoder().decode(payload));
+  decodeEventJson(P.isString(payload) ? payload : new TextDecoder().decode(payload));
 
 /**
  * The event types a subscription billing system acts on:
@@ -509,7 +509,7 @@ const sdkTolerance = (tolerance: number | undefined): number | undefined =>
 
 /** A payload the SDK takes as text: a `Buffer` is read as UTF-8. */
 const payloadText = (payload: string | Buffer): string =>
-  Predicate.isString(payload) ? payload : payload.toString("utf8");
+  P.isString(payload) ? payload : payload.toString("utf8");
 
 /**
  * The `SignatureVerificationError` an SDK-based wrapper fails with when the
@@ -524,9 +524,7 @@ const sdkFailure = (
   new SignatureVerificationError({
     // The thrown error's message; the value as a string when it carries none.
     message:
-      Predicate.hasProperty(error, "message") && Predicate.isString(error.message)
-        ? error.message
-        : String(error),
+      P.hasProperty(error, "message") && P.isString(error.message) ? error.message : String(error),
     header,
     payload: payloadText(payload),
   });
