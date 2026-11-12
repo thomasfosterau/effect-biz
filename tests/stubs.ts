@@ -18,7 +18,6 @@ import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { FetchHttpClient } from "effect/http";
-import { omitUndefined } from "@thomasfosterau/effect-biz/Payments.internal";
 import { TestClock } from "effect/testing";
 
 /** A request as the stubbed `fetch` saw it. */
@@ -33,6 +32,15 @@ export interface CapturedRequest {
   /** A multipart body, as sent; absent for any other body. */
   readonly form?: FormData;
 }
+
+/** The optional `body` / `form` members of a {@link CapturedRequest}, present only when the request had one. */
+const bodyFields = (init?: RequestInit): Pick<CapturedRequest, "body" | "form"> =>
+  init?.body instanceof FormData
+    ? { form: init.body }
+    : Option.match(Option.flatMap(Option.fromNullishOr(init?.body), textOf), {
+        onNone: () => ({}),
+        onSome: (body) => ({ body }),
+      });
 
 const textOf = (raw: BodyInit): Option.Option<string> =>
   P.isString(raw)
@@ -73,10 +81,7 @@ export const stubFetch = (
       method: init?.method ?? "GET",
       headers: new Headers(init?.headers),
       init: init ?? {},
-      ...omitUndefined({
-        body: Option.getOrUndefined(Option.flatMap(Option.fromNullishOr(init?.body), textOf)),
-        form: init?.body instanceof FormData ? init.body : undefined,
-      }),
+      ...bodyFields(init),
     };
     calls.push(captured);
     return handler(captured, calls.length);
