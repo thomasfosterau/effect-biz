@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.schemastore.org/package",
   "name": "@thomasfosterau/effect-biz",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "The foundation of effect-biz (modular ERP and business-process services for Effect) and its vendor-neutral payments core",
   "keywords": [
     "business",

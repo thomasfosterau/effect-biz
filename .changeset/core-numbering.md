@@ -1,5 +1,0 @@
----
-"@thomasfosterau/effect-biz": minor
----
-
-Add document numbering sequences (#31). `@thomasfosterau/effect-biz/NumberSequence` defines a `SequenceDefinition` per company and `DocumentType`: a `Pattern` of text and tokens (`{YYYY}`, `{YY}`, `{MM}`, `{FY}` and `{FYY}` for the fiscal year named by the year it ends in, `{COMPANY}` and exactly one `{#}` counter), a padding, a `ResetPeriod` (`"never"`, `"yearly"`, `"fiscal-yearly"`, `"monthly"`, in the company's time zone) and a `NumberingMode`. `define` creates or updates a definition, stored per tenant behind the `SequenceDefinitions` port (`get`, `list`). `next` issues a `DocumentNumber` through the `NumberSequences` port: in gap-less mode the counter write is staged and guarded in the command's `UnitOfWork` batch, so concurrent commands never share a number and a rolled-back command consumes none; in gaps-allowed mode it commits at once. `layerMemory` is the in-memory implementation; `periodOf`, `advance`, `format` and `fiscalYearOf` are the pure steps a SQL layer shares. `./testing` adds `numberSequencesContract`.

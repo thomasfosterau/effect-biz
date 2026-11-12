@@ -1,5 +1,0 @@
----
-"@thomasfosterau/effect-biz": minor
----
-
-Add domain events, the transactional outbox, the dispatcher and idempotent subscribers (#30). `./DomainEvent` defines an event type's versions (`make`, and `evolve` with an upcaster from the previous version), the JSON-safe `Envelope` (`EnvelopeFromJson`), and correlation and causation through `CurrentCorrelation`, `withCorrelation` and `causedBy`. `./EventRecorder`'s `record` fills the envelope from the context (tenant, optional company, actor kind and id, correlation, a fresh `EventId`, `Clock`) and stages it into the outbox within the command's unit of work. `./Outbox` is the port (`append`, lease-based `claimBatch`, `markDispatched`, `markFailed`, `deadLetters`) with per-(entry, subscriber) delivery state and per-aggregate ordering, and `layerMemory`. `./Subscriber` builds named handlers made exactly-once by the `Inbox` port (`layerInboxMemory`), whose mark commits with the handler's writes. `./Dispatcher` claims and delivers batches with exponential backoff and dead letters (`make`, `runOnce`, `drain`, `layer` with a scoped relay fiber, `layerOnDemand`). `./testing` adds `eventsContract`.
