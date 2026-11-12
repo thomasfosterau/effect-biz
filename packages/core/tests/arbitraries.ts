@@ -62,4 +62,4 @@ export const failed = <A>(result: Result.Result<A, BusinessRuleViolation>): Busi
 
 /** Whether decoding the input (JSON, or one of the non-JSON values a test feeds: a bigint, undefined) against the schema fails. */
 export const rejects = (schema: Schema.Decoder<unknown>, input?: Schema.Json | bigint): boolean =>
-  Schema.decodeUnknownExit(schema)(input)._tag === "Failure";
+  Schema.decodeExit(schema)(input)._tag === "Failure";

@@ -163,7 +163,7 @@ describe("the resources published for every remaining operation (effect-finance#
     expect(request?.url.pathname).toBe("/v2/core/accounts/acct_1");
     expect(request?.headers.get("content-type")).toBe("application/json");
     expect(
-      Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(request?.body ?? "null"),
+      Schema.decodeSync(Schema.fromJsonString(Schema.Unknown))(request?.body ?? "null"),
     ).toEqual({
       display_name: "Jenny Rosen",
       metadata: { order: "42" },
