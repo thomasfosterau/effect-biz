@@ -112,6 +112,11 @@ export const awaitTestPromise = <A>(
   Effect.tryPromise({ try: evaluate, catch: (cause) => new TestPromiseRejected({ cause }) });
 
 /** Let pending promises (the stubbed `fetch`) settle. */
+/** A `fetch` handler that rejects synchronously with `error`, as a dropped connection does. */
+export const throwing = (error: Error): never => {
+  throw error;
+};
+
 export const macrotask = Effect.callback<void>((resume) => {
   const timer = setTimeout(() => resume(Effect.void), 0);
   return Effect.sync(() => clearTimeout(timer));

@@ -17,10 +17,12 @@ import { Credentials } from "@distilled.cloud/stripe/Credentials";
 import { jsonResponse, stubApi } from "../../../tests/stubs.ts";
 
 export {
+  awaitTestPromise,
   type CapturedRequest,
   jsonResponse,
   reachableFrom,
   stubFetch,
+  throwing,
   withTestClock,
 } from "../../../tests/stubs.ts";
 

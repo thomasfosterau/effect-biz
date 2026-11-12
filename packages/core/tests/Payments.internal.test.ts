@@ -47,7 +47,13 @@ import {
   timeoutOf,
   tokenCache,
 } from "../src/Payments.internal.ts";
-import { jsonResponse, reachableFrom, stubFetch, withTestClock } from "../../../tests/stubs.ts";
+import {
+  jsonResponse,
+  reachableFrom,
+  stubFetch,
+  throwing,
+  withTestClock,
+} from "../../../tests/stubs.ts";
 
 class LoginFailed extends Schema.TaggedError<LoginFailed, { readonly brand: unique symbol }>()(
   "LoginFailed",
@@ -387,10 +393,6 @@ describe("send", () => {
     effect: (http: HttpClient.HttpClient) => Effect.Effect<A, E>,
     fetch: () => Response | Promise<Response>,
   ) => Effect.flatMap(HttpClient.HttpClient, effect).pipe(Effect.provide(stubFetch(fetch).http));
-  /** A `fetch` that rejects synchronously with `error`, as a dropped connection does. */
-  const throwing = (error: Error): never => {
-    throw error;
-  };
   const options = { provider: "Acme", what: "request", limit: Duration.seconds(5) };
 
   it.effect("reads any status with its JSON body, or {} for a body that is not JSON", () =>

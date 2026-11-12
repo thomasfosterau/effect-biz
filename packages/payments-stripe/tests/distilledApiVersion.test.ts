@@ -1,4 +1,5 @@
-import { describe, it, expect, expectTypeOf } from "vite-plus/test";
+import { describe, expect, expectTypeOf } from "vite-plus/test";
+import { it } from "@effect/vitest";
 // oxlint-disable-next-line effect/use-filesystem-service -- a test reading an installed package's manifest, outside any Effect runtime
 import { readFileSync } from "node:fs";
 // oxlint-disable-next-line effect/avoid-node-imports -- see the import above

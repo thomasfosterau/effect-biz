@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -53,9 +54,7 @@ const onDefaultLayer = <A, E>(
   body: Schema.Json,
 ) => {
   const { http, calls } = stubFetch(() => jsonResponse(200, body));
-  const result = Effect.runPromise(
-    effect.pipe(Effect.provide(StripePayments.layer(config)), Effect.provide(http)),
-  );
+  const result = effect.pipe(Effect.provide(StripePayments.layer(config)), Effect.provide(http));
   return { result, calls };
 };
 
@@ -173,93 +172,106 @@ describe("endive fixtures", () => {
 });
 
 describe("the default layer decodes endive responses", () => {
-  it("maps an endive subscription", async () => {
-    const { result, calls } = onDefaultLayer(
-      Subscription.retrieve(endiveSubscription.id),
-      endiveSubscription,
-    );
-    const subscription = await result;
-    expect(subscription).toBeInstanceOf(Subscription.Subscription);
-    expect(subscription).toMatchObject({
-      id: endiveSubscription.id,
-      customerId: endiveSubscription.customer,
-      status: "active",
-      cancelAtPeriodEnd: false,
-      currentPeriodEnd: endiveSubscription.items.data[0]?.current_period_end,
-    });
-    expect(subscription.items.map((item) => item.priceId)).toEqual([
-      endiveSubscription.items.data[0]?.price.id,
-    ]);
-    expect(calls[0]?.headers.get("stripe-version")).toBe(StripePayments.DISTILLED_API_VERSION);
-  });
+  it.effect("maps an endive subscription", () =>
+    Effect.gen(function* () {
+      const { result, calls } = onDefaultLayer(
+        Subscription.retrieve(endiveSubscription.id),
+        endiveSubscription,
+      );
+      const subscription = yield* result;
+      expect(subscription).toBeInstanceOf(Subscription.Subscription);
+      expect(subscription).toMatchObject({
+        id: endiveSubscription.id,
+        customerId: endiveSubscription.customer,
+        status: "active",
+        cancelAtPeriodEnd: false,
+        currentPeriodEnd: endiveSubscription.items.data[0]?.current_period_end,
+      });
+      expect(subscription.items.map((item) => item.priceId)).toEqual([
+        endiveSubscription.items.data[0]?.price.id,
+      ]);
+      expect(calls[0]?.headers.get("stripe-version")).toBe(StripePayments.DISTILLED_API_VERSION);
+    }),
+  );
 
-  it("maps an endive checkout session", async () => {
-    const { result, calls } = onDefaultLayer(
-      CheckoutSession.create({
-        mode: "subscription",
-        customer: "cus_QxAbCdEfGhIjKl",
-        lineItems: [{ price: "price_monthly" }],
-        successUrl: "https://example.test/success",
-        cancelUrl: "https://example.test/cancel",
+  it.effect("maps an endive checkout session", () =>
+    Effect.gen(function* () {
+      const { result, calls } = onDefaultLayer(
+        CheckoutSession.create({
+          mode: "subscription",
+          customer: "cus_QxAbCdEfGhIjKl",
+          lineItems: [{ price: "price_monthly" }],
+          successUrl: "https://example.test/success",
+          cancelUrl: "https://example.test/cancel",
+        }),
+        endiveCheckoutSession,
+      );
+      const session = yield* result;
+      expect(session).toBeInstanceOf(CheckoutSession.CheckoutSession);
+      expect(session).toMatchObject({
+        id: endiveCheckoutSession.id,
+        url: endiveCheckoutSession.url,
+      });
+      expect(calls[0]?.headers.get("stripe-version")).toBe(StripePayments.DISTILLED_API_VERSION);
+    }),
+  );
+
+  it.effect("maps an endive payment intent", () =>
+    Effect.gen(function* () {
+      const { result, calls } = onDefaultLayer(
+        PaymentIntent.retrieve(endivePaymentIntent.id),
+        endivePaymentIntent,
+      );
+      const intent = yield* result;
+      expect(intent).toBeInstanceOf(PaymentIntent.PaymentIntent);
+      expect(intent).toMatchObject({
+        id: endivePaymentIntent.id,
+        amount: endivePaymentIntent.amount,
+        currency: endivePaymentIntent.currency,
+        status: "succeeded",
+        customerId: endivePaymentIntent.customer,
+        paymentMethodId: endivePaymentIntent.payment_method,
+        clientSecret: endivePaymentIntent.client_secret,
+        description: endivePaymentIntent.description,
+        metadata: endivePaymentIntent.metadata,
+        created: endivePaymentIntent.created,
+      });
+      expect(calls[0]?.method).toBe("GET");
+      expect(calls[0]?.url.pathname).toBe(`/v1/payment_intents/${endivePaymentIntent.id}`);
+      expect(calls[0]?.headers.get("stripe-version")).toBe(StripePayments.DISTILLED_API_VERSION);
+    }),
+  );
+
+  it.effect("maps an endive product", () =>
+    Effect.gen(function* () {
+      const { result, calls } = onDefaultLayer(Product.retrieve(endiveProduct.id), endiveProduct);
+      const product = yield* result;
+      expect(product).toBeInstanceOf(Product.Product);
+      expect(product).toMatchObject({
+        id: endiveProduct.id,
+        name: endiveProduct.name,
+        description: endiveProduct.description,
+        active: true,
+        metadata: endiveProduct.metadata,
+        created: endiveProduct.created,
+      });
+      expect(calls[0]?.method).toBe("GET");
+      expect(calls[0]?.url.pathname).toBe(`/v1/products/${endiveProduct.id}`);
+      expect(calls[0]?.headers.get("stripe-version")).toBe(StripePayments.DISTILLED_API_VERSION);
+    }),
+  );
+
+  it.effect(
+    "returns an endive subscription from the resource module as sent, under strict validation too",
+    () =>
+      Effect.gen(function* () {
+        const { http } = stubFetch(() => jsonResponse(200, endiveSubscription));
+        const subscription = yield* StripeSubscription.retrieve(endiveSubscription.id).pipe(
+          Effect.provide(StripeHttp.layer(config)),
+          Effect.provide(http),
+          Effect.provide(strictValidation),
+        );
+        expect(subscription).toEqual(endiveSubscription);
       }),
-      endiveCheckoutSession,
-    );
-    const session = await result;
-    expect(session).toBeInstanceOf(CheckoutSession.CheckoutSession);
-    expect(session).toMatchObject({ id: endiveCheckoutSession.id, url: endiveCheckoutSession.url });
-    expect(calls[0]?.headers.get("stripe-version")).toBe(StripePayments.DISTILLED_API_VERSION);
-  });
-
-  it("maps an endive payment intent", async () => {
-    const { result, calls } = onDefaultLayer(
-      PaymentIntent.retrieve(endivePaymentIntent.id),
-      endivePaymentIntent,
-    );
-    const intent = await result;
-    expect(intent).toBeInstanceOf(PaymentIntent.PaymentIntent);
-    expect(intent).toMatchObject({
-      id: endivePaymentIntent.id,
-      amount: endivePaymentIntent.amount,
-      currency: endivePaymentIntent.currency,
-      status: "succeeded",
-      customerId: endivePaymentIntent.customer,
-      paymentMethodId: endivePaymentIntent.payment_method,
-      clientSecret: endivePaymentIntent.client_secret,
-      description: endivePaymentIntent.description,
-      metadata: endivePaymentIntent.metadata,
-      created: endivePaymentIntent.created,
-    });
-    expect(calls[0]?.method).toBe("GET");
-    expect(calls[0]?.url.pathname).toBe(`/v1/payment_intents/${endivePaymentIntent.id}`);
-    expect(calls[0]?.headers.get("stripe-version")).toBe(StripePayments.DISTILLED_API_VERSION);
-  });
-
-  it("maps an endive product", async () => {
-    const { result, calls } = onDefaultLayer(Product.retrieve(endiveProduct.id), endiveProduct);
-    const product = await result;
-    expect(product).toBeInstanceOf(Product.Product);
-    expect(product).toMatchObject({
-      id: endiveProduct.id,
-      name: endiveProduct.name,
-      description: endiveProduct.description,
-      active: true,
-      metadata: endiveProduct.metadata,
-      created: endiveProduct.created,
-    });
-    expect(calls[0]?.method).toBe("GET");
-    expect(calls[0]?.url.pathname).toBe(`/v1/products/${endiveProduct.id}`);
-    expect(calls[0]?.headers.get("stripe-version")).toBe(StripePayments.DISTILLED_API_VERSION);
-  });
-
-  it("returns an endive subscription from the resource module as sent, under strict validation too", async () => {
-    const { http } = stubFetch(() => jsonResponse(200, endiveSubscription));
-    const subscription = await Effect.runPromise(
-      StripeSubscription.retrieve(endiveSubscription.id).pipe(
-        Effect.provide(StripeHttp.layer(config)),
-        Effect.provide(http),
-        Effect.provide(strictValidation),
-      ),
-    );
-    expect(subscription).toEqual(endiveSubscription);
-  });
+  );
 });
