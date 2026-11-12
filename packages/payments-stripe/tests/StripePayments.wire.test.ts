@@ -109,10 +109,8 @@ const everyCall: ReadonlyArray<
 describe("StripePayments pins the API version", () => {
   it.each(everyCall)("%s sends Stripe-Version: DISTILLED_API_VERSION", async (_, call, route) => {
     const stub = stubStripe(() => ({}));
-    await Effect.runPromise(
-      Effect.exit(
-        call.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer)),
-      ),
+    await Effect.runPromiseExit(
+      call.pipe(Effect.provide(StripePayments.capabilities), Effect.provide(stub.layer)),
     );
     expect(stub.calls).toHaveLength(1);
     expect(`${stub.calls[0]?.method} ${stub.calls[0]?.path}`).toBe(route);

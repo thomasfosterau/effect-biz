@@ -489,20 +489,21 @@ export const layerFromEnv = (
 ): Layer.Layer<StripeHttp, PaymentConfigError, HttpClient.HttpClient> =>
   Layer.effect(
     StripeHttp,
-    Effect.fn("StripeHttp.layerFromEnv")(function* () {
-      const apiKey = yield* Config.Redacted(envVar).pipe(Config.withDefault(Redacted.make("")));
+    Effect.gen(function* () {
+      const apiKey = yield* Config.Redacted(envVar).pipe(
+        Config.withDefault(Redacted.make("")),
+        Effect.catchTag("ConfigError", (error) =>
+          Effect.fail(new PaymentConfigError({ message: error.message })),
+        ),
+      );
       if (Redacted.value(apiKey) === "") {
         return yield* new PaymentConfigError({
           message: `Environment variable ${envVar} is not set`,
         });
       }
       return yield* make({ apiKey });
-    })().pipe(
-      Effect.catchTag("ConfigError", (error) =>
-        Effect.fail(new PaymentConfigError({ message: error.message })),
-      ),
-    ),
-  );
+    }),
+  ).pipe(Layer.withSpan("StripeHttp.layerFromEnv"));
 
 /** Options for {@link layerConfig}. */
 export interface LayerConfigOptions extends Omit<StripeHttpConfig, "apiKey"> {
@@ -566,10 +567,11 @@ export const layerConfig = ({
           }),
       );
       const credentials = Effect.flatMap(ConfigProvider.ConfigProvider, (caller) =>
-        Effect.flatMap(readKey(envVar, caller), (key) =>
-          Option.isSome(key) || caller === builtUnder
-            ? Effect.succeed(key)
-            : readKey(envVar, builtUnder),
+        readKey(envVar, caller).pipe(
+          Effect.filterOrElse(
+            (key) => Option.isSome(key) || caller === builtUnder,
+            () => readKey(envVar, builtUnder),
+          ),
         ),
       ).pipe(
         Effect.flatMap(
