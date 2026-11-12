@@ -54,19 +54,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # Only to run the CLI on the runner; the container installs its own.
-      - name: Setup pnpm
-        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      # Only to run the CLI on the runner (no install); the container installs
+      # its own toolchain.
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@cab1ab9eaff52d4857875f4f2c016e36af8f2c76 # v1.22.0
         with:
-          node-version: "*"
-          check-latest: true
+          version-file: pnpm-workspace.yaml
+          node-version: lts
+          run-install: false
       # `up` fails when the image, a feature or `postCreateCommand` fails.
       - name: Build and start the container
         run: |
           set -o pipefail
-          pnpm dlx "$DEVCONTAINER_CLI" up --workspace-folder . --log-level info 2>&1 | tee "$RUNNER_TEMP/up.log"
+          vp dlx "$DEVCONTAINER_CLI" up --workspace-folder . --log-level info 2>&1 | tee "$RUNNER_TEMP/up.log"
       # The hook logs and continues on every failure; any such line fails here.
       - name: Assert the hook reported no failure
         run: |
@@ -80,7 +80,7 @@ jobs:
         run: |
           pin="$(sed -nE 's/^  vite-plus: "?([0-9]+\.[0-9]+\.[0-9]+)"?$/\1/p' pnpm-workspace.yaml | head -1)"
           echo "catalog vite-plus pin: $pin"
-          run() { pnpm dlx "$DEVCONTAINER_CLI" exec --workspace-folder . bash -lc "$1"; }
+          run() { vp dlx "$DEVCONTAINER_CLI" exec --workspace-folder . bash -lc "$1"; }
           set -x
           run 'id; echo "HOME=$HOME"; pwd; echo "PATH=$PATH"; env | grep -E "^(VP_|VITE_PLUS|PNPM|COREPACK)" || true; type -a vp node pnpm; ls -l "$HOME/.local/bin"'
           # The hook links the global CLI, not its node_modules fallback shim.
