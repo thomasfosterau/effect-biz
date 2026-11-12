@@ -1,8 +1,8 @@
 import type * as Schema from "effect/Schema";
-import { describe, expect } from "vite-plus/test";
-import { it } from "@effect/vitest";
+import { expect } from "vite-plus/test";
+import { layer } from "@effect/vitest";
+import { FetchHttpClient } from "effect/http";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Customer from "@thomasfosterau/effect-biz/Payments.Customer";
 import * as Product from "@thomasfosterau/effect-biz/Payments.Product";
@@ -11,8 +11,14 @@ import * as PaymentIntent from "@thomasfosterau/effect-biz/Payments.PaymentInten
 import * as Subscription from "@thomasfosterau/effect-biz/Payments.Subscription";
 import * as Refund from "@thomasfosterau/effect-biz/Payments.Refund";
 import { PaymentNetworkError, PaymentProviderError } from "@thomasfosterau/effect-biz/Payments";
-import * as StripePayments from "../src/StripePayments.ts";
-import { formOf, stubStripe, stubStripeTable, throwing, withTestClock } from "./support.ts";
+import {
+  capabilitiesOverStub,
+  formOf,
+  stubStripe,
+  stubStripeTable,
+  throwing,
+  withTestClock,
+} from "./support.ts";
 
 /**
  * Canned Stripe objects, keyed by `METHOD /path`, so the neutral mapping is
@@ -116,20 +122,18 @@ const responses = {
 } satisfies Record<string, Schema.Json>;
 
 /** Run `effect` against the capabilities over a stubbed API answering from `answers`. */
-const run = <A, E>(
-  effect: Effect.Effect<A, E, Layer.Success<typeof StripePayments.capabilities>>,
+const run = <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
   answers: Record<string, Schema.Json | Response> = responses,
 ) => {
   const stub = stubStripeTable(answers);
   return {
     calls: stub.calls,
-    result: withTestClock(
-      effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
-    ),
+    result: withTestClock(effect.pipe(Effect.provideService(FetchHttpClient.Fetch, stub.fetch))),
   };
 };
 
-describe("StripePayments capabilities", () => {
+layer(capabilitiesOverStub)("StripePayments capabilities", (it) => {
   it.effect("maps a created customer to the neutral entity", () =>
     Effect.gen(function* () {
       const { result, calls } = run(
@@ -461,7 +465,7 @@ describe("StripePayments capabilities", () => {
       const stub = stubStripe(() => throwing(new TypeError("network down")));
       const error = yield* withTestClock(
         Effect.flip(Customer.create({ email: "x@example.com" })).pipe(
-          Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer)),
+          Effect.provideService(FetchHttpClient.Fetch, stub.fetch),
         ),
       );
       expect(error).toBeInstanceOf(PaymentNetworkError);

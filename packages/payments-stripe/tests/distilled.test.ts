@@ -1,5 +1,6 @@
-import { describe, expect } from "vite-plus/test";
-import { it } from "@effect/vitest";
+import { expect } from "vite-plus/test";
+import { layer as testLayer } from "@effect/vitest";
+import { FetchHttpClient } from "effect/http";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
@@ -29,20 +30,21 @@ interface Untagged {
 }
 
 const callWith = (failure: DistilledOnlyError | Untagged) => {
-  const { http, calls } = stubFetch(() => jsonResponse(200, {}));
+  const { fetch, calls } = stubFetch(() => jsonResponse(200, {}));
   const result = Effect.flip(
     Effect.flatMap(StripeHttp, (client) =>
       Effect.asVoid(client.call("GET", () => Effect.fail(failure), {})),
-    ).pipe(
-      Effect.provide(
-        Layer.provideMerge(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }), http),
-      ),
-    ),
+    ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetch)),
   );
   return { result, calls };
 };
 
-describe("StripeHttp", () => {
+testLayer(
+  Layer.provideMerge(
+    layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }),
+    FetchHttpClient.layer,
+  ),
+)("StripeHttp", (it) => {
   it.effect("maps a Distilled failure with no response to PaymentProviderError by its tag", () =>
     Effect.gen(function* () {
       const { result, calls } = callWith(new DistilledOnlyError({ message: "schema mismatch" }));

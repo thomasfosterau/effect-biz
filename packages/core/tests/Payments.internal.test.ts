@@ -1,5 +1,5 @@
 import { assert, describe, expect } from "vite-plus/test";
-import { it } from "@effect/vitest";
+import { it, layer } from "@effect/vitest";
 import * as Arr from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
@@ -12,7 +12,7 @@ import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Schema from "effect/Schema";
 import * as Struct from "effect/Struct";
-import { HttpClient, HttpClientError, HttpClientRequest } from "effect/http";
+import { FetchHttpClient, HttpClient, HttpClientError, HttpClientRequest } from "effect/http";
 import { TestClock } from "effect/testing";
 import {
   PaymentAuthenticationError,
@@ -388,7 +388,7 @@ describe("timeoutOf", () => {
   );
 });
 
-describe("send", () => {
+layer(FetchHttpClient.layer)("send", (it) => {
   const SECRET = "Bearer not_a_real_secret";
   const request = HttpClientRequest.get("https://api.example.com/v1/things").pipe(
     HttpClientRequest.setHeader("Authorization", SECRET),
@@ -396,7 +396,10 @@ describe("send", () => {
   const run = <A, E>(
     effect: (http: HttpClient.HttpClient) => Effect.Effect<A, E>,
     fetch: () => Response | Promise<Response>,
-  ) => Effect.flatMap(HttpClient.HttpClient, effect).pipe(Effect.provide(stubFetch(fetch).http));
+  ) =>
+    Effect.flatMap(HttpClient.HttpClient, effect).pipe(
+      Effect.provideService(FetchHttpClient.Fetch, stubFetch(fetch).fetch),
+    );
   const options = { provider: "Acme", what: "request", limit: Duration.seconds(5) };
 
   it.effect("reads any status with its JSON body, or {} for a body that is not JSON", () =>
@@ -457,16 +460,20 @@ describe("send", () => {
     }),
   );
 
-  it("maps an HttpClientError onto PaymentNetworkError by its message and cause", () => {
-    const cause = new Error("socket hang up");
-    const error = networkError(
-      new HttpClientError.HttpClientError({
-        reason: new HttpClientError.TransportError({ request, cause }),
-      }),
-    );
-    expect(error.cause).toEqual(Option.some(cause));
-    expect(reachableFrom(error).objects.filter(HttpClientRequest.isHttpClientRequest)).toEqual([]);
-  });
+  it.effect("maps an HttpClientError onto PaymentNetworkError by its message and cause", () =>
+    Effect.sync(() => {
+      const cause = new Error("socket hang up");
+      const error = networkError(
+        new HttpClientError.HttpClientError({
+          reason: new HttpClientError.TransportError({ request, cause }),
+        }),
+      );
+      expect(error.cause).toEqual(Option.some(cause));
+      expect(reachableFrom(error).objects.filter(HttpClientRequest.isHttpClientRequest)).toEqual(
+        [],
+      );
+    }),
+  );
 });
 
 describe("tokenCache", () => {
@@ -482,7 +489,7 @@ describe("tokenCache", () => {
         yield* TestClock.adjust("1 second");
         const stale = yield* cache.cached;
         return { empty, fresh, stillFresh, stale };
-      }).pipe(Effect.provide(TestClock.layer()));
+      });
       expect(result).toEqual({
         empty: Option.none(),
         fresh: Option.some("tok_1"),
@@ -563,7 +570,7 @@ describe("stringField", () => {
   });
 });
 
-describe("observeResponses", () => {
+layer(FetchHttpClient.layer)("observeResponses", (it) => {
   const observe = (fetch: () => Response) =>
     Effect.gen(function* () {
       const watched = yield* observeResponses(yield* HttpClient.HttpClient);
@@ -572,7 +579,7 @@ describe("observeResponses", () => {
       // The body is still readable after the observer read it.
       const text = yield* response.text;
       return { before, text, after: yield* watched.last };
-    }).pipe(Effect.provide(stubFetch(fetch).http));
+    }).pipe(Effect.provideService(FetchHttpClient.Fetch, stubFetch(fetch).fetch));
 
   it.effect("records the status, headers and JSON body, and hands the response on unread", () =>
     Effect.gen(function* () {
