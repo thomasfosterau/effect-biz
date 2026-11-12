@@ -76,6 +76,8 @@ export default defineConfig({
       perf: "error",
     },
     rules: {
+      // `Schema.Number` admits NaN and Infinity; use `Schema.Finite` / `Schema.Int`.
+      "effecttsgo/schema-number": "error",
       // Entities and errors are nominal: `Schema.Class<Self, { readonly brand: unique symbol }>`.
       "effecttsgo/schema-class-missing-brand": "error",
       "eslint/no-unused-vars": [
@@ -87,18 +89,16 @@ export default defineConfig({
       ],
       "eslint/prefer-const": "warn",
 
+      // Chained `Effect.provide(a), Effect.provide(b)` becomes one provide of a
+      // composed layer (`Layer.provideMerge`, `Layer.mergeAll`).
+      "effecttsgo/multiple-effect-provide": "error",
+
       // ---- `suspicious` / `perf` / plugin and type-aware rules ----
       // `_tag` is Effect's discriminant, read and written on every tagged
       // value; any other leading underscore is still a finding.
       "eslint/no-underscore-dangle": ["error", { allow: ["_tag"] }],
-      // Allowance adopted with type-aware linting (count as of adoption; a
-      // new site is a defect, not headroom; paying it down is #162). Every
-      // assertion
-      // already carries a `// SAFETY:` comment
-      // (effect/require-safety-comment-for-type-assertion): a structural read
-      // of a value the type system cannot narrow (a decoded wire body, a
-      // Distilled operation's erased input, a test fixture).
-      "typescript/no-unsafe-type-assertion": "warn", // 17 sites (4 src, 2 scripts, 11 tests)
+      // Every assertion that remains is allowed per file in the override below.
+      "typescript/no-unsafe-type-assertion": "error",
       // `expect(value, message)`: vitest's second argument is the failure
       // message, which the jest-derived default (one argument) rejects.
       "vitest/valid-expect": ["error", { maxArgs: 2 }],
@@ -119,6 +119,16 @@ export default defineConfig({
       "effecttsgo/flat-map-conditional-to-filter-or-fail": "error",
       "effecttsgo/map-some-to-as-some": "error",
       "effecttsgo/effect-succeed-with-undefined": "error",
+      "effecttsgo/prefer-typed-schema-decoder": "error",
+      // Off: it fires on every use of an API tagged `@stability unstable`
+      // (73 sites today), and the architecture mandates those modules
+      // (`effect/http` for the Stripe client and Distilled, plus
+      // `effect/FileSystem`, `effect/Path` and `@effect/platform-node` in the
+      // generator script; `effect/rpc`, `effect/workflow` and `effect/sql` are
+      // planned). Effect 4 has no stable `HttpClient`/`FileSystem`, and the
+      // rule takes no config (`RuleNoConfig` in `@effect/tsgo`'s
+      // oxlint-schema.json), so there is no allowlist.
+      "effecttsgo/unstable-api-usage": "off",
 
       // ---- Effect preset: rules this workspace's conventions cut across ----
       // `prefer-option-over-null` fires on `?: T | undefined`, which is the
@@ -135,30 +145,6 @@ export default defineConfig({
       "vite-plus/prefer-vite-plus-imports": "error",
     },
     overrides: [
-      // The assertions that cannot be typed away (each carries a `// SAFETY:`
-      // comment saying why); every other `as` in the workspace is gone.
-      // - Payments.internal.ts `omitUndefined`: the filtered record's type is
-      //   a mapped type over `T` that TypeScript cannot derive from the filter.
-      // - internal/resource.ts `operation`: the runtime function is the
-      //   generated signature `F`, which is a caller-chosen type parameter.
-      // - scripts/resources.ts: reads Distilled's untyped module export and
-      //   its `Http()` annotation payload.
-      // - the endive test: Distilled types every schema as `Schema.Top`,
-      //   which no checked decoder accepts.
-      // - the idempotency test: a raw string that the brand refuses is the case
-      //   under test.
-      {
-        files: [
-          "packages/core/src/Payments.internal.ts",
-          "packages/payments-stripe/src/internal/resource.ts",
-          "packages/payments-stripe/scripts/resources.ts",
-          "packages/payments-stripe/tests/StripePayments.endive.test.ts",
-          "packages/payments-stripe/tests/StripePayments.idempotency.test.ts",
-        ],
-        rules: {
-          "effect/casting-awareness": "off",
-        },
-      },
       // Build/test configs are evaluated by Vite and Vitest in bare Node,
       // before any Effect runtime exists — there is no `Config` provider to
       // read from and no `FileSystem` service to call, so `process.env` and
@@ -177,6 +163,41 @@ export default defineConfig({
           // `...(process.env.X ? { x } : {})` is how a vitest option is left
           // unset under `exactOptionalPropertyTypes`.
           "effect/no-conditional-empty-object-spread": "off",
+        },
+      },
+      // The assertions no typing removes (10 sites, each with a `// SAFETY:`
+      // comment). Src: a generic return (`F`, `OmitUndefined<T>`) and an
+      // operation input that Distilled's `Operation<never, …>` types as
+      // `never`. Tests: a fixture that must hand a function a value its type
+      // forbids (a non-string id, a malformed status, an unbranded key, a
+      // partial SDK client) to exercise the runtime check for an untyped
+      // caller; a decoder cannot build such a value. Listed file by file.
+      {
+        files: [
+          // 1: `OmitUndefined<T>` over a generic `T`.
+          "packages/core/src/Payments.internal.ts",
+          // 1: `checkId` is given a non-string id on purpose.
+          "packages/core/tests/Payments.internal.test.ts",
+          // 2: the erased operation input (`never`) and the generic signature `F`.
+          "packages/payments-stripe/src/internal/resource.ts",
+          // 1: `Schema.Top` (Distilled's schemas) needs `Codec<unknown, unknown>` to decode synchronously.
+          "packages/payments-stripe/tests/StripePayments.endive.test.ts",
+          // 1: a wire status that is not a string.
+          "packages/payments-stripe/tests/StripePayments.enumerations.test.ts",
+          // 1: a key the brand would have refused.
+          "packages/payments-stripe/tests/StripePayments.idempotency.test.ts",
+          // 1: a missing path id.
+          "packages/payments-stripe/tests/StripeHttp.test.ts",
+          // 1: an undefined path id.
+          "packages/payments-stripe/tests/StripePayments.wire.test.ts",
+          // 1: a partial SDK client.
+          "packages/payments-stripe/tests/Webhook.test.ts",
+        ],
+        // `effect/casting-awareness` fires on every `as`: it is held at `error`
+        // and these same files, each cast with its reason above, are exempt.
+        rules: {
+          "typescript/no-unsafe-type-assertion": "off",
+          "effect/casting-awareness": "off",
         },
       },
       // Type-level tests: every binding exists to be asserted against, never

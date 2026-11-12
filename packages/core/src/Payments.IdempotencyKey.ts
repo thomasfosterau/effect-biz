@@ -118,7 +118,7 @@ export const validate = (
 ): Effect.Effect<IdempotencyKey | undefined, PaymentInvalidRequestError> =>
   key === undefined
     ? Effect.undefined
-    : Schema.decodeUnknownEffect(IdempotencyKey)(key).pipe(
+    : Schema.decodeEffect(IdempotencyKey)(key).pipe(
         Effect.mapError(
           () =>
             new PaymentInvalidRequestError({

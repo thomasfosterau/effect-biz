@@ -40,16 +40,13 @@ export interface Route {
  * The fields of a caller's {@link RequestOptions}, and nothing else: an
  * options object from untyped code must not be able to set `upload`.
  */
-const pickOptions = (options: Param): RequestOptions => {
-  const given = paramsOf(options);
-  const text = (key: string): string | undefined => {
-    const value = given[key];
-    return P.isString(value) ? value : undefined;
-  };
+const pickOptions = (options: unknown): RequestOptions => {
+  const field = (key: keyof RequestOptions): string | undefined =>
+    P.hasProperty(options, key) && P.isString(options[key]) ? options[key] : undefined;
   return {
-    idempotencyKey: text("idempotencyKey"),
-    stripeAccount: text("stripeAccount"),
-    apiVersion: text("apiVersion"),
+    idempotencyKey: field("idempotencyKey"),
+    stripeAccount: field("stripeAccount"),
+    apiVersion: field("apiVersion"),
   };
 };
 
@@ -125,8 +122,6 @@ export const operation = <F>(distilled: Operation<never, unknown, unknown>, rout
   ): Effect.Effect<unknown, PaymentsError, StripeHttp> => {
     const ids = args.slice(0, route.ids.length);
     const params = route.params ? args[route.ids.length] : undefined;
-    // The trailing argument is `RequestOptions` by the generated signature;
-    // `pickOptions` reads only its three string fields.
     const options = args[route.ids.length + (route.params ? 1 : 0)];
     const given = paramsOf(params);
     const input = R.fromEntries([

@@ -40,7 +40,7 @@ export class Refund extends Schema.Class<Refund, { readonly brand: unique symbol
 )({
   id: Schema.String,
   /** Amount refunded in the smallest currency unit. */
-  amount: Schema.Number,
+  amount: Schema.Int,
   currency: Schema.String,
   status: RefundStatus,
   /** The payment intent being refunded, if the refund targets one. */
@@ -50,7 +50,7 @@ export class Refund extends Schema.Class<Refund, { readonly brand: unique symbol
   reason: Schema.NullOr(Schema.String),
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
-  created: Schema.Number,
+  created: Schema.Int,
 }) {}
 
 /** Parameters for creating a refund. Provide either a payment intent or charge. */

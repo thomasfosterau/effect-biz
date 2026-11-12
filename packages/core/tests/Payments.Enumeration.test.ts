@@ -25,8 +25,8 @@ describe("Enumeration", () => {
 
   it("decodes a wire string leniently and encodes it back to the same string", () => {
     const wire = Enumeration.fromWire(Refund.KnownRefundStatus);
-    expect(Schema.decodeUnknownSync(wire)("pending")).toBe("pending");
-    const unknown = Schema.decodeUnknownSync(wire)("held");
+    expect(Schema.decodeSync(wire)("pending")).toBe("pending");
+    const unknown = Schema.decodeSync(wire)("held");
     expect(unknown).toEqual({ _tag: "Other", raw: "held" });
     expect(Schema.encodeSync(wire)(unknown)).toBe("held");
     expect(Schema.encodeSync(wire)("pending")).toBe("pending");

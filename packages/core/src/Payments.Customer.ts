@@ -31,7 +31,7 @@ export class Customer extends Schema.Class<Customer, { readonly brand: unique sy
   description: Schema.NullOr(Schema.String),
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
-  created: Schema.Number,
+  created: Schema.Int,
   /** Whether the customer exists in live (non-test) mode. */
   livemode: Schema.Boolean,
 }) {}

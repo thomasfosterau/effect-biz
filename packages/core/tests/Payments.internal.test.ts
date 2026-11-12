@@ -57,7 +57,7 @@ import {
 class LoginFailed extends Schema.TaggedError<LoginFailed, { readonly brand: unique symbol }>()(
   "LoginFailed",
   {
-    attempt: Schema.Number,
+    attempt: Schema.Finite,
   },
 ) {}
 
@@ -517,10 +517,13 @@ describe("checkId", () => {
   });
 
   it("refuses an empty or non-string id before anything is sent", async () => {
-    // Untyped callers can pass anything; that is what is under test.
-    const untypedIds: ReadonlyArray<any> = ["", undefined, 42];
     const errors = await Effect.runPromise(
-      Effect.forEach(untypedIds, (id) => Effect.flip(checkId("customer", id)), { concurrency: 1 }),
+      Effect.forEach(
+        ["", undefined, 42],
+        // SAFETY: untyped callers can pass anything; that is what is under test.
+        (id) => Effect.flip(checkId("customer", id as string)),
+        { concurrency: 1 },
+      ),
     );
     Arr.forEach(errors, (error) => {
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);

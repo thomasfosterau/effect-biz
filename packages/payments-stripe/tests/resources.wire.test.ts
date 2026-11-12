@@ -1,6 +1,8 @@
 import { assert, describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Exit from "effect/Exit";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import * as Redacted from "effect/Redacted";
@@ -34,9 +36,18 @@ type Exported = (
   ...args: ReadonlyArray<unknown>
 ) => Effect.Effect<unknown, PaymentsError, StripeHttp>;
 
-const load = async (subpath: string): Promise<Readonly<Record<string, Exported>>> =>
-  // Every generated module exports its operations as functions of this shape.
-  await import(`../src/${subpath}.ts`);
+const decodeModule = Schema.decodeUnknownSync(
+  Schema.Record(
+    Schema.String,
+    // Every generated module exports its operations as functions of this shape.
+    Schema.declare((value): value is Exported => P.isFunction(value)),
+  ),
+);
+
+const load = async (subpath: string): Promise<Readonly<Record<string, Exported>>> => {
+  const loaded: unknown = await import(`../src/${subpath}.ts`);
+  return decodeModule(loaded);
+};
 
 /** The arguments of a call: an id per path id, `{}` for params, no options. */
 const argsOf = (operation: Planned): ReadonlyArray<unknown> => [
@@ -59,8 +70,9 @@ const run = (
   const { http, calls } = stubFetch(respond);
   const exit = Effect.runPromiseExit(
     call.pipe(
-      Effect.provide(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 })),
-      Effect.provide(http),
+      Effect.provide(
+        Layer.provideMerge(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }), http),
+      ),
     ),
   );
   return { exit, calls };
@@ -162,7 +174,7 @@ describe("the resources published for every remaining operation (effect-finance#
     expect(request?.url.pathname).toBe("/v2/core/accounts/acct_1");
     expect(request?.headers.get("content-type")).toBe("application/json");
     expect(
-      Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(request?.body ?? "null"),
+      Schema.decodeSync(Schema.fromJsonString(Schema.Unknown))(request?.body ?? "null"),
     ).toEqual({
       display_name: "Jenny Rosen",
       metadata: { order: "42" },
