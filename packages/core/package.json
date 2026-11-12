@@ -38,9 +38,37 @@
       "types": "./dist/BizError.d.ts",
       "default": "./dist/BizError.js"
     },
+    "./Currency": {
+      "types": "./dist/Currency.d.ts",
+      "default": "./dist/Currency.js"
+    },
+    "./Decimal": {
+      "types": "./dist/Decimal.d.ts",
+      "default": "./dist/Decimal.js"
+    },
     "./Id": {
       "types": "./dist/Id.d.ts",
       "default": "./dist/Id.js"
+    },
+    "./Money": {
+      "types": "./dist/Money.d.ts",
+      "default": "./dist/Money.js"
+    },
+    "./Percentage": {
+      "types": "./dist/Percentage.d.ts",
+      "default": "./dist/Percentage.js"
+    },
+    "./Quantity": {
+      "types": "./dist/Quantity.d.ts",
+      "default": "./dist/Quantity.js"
+    },
+    "./Rate": {
+      "types": "./dist/Rate.d.ts",
+      "default": "./dist/Rate.js"
+    },
+    "./Rounding": {
+      "types": "./dist/Rounding.d.ts",
+      "default": "./dist/Rounding.js"
     },
     "./Payments": {
       "types": "./dist/Payments.d.ts",
