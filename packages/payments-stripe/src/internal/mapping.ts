@@ -106,7 +106,7 @@ const StripeCustomer = /* @__PURE__ */ Schema.Struct({
   phone: /* @__PURE__ */ Maybe(Schema.String),
   description: /* @__PURE__ */ Maybe(Schema.String),
   metadata: Metadata,
-  created: Schema.Number,
+  created: Schema.Int,
   livemode: Schema.Boolean,
 });
 
@@ -119,7 +119,7 @@ const StripeProduct = /* @__PURE__ */ Schema.Struct({
   description: /* @__PURE__ */ Maybe(Schema.String),
   active: Schema.Boolean,
   metadata: Metadata,
-  created: Schema.Number,
+  created: Schema.Int,
 });
 
 const StripePrice = /* @__PURE__ */ Schema.Struct({
@@ -127,21 +127,21 @@ const StripePrice = /* @__PURE__ */ Schema.Struct({
   product: /* @__PURE__ */ Maybe(Ref),
   active: Schema.Boolean,
   currency: Schema.String,
-  unit_amount: /* @__PURE__ */ Maybe(Schema.Number),
+  unit_amount: /* @__PURE__ */ Maybe(Schema.Int),
   type: /* @__PURE__ */ Enumeration.fromWire(PriceNS.KnownPriceType),
   recurring: /* @__PURE__ */ Maybe(
     /* @__PURE__ */ Schema.Struct({
       interval: /* @__PURE__ */ Enumeration.fromWire(PriceNS.KnownRecurringInterval),
-      interval_count: Schema.Number,
+      interval_count: Schema.Int,
     }),
   ),
   metadata: Metadata,
-  created: Schema.Number,
+  created: Schema.Int,
 });
 
 const StripePaymentIntent = /* @__PURE__ */ Schema.Struct({
   id: Schema.String,
-  amount: Schema.Number,
+  amount: Schema.Int,
   currency: Schema.String,
   status: /* @__PURE__ */ Enumeration.fromWire(PaymentIntentNS.KnownPaymentStatus),
   customer: /* @__PURE__ */ Maybe(Ref),
@@ -149,7 +149,7 @@ const StripePaymentIntent = /* @__PURE__ */ Schema.Struct({
   client_secret: /* @__PURE__ */ Maybe(Secret),
   description: /* @__PURE__ */ Maybe(Schema.String),
   metadata: Metadata,
-  created: Schema.Number,
+  created: Schema.Int,
 });
 
 /**
@@ -167,29 +167,29 @@ const StripeSubscription = /* @__PURE__ */ Schema.Struct({
       /* @__PURE__ */ Schema.Struct({
         id: Schema.String,
         price: /* @__PURE__ */ Schema.Struct({ id: Schema.String }),
-        quantity: /* @__PURE__ */ Maybe(Schema.Number),
-        current_period_start: /* @__PURE__ */ Maybe(Schema.Number),
-        current_period_end: /* @__PURE__ */ Maybe(Schema.Number),
+        quantity: /* @__PURE__ */ Maybe(Schema.Int),
+        current_period_start: /* @__PURE__ */ Maybe(Schema.Int),
+        current_period_end: /* @__PURE__ */ Maybe(Schema.Int),
       }),
     ),
   }),
-  current_period_start: /* @__PURE__ */ Maybe(Schema.Number),
-  current_period_end: /* @__PURE__ */ Maybe(Schema.Number),
+  current_period_start: /* @__PURE__ */ Maybe(Schema.Int),
+  current_period_end: /* @__PURE__ */ Maybe(Schema.Int),
   cancel_at_period_end: Schema.Boolean,
   metadata: Metadata,
-  created: Schema.Number,
+  created: Schema.Int,
 });
 
 const StripeRefund = /* @__PURE__ */ Schema.Struct({
   id: Schema.String,
-  amount: Schema.Number,
+  amount: Schema.Int,
   currency: Schema.String,
   status: /* @__PURE__ */ Maybe(/* @__PURE__ */ Enumeration.fromWire(RefundNS.KnownRefundStatus)),
   payment_intent: /* @__PURE__ */ Maybe(Ref),
   charge: /* @__PURE__ */ Maybe(Ref),
   reason: /* @__PURE__ */ Maybe(Schema.String),
   metadata: Metadata,
-  created: Schema.Number,
+  created: Schema.Int,
 });
 
 /**

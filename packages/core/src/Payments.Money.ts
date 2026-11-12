@@ -15,7 +15,7 @@ import * as Schema from "effect/Schema";
  */
 export class Money extends Schema.Class<Money>("@effect-biz/payments/Money")({
   /** The amount in the smallest currency unit (e.g. `2000` = $20.00). */
-  amount: Schema.Number,
+  amount: Schema.Int,
   /** The lower-cased ISO 4217 currency code, e.g. `"usd"`. */
   currency: Schema.String,
 }) {}

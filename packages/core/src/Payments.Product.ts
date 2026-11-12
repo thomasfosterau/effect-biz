@@ -22,7 +22,7 @@ export class Product extends Schema.Class<Product>("@effect-biz/payments/Product
   active: Schema.Boolean,
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
-  created: Schema.Number,
+  created: Schema.Int,
 }) {}
 
 /** Parameters for creating a product. */

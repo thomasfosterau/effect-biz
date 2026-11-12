@@ -42,7 +42,7 @@ export class SubscriptionItem extends Schema.Class<SubscriptionItem>(
 )({
   id: Schema.String,
   priceId: Schema.String,
-  quantity: Schema.NullOr(Schema.Number),
+  quantity: Schema.NullOr(Schema.Int),
 }) {}
 
 /**
@@ -54,13 +54,13 @@ export class Subscription extends Schema.Class<Subscription>("@effect-biz/paymen
   status: SubscriptionStatus,
   items: Schema.Array(SubscriptionItem),
   /** Start of the current billing period (Unix timestamp in seconds). */
-  currentPeriodStart: Schema.Number,
+  currentPeriodStart: Schema.Int,
   /** End of the current billing period (Unix timestamp in seconds). */
-  currentPeriodEnd: Schema.Number,
+  currentPeriodEnd: Schema.Int,
   cancelAtPeriodEnd: Schema.Boolean,
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
-  created: Schema.Number,
+  created: Schema.Int,
 }) {}
 
 /** A price/quantity pair used when creating a subscription. */

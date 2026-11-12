@@ -38,7 +38,7 @@ export type PriceType = typeof PriceType.Type;
 /** The recurring schedule of a price, when it is not a one-time price. */
 export class Recurring extends Schema.Class<Recurring>("@effect-biz/payments/Recurring")({
   interval: RecurringInterval,
-  intervalCount: Schema.Number,
+  intervalCount: Schema.Int,
 }) {}
 
 /**
@@ -52,12 +52,12 @@ export class Price extends Schema.Class<Price>("@effect-biz/payments/Price")({
   active: Schema.Boolean,
   currency: Schema.String,
   /** Amount in the smallest currency unit, or `null` for some price types. */
-  unitAmount: Schema.NullOr(Schema.Number),
+  unitAmount: Schema.NullOr(Schema.Int),
   type: PriceType,
   recurring: Schema.NullOr(Recurring),
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
-  created: Schema.Number,
+  created: Schema.Int,
 }) {}
 
 /** Parameters for creating a price. */

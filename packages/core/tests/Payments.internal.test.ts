@@ -55,7 +55,7 @@ import {
 } from "../../../tests/stubs.ts";
 
 class LoginFailed extends Schema.TaggedError<LoginFailed>()("LoginFailed", {
-  attempt: Schema.Number,
+  attempt: Schema.Finite,
 }) {}
 
 const ok = (token: string) => () => Exit.succeed(token);
