@@ -1,3 +1,4 @@
+import type * as Schema from "effect/Schema";
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
 import type * as Layer from "effect/Layer";
@@ -115,7 +116,7 @@ const responses = {
 /** Run `effect` against the capabilities over a stubbed API answering from `answers`. */
 const run = <A, E>(
   effect: Effect.Effect<A, E, Layer.Success<typeof StripePayments.capabilities>>,
-  answers: Record<string, unknown> = responses,
+  answers: Record<string, Schema.Json | Response> = responses,
 ) => {
   const stub = stubStripeTable(answers);
   return {

@@ -274,7 +274,7 @@ const Maybe = <S extends Schema.Top>(schema: S) => Schema.optional(Schema.NullOr
 /**
  * The event envelope common to every Stripe event.
  *
- * `data.object` stays `Schema.Unknown`: its shape depends on the event type,
+ * `data.object` stays untyped JSON (`Schema.Json`): its shape depends on the event type,
  * and an event type nobody handles must never fail to decode. Unknown fields
  * are ignored.
  */
@@ -284,7 +284,7 @@ export const WebhookEvent = Schema.Struct({
   created: Schema.optional(Schema.Number),
   livemode: Schema.optional(Schema.Boolean),
   api_version: Maybe(Schema.String),
-  data: Schema.Struct({ object: Schema.Unknown }),
+  data: Schema.Struct({ object: Schema.Json }),
 });
 
 /** A decoded {@link WebhookEvent} envelope. */
@@ -455,17 +455,18 @@ const decodeInvoiceObject = Schema.decodeUnknownEffect(InvoiceObject);
 
 /** Decode a `checkout.session.completed` event's `data.object`. */
 export const decodeCheckoutSession = (
-  object: unknown,
+  object: Schema.Json,
 ): Effect.Effect<CheckoutSessionObject, Schema.SchemaError> => decodeCheckoutSessionObject(object);
 
 /** Decode a `customer.subscription.*` event's `data.object`. */
 export const decodeSubscription = (
-  object: unknown,
+  object: Schema.Json,
 ): Effect.Effect<SubscriptionObject, Schema.SchemaError> => decodeSubscriptionObject(object);
 
 /** Decode an `invoice.payment_failed` event's `data.object`. */
-export const decodeInvoice = (object: unknown): Effect.Effect<InvoiceObject, Schema.SchemaError> =>
-  decodeInvoiceObject(object);
+export const decodeInvoice = (
+  object: Schema.Json,
+): Effect.Effect<InvoiceObject, Schema.SchemaError> => decodeInvoiceObject(object);
 
 // ---------------------------------------------------------------------------
 // SDK-based verifier (optional: needs an SDK client and the `stripe` peer)
@@ -517,16 +518,16 @@ const payloadText = (payload: string | Buffer): string =>
  * and the payload as a string.
  */
 const sdkFailure = (
-  error: unknown,
+  cause: unknown,
   payload: string | Buffer,
   header: string | undefined,
 ): SignatureVerificationError =>
   new SignatureVerificationError({
     // The thrown error's message; the value as a string when it carries none.
     message:
-      Predicate.hasProperty(error, "message") && Predicate.isString(error.message)
-        ? error.message
-        : String(error),
+      Predicate.hasProperty(cause, "message") && Predicate.isString(cause.message)
+        ? cause.message
+        : String(cause),
     header,
     payload: payloadText(payload),
   });

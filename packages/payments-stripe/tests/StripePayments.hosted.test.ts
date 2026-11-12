@@ -1,3 +1,4 @@
+import type * as Schema from "effect/Schema";
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -37,7 +38,7 @@ const portal: BillingPortal.CreateParams = {
 /** Run `effect` against the capabilities over a stubbed API answering from `answers`. */
 const run = <A, E>(
   effect: Effect.Effect<A, E, Layer.Success<typeof StripePayments.capabilities>>,
-  answers: Record<string, unknown>,
+  answers: Record<string, Schema.Json | Response>,
 ) => {
   const stub = stubStripeTable(answers);
   return {
@@ -180,7 +181,7 @@ describe("StripePayments billingPortalSessionsLayer", () => {
 
 describe("hosted sessions over StripePayments.layer", () => {
   /** `StripePayments.layer` over a stubbed `fetch` answering `body` to every request. */
-  const wire = (body: unknown) => {
+  const wire = (body: Schema.Json) => {
     const { http, calls } = stubFetch(() => jsonResponse(200, body));
     const layer = StripePayments.layer({ apiKey: Redacted.make("sk_test_not_real") }).pipe(
       Layer.provide(http),

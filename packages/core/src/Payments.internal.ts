@@ -527,13 +527,14 @@ export const checkId = (
       );
 
 /**
- * A string field of an unknown value, if it has one.
+ * A string field of a failure (a thrown or failed value of unknown shape), if
+ * it has one.
  *
  * Internal, and exempt from semver: see the module documentation.
  */
-export const stringField = (value: unknown, field: string): string | undefined =>
-  Predicate.hasProperty(value, field) && Predicate.isString(value[field])
-    ? value[field]
+export const stringField = (cause: unknown, field: string): string | undefined =>
+  Predicate.hasProperty(cause, field) && Predicate.isString(cause[field])
+    ? cause[field]
     : undefined;
 
 /**
@@ -545,14 +546,14 @@ export interface ObservedResponse {
   readonly status: number;
   readonly headers: Readonly<Record<string, string | undefined>>;
   /** The JSON body, or `None` for an empty body or one that is not JSON. */
-  readonly body: Option.Option<unknown>;
+  readonly body: Option.Option<Schema.Json>;
 }
 
 // A pure IIFE rather than annotated calls: `Schema.Unknown`, a property read
 // on an import, would keep the whole expression in a bundle that never
 // imports `observeResponses`.
 const decodeJson = /* @__PURE__ */ (() =>
-  Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Unknown)))();
+  Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Json)))();
 
 /**
  * `http`, watched: the returned `client` records the status, headers and
@@ -596,15 +597,15 @@ export const observeResponses = (
  * Internal, and exempt from semver: see the module documentation.
  */
 export const rejectedError = (
-  error: unknown,
+  cause: unknown,
   provider: string,
   fallback: { readonly message: string; readonly code: string },
 ): PaymentProviderError =>
   new PaymentProviderError({
-    message: stringField(error, "message") ?? fallback.message,
+    message: stringField(cause, "message") ?? fallback.message,
     provider,
-    code: stringField(error, "_tag") ?? fallback.code,
-    cause: error,
+    code: stringField(cause, "_tag") ?? fallback.code,
+    cause,
   });
 
 // ---------------------------------------------------------------------------
@@ -633,8 +634,8 @@ export const responseDecoder =
     schema: S,
     map: (value: S["Type"]) => A,
   ) =>
-  (body: unknown): Effect.Effect<A, PaymentProviderError> =>
-    Schema.decodeUnknownEffect(schema)(body).pipe(
+  (body: Schema.Json): Effect.Effect<A, PaymentProviderError> =>
+    Schema.decodeEffect(schema)(body).pipe(
       Effect.mapError(
         (cause) =>
           new PaymentProviderError({

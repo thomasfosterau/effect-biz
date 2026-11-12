@@ -50,7 +50,7 @@ const onDefaultLayer = <A, E>(
     | PaymentIntent.PaymentIntents
     | Product.Products
   >,
-  body: unknown,
+  body: Schema.Json,
 ) => {
   const { http, calls } = stubFetch(() => jsonResponse(200, body));
   const result = Effect.runPromise(
@@ -68,10 +68,14 @@ const onDefaultLayer = <A, E>(
  * still decodes. `Schema.Top` leaves the decoding services open; they need
  * none.
  */
-const strictly = (schema: Schema.Top, body: unknown, options?: SchemaAST.ParseOptions): unknown =>
+const strictly = (
+  schema: Schema.Top,
+  body: Schema.Json,
+  options?: SchemaAST.ParseOptions,
+): unknown =>
   // SAFETY: Distilled's generated schemas are plain structs, unions and
   // suspensions over `effect/Schema` built-ins, which need no services.
-  Schema.decodeUnknownSync(schema as Schema.Codec<unknown, unknown>, options)(body);
+  Schema.decodeSync(schema as Schema.Codec<unknown, unknown>, options)(body);
 
 /**
  * Reject excess properties too. Only for the fixtures Distilled models in

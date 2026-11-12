@@ -102,7 +102,7 @@ const decodeEnvelope = Schema.decodeUnknownOption(StripeErrorEnvelope);
 const orUndefined = (value: string | null | undefined): string | undefined => value ?? undefined;
 
 /** The error fields of a response body, normalising the OAuth form. */
-const errorFieldsOf = (body: unknown): StripeErrorFields | undefined =>
+const errorFieldsOf = (body: Schema.Json | undefined): StripeErrorFields | undefined =>
   Option.match(decodeEnvelope(body), {
     onNone: () => undefined,
     onSome: ({ error, error_description }): StripeErrorFields =>
@@ -167,7 +167,7 @@ export const retryAfterOf = (header: string | undefined): number | undefined => 
 export const classifyResponse = (
   status: number,
   retryAfter: string | undefined,
-  body: unknown,
+  body: Schema.Json | undefined,
 ): StripeFailure => {
   const error = errorFieldsOf(body);
   if (error === undefined) {

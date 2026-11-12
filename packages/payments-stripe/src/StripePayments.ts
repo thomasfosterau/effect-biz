@@ -22,6 +22,7 @@
 import type * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type * as Schema from "effect/Schema";
 import type { HttpClient } from "effect/http";
 import type { Credentials } from "@distilled.cloud/stripe/Credentials";
 import {
@@ -132,7 +133,7 @@ const call =
     method: Method,
     operation: Operation<I, O, E>,
     input: I,
-    decode: (body: unknown) => Effect.Effect<A, PaymentsError>,
+    decode: (body: Schema.Json) => Effect.Effect<A, PaymentsError>,
     options: {
       readonly id?: readonly [resource: string, id: string] | undefined;
       readonly idempotencyKey?: string | undefined;

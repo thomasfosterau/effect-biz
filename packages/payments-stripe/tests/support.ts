@@ -11,6 +11,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Predicate from "effect/Predicate";
 import * as Rec from "effect/Record";
+import type * as Schema from "effect/Schema";
 import * as Redacted from "effect/Redacted";
 import { Credentials } from "@distilled.cloud/stripe/Credentials";
 import { jsonResponse, stubApi } from "../../../tests/stubs.ts";
@@ -40,17 +41,20 @@ export interface StripeCall {
   readonly headers: Headers;
 }
 
+const isJsonArray = (value: Schema.Json): value is Schema.JsonArray => Array.isArray(value);
+
 /** One parameter flattened into its bracketed form fields. */
-const fieldsOf = (key: string, value: unknown): ReadonlyArray<readonly [string, string]> =>
+const fieldsOf = (
+  key: string,
+  value: Schema.Json | undefined,
+): ReadonlyArray<readonly [string, string]> =>
   value === undefined || value === null
     ? []
-    : Array.isArray(value)
-      ? value.flatMap((item, index) => fieldsOf(`${key}[${index}]`, item))
-      : Predicate.isObject(value)
-        ? Arr.flatMap(Rec.toEntries(value), ([name, item]) => fieldsOf(`${key}[${name}]`, item))
-        : Predicate.isString(value) || Predicate.isNumber(value) || Predicate.isBoolean(value)
-          ? [[key, String(value)]]
-          : [];
+    : Predicate.isString(value) || Predicate.isNumber(value) || Predicate.isBoolean(value)
+      ? [[key, String(value)]]
+      : isJsonArray(value)
+        ? value.flatMap((item, index) => fieldsOf(`${key}[${index}]`, item))
+        : Arr.flatMap(Rec.toEntries(value), ([name, item]) => fieldsOf(`${key}[${name}]`, item));
 
 /**
  * `params` flattened the way Stripe reads a form body, for comparison with a
@@ -58,7 +62,9 @@ const fieldsOf = (key: string, value: unknown): ReadonlyArray<readonly [string, 
  * "pro" }` becomes `"metadata[tier]": "pro"` and `items: [{ price }]`
  * becomes `"items[0][price]"`.
  */
-export const formOf = (params: Readonly<Record<string, unknown>>): Record<string, string> =>
+export const formOf = (
+  params: Readonly<Record<string, Schema.Json | undefined>>,
+): Record<string, string> =>
   Rec.fromEntries(Arr.flatMap(Rec.toEntries(params), ([key, value]) => fieldsOf(key, value)));
 
 /**
@@ -69,7 +75,9 @@ export const formOf = (params: Readonly<Record<string, unknown>>): Record<string
  * `HttpClient`; `fetch` is the stub alone, for a program that builds its own
  * client and credentials.
  */
-export const stubStripe = (answer: (call: StripeCall, attempt: number) => unknown) => {
+export const stubStripe = (
+  answer: (call: StripeCall, attempt: number) => Schema.Json | undefined | Response,
+) => {
   const stub = stubApi(
     (request): StripeCall => ({
       method: request.method,
@@ -96,7 +104,7 @@ export const stubStripe = (answer: (call: StripeCall, attempt: number) => unknow
 };
 
 /** `stubStripe` answering from a table keyed by `METHOD /path`; a miss is a 404. */
-export const stubStripeTable = (answers: Readonly<Record<string, unknown>>) =>
+export const stubStripeTable = (answers: Readonly<Record<string, Schema.Json | Response>>) =>
   stubStripe(
     (call) =>
       answers[`${call.method} ${call.path}`] ??
