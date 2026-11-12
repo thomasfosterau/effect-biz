@@ -1,6 +1,8 @@
-import { assert, describe, expect } from "vite-plus/test";
-import { it } from "@effect/vitest";
+import { assert, expect } from "vite-plus/test";
+import { layer } from "@effect/vitest";
+import { FetchHttpClient } from "effect/http";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -21,7 +23,7 @@ import * as V2CoreEvent from "../src/V2.Core.Event.ts";
 import * as V2CoreEventDestination from "../src/V2.Core.EventDestination.ts";
 import {
   DISTILLED_API_VERSION,
-  layer,
+  layer as stripeHttpLayer,
   layerFromContext,
   layerFromEnv,
   make,
@@ -32,6 +34,7 @@ import {
 import {
   type CapturedRequest,
   jsonResponse,
+  stripeBackend,
   stubFetch,
   stubStripe,
   TEST_KEY,
@@ -53,19 +56,25 @@ const config = (over: Partial<StripeHttpConfig> = {}): StripeHttpConfig => ({
 });
 
 /**
- * Run `effect` over `StripeHttp.layer(config(over))` and a stubbed `fetch`
- * answering with `handler`, under a `TestClock` so backoff elapses at once.
+ * `StripeHttp.layer(config(options))` over `FetchHttpClient.layer`, whose
+ * `fetch` each case points at its stub (see {@link over}). The client reads
+ * its configuration when built, so a case with its own configuration builds
+ * its own layer, in a nested `it.layer`.
+ */
+const stripeHttp = (options: Partial<StripeHttpConfig> = {}) =>
+  Layer.provideMerge(stripeHttpLayer(config(options)), FetchHttpClient.layer);
+
+/**
+ * Run `effect` over a stubbed `fetch` answering with `handler`, under a
+ * `TestClock` so backoff elapses at once. It needs {@link stripeHttp}.
  */
 const over = <A, E>(
   effect: Effect.Effect<A, E, StripeHttp>,
   handler: (request: CapturedRequest, attempt: number) => Response | Promise<Response> = () =>
     jsonResponse(200, { id: "obj_1" }),
-  options: Partial<StripeHttpConfig> = {},
 ) => {
-  const { http, calls } = stubFetch(handler);
-  const result = withTestClock(
-    effect.pipe(Effect.provide(Layer.provideMerge(layer(config(options)), http))),
-  );
+  const { fetch, calls } = stubFetch(handler);
+  const result = withTestClock(effect.pipe(Effect.provideService(FetchHttpClient.Fetch, fetch)));
   return { result, calls };
 };
 
@@ -78,7 +87,7 @@ const failure = <A>(
   return { error: run.result, calls: run.calls };
 };
 
-describe("resource modules over StripeHttp", () => {
+layer(stripeHttp())("resource modules over StripeHttp", (it) => {
   it.effect("runs a resource module end to end, returning the body as Stripe sent it", () =>
     Effect.gen(function* () {
       const body = { ...basilSubscription, cancel_at_period_end: true };
@@ -128,7 +137,7 @@ describe("resource modules over StripeHttp", () => {
           "&expand[0]=latest_invoice&invoice_now=true&prorate=false",
       );
       expect(calls[0]?.body).toBeUndefined();
-      expect(calls[0]?.init?.body).toBeUndefined();
+      expect(calls[0]?.init.body).toBeUndefined();
       expect(calls[0]?.headers.get("content-type")).toBeNull();
     }),
   );
@@ -143,7 +152,7 @@ describe("resource modules over StripeHttp", () => {
       expect(calls[0]?.url.toString()).toBe(
         "https://api.stripe.com/v1/customers/cus_1/sources/card_1?expand[0]=customer",
       );
-      expect(calls[0]?.init?.body).toBeUndefined();
+      expect(calls[0]?.init.body).toBeUndefined();
       expect(calls[0]?.headers.get("content-type")).toBeNull();
     }),
   );
@@ -153,7 +162,7 @@ describe("resource modules over StripeHttp", () => {
       const { result, calls } = over(Subscription.cancel("sub_1"));
       yield* result;
       expect(calls[0]?.url.toString()).toBe("https://api.stripe.com/v1/subscriptions/sub_1");
-      expect(calls[0]?.init?.body).toBeUndefined();
+      expect(calls[0]?.init.body).toBeUndefined();
       expect(calls[0]?.headers.get("content-type")).toBeNull();
     }),
   );
@@ -188,7 +197,7 @@ describe("resource modules over StripeHttp", () => {
       expect(failed.message).toBe(
         "Path segment 1 of /v1/customers/{customer} must be a non-empty string",
       );
-      expect(failed).toMatchObject({ param: "customer" });
+      expect(failed).toMatchObject({ param: Option.some("customer") });
       expect(calls).toHaveLength(0);
     }),
   );
@@ -200,7 +209,7 @@ describe("resource modules over StripeHttp", () => {
         _tag: "PaymentInvalidRequestError",
         message:
           "Path segment 2 of /v1/accounts/{account}/persons/{person} must be a non-empty string",
-        param: "person",
+        param: Option.some("person"),
       });
       expect(calls).toHaveLength(0);
     }),
@@ -214,35 +223,37 @@ describe("resource modules over StripeHttp", () => {
     }),
   );
 
-  it.effect(
-    "returns a body Distilled's schema would refuse, even when the caller asks for strict",
-    () =>
-      Effect.gen(function* () {
-        // Distilled's `Customer` requires `livemode`, `created`, … : strict
-        // validation would fail this body, and the client pins lenient.
-        const { http } = stubFetch(() => jsonResponse(200, { id: "cus_1", object: "customer" }));
-        const result = yield* Customer.retrieve("cus_1").pipe(
-          Effect.provide(
-            Layer.provideMerge(Layer.provideMerge(layer(config()), http), strictValidation),
-          ),
-        );
-        expect(result).toEqual({ id: "cus_1", object: "customer" });
-      }),
-  );
+  it.layer(Layer.provideMerge(stripeHttp(), strictValidation))((it) => {
+    it.effect(
+      "returns a body Distilled's schema would refuse, even when the caller asks for strict",
+      () =>
+        Effect.gen(function* () {
+          // Distilled's `Customer` requires `livemode`, `created`, … : strict
+          // validation would fail this body, and the client pins lenient.
+          const { fetch } = stubFetch(() => jsonResponse(200, { id: "cus_1", object: "customer" }));
+          const result = yield* Customer.retrieve("cus_1").pipe(
+            Effect.provideService(FetchHttpClient.Fetch, fetch),
+          );
+          expect(result).toEqual({ id: "cus_1", object: "customer" });
+        }),
+    );
+  });
 
-  it.effect("runs over Distilled's Credentials in context (layerFromContext)", () =>
-    Effect.gen(function* () {
-      const stub = stubStripe(() => ({ id: "cus_1" }));
-      const result = yield* Customer.retrieve("cus_1").pipe(
-        Effect.provide(Layer.provideMerge(layerFromContext, stub.layer)),
-      );
-      expect(result).toEqual({ id: "cus_1" });
-      expect(stub.calls[0]?.headers.get("stripe-version")).toBe(DISTILLED_API_VERSION);
-    }),
-  );
+  it.layer(Layer.provideMerge(layerFromContext, stripeBackend))((it) => {
+    it.effect("runs over Distilled's Credentials in context (layerFromContext)", () =>
+      Effect.gen(function* () {
+        const stub = stubStripe(() => ({ id: "cus_1" }));
+        const result = yield* Customer.retrieve("cus_1").pipe(
+          Effect.provideService(FetchHttpClient.Fetch, stub.fetch),
+        );
+        expect(result).toEqual({ id: "cus_1" });
+        expect(stub.calls[0]?.headers.get("stripe-version")).toBe(DISTILLED_API_VERSION);
+      }),
+    );
+  });
 });
 
-describe("RequestOptions on a resource-module operation", () => {
+layer(stripeHttp())("RequestOptions on a resource-module operation", (it) => {
   it.effect("sends the Idempotency-Key and Stripe-Account headers", () =>
     Effect.gen(function* () {
       const { result, calls } = over(
@@ -285,33 +296,33 @@ describe("RequestOptions on a resource-module operation", () => {
     }),
   );
 
-  it.effect("prefers the call's version and account over the configured ones", () =>
-    Effect.gen(function* () {
-      const { result, calls } = over(
-        Effect.all(
-          [
-            Customer.retrieve("cus_1", undefined, {
-              apiVersion: "2025-08-27.basil",
-              stripeAccount: "acct_call",
-            }),
-            Customer.retrieve("cus_1"),
-          ],
-          { concurrency: 1 },
-        ),
-        undefined,
-        { apiVersion: "2025-07-30.basil", stripeAccount: "acct_config" },
-      );
-      yield* result;
-      expect(calls.map((call) => call.headers.get("stripe-version"))).toEqual([
-        "2025-08-27.basil",
-        "2025-07-30.basil",
-      ]);
-      expect(calls.map((call) => call.headers.get("stripe-account"))).toEqual([
-        "acct_call",
-        "acct_config",
-      ]);
-    }),
-  );
+  it.layer(stripeHttp({ apiVersion: "2025-07-30.basil", stripeAccount: "acct_config" }))((it) => {
+    it.effect("prefers the call's version and account over the configured ones", () =>
+      Effect.gen(function* () {
+        const { result, calls } = over(
+          Effect.all(
+            [
+              Customer.retrieve("cus_1", undefined, {
+                apiVersion: "2025-08-27.basil",
+                stripeAccount: "acct_call",
+              }),
+              Customer.retrieve("cus_1"),
+            ],
+            { concurrency: 1 },
+          ),
+        );
+        yield* result;
+        expect(calls.map((call) => call.headers.get("stripe-version"))).toEqual([
+          "2025-08-27.basil",
+          "2025-07-30.basil",
+        ]);
+        expect(calls.map((call) => call.headers.get("stripe-account"))).toEqual([
+          "acct_call",
+          "acct_config",
+        ]);
+      }),
+    );
+  });
 
   it.effect("generates one key for a retryable POST and reuses it across its attempts", () =>
     Effect.gen(function* () {
@@ -360,7 +371,7 @@ describe("RequestOptions on a resource-module operation", () => {
         expect(yield* error).toMatchObject({
           _tag: "PaymentInvalidRequestError",
           message: `${name} must not be empty`,
-          param: name,
+          param: Option.some(name),
         });
         expect(calls).toHaveLength(0);
       }),
@@ -384,7 +395,7 @@ describe("RequestOptions on a resource-module operation", () => {
  * it keys every `/v2` `DELETE` (`_defaultIdempotencyKey`), and it indexes
  * array query params (`include[0]=…`), where Distilled repeats `include[]`.
  */
-describe("the /v2 request policy", () => {
+layer(stripeHttp())("the /v2 request policy", (it) => {
   const retried = (_request: CapturedRequest, attempt: number) =>
     attempt < 3 ? jsonResponse(503, {}) : jsonResponse(200, { id: "ed_1", object: "v2.deleted" });
 
@@ -415,18 +426,18 @@ describe("the /v2 request policy", () => {
     }),
   );
 
-  it.effect("keys a /v2 DELETE under a configured origin", () =>
-    Effect.gen(function* () {
-      const { result, calls } = over(V2CoreEventDestination.del("ed_1"), undefined, {
-        baseUrl: "http://localhost:12111",
-      });
-      yield* result;
-      expect(calls[0]?.url.toString()).toBe(
-        "http://localhost:12111/v2/core/event_destinations/ed_1",
-      );
-      expect(calls[0]?.headers.get("idempotency-key")).toMatch(/^effect-payments-retry-/);
-    }),
-  );
+  it.layer(stripeHttp({ baseUrl: "http://localhost:12111" }))((it) => {
+    it.effect("keys a /v2 DELETE under a configured origin", () =>
+      Effect.gen(function* () {
+        const { result, calls } = over(V2CoreEventDestination.del("ed_1"));
+        yield* result;
+        expect(calls[0]?.url.toString()).toBe(
+          "http://localhost:12111/v2/core/event_destinations/ed_1",
+        );
+        expect(calls[0]?.headers.get("idempotency-key")).toMatch(/^effect-payments-retry-/);
+      }),
+    );
+  });
 
   it.effect("keeps a caller's key on a /v2 DELETE across the client's retries", () =>
     Effect.gen(function* () {
@@ -453,15 +464,15 @@ describe("the /v2 request policy", () => {
     }),
   );
 
-  it.effect("generates no key for a /v2 DELETE the client will not retry", () =>
-    Effect.gen(function* () {
-      const { result, calls } = over(V2CoreEventDestination.del("ed_1"), undefined, {
-        maxNetworkRetries: 0,
-      });
-      yield* result;
-      expect(calls[0]?.headers.get("idempotency-key")).toBeNull();
-    }),
-  );
+  it.layer(stripeHttp({ maxNetworkRetries: 0 }))((it) => {
+    it.effect("generates no key for a /v2 DELETE the client will not retry", () =>
+      Effect.gen(function* () {
+        const { result, calls } = over(V2CoreEventDestination.del("ed_1"));
+        yield* result;
+        expect(calls[0]?.headers.get("idempotency-key")).toBeNull();
+      }),
+    );
+  });
 
   it.effect("sends no key on a /v2 GET", () =>
     Effect.gen(function* () {
@@ -522,7 +533,7 @@ describe("the /v2 request policy", () => {
   );
 });
 
-describe("file uploads", () => {
+layer(stripeHttp())("file uploads", (it) => {
   it.effect("sends File.create as multipart/form-data to the uploads origin", () =>
     Effect.gen(function* () {
       const { result, calls } = over(
@@ -570,63 +581,59 @@ describe("file uploads", () => {
     }),
   );
 
-  it.effect("honours a configured uploads origin, and keeps the API origin for the rest", () =>
-    Effect.gen(function* () {
-      const { result, calls } = over(
-        Effect.all([File.create({ purpose: "dispute_evidence", file: "evidence" }), File.list()], {
-          concurrency: 1,
-        }),
-        undefined,
-        { uploadsBaseUrl: "http://localhost:12112", baseUrl: "http://localhost:12111" },
-      );
-      yield* result;
-      expect(calls.map((call) => call.url.origin)).toEqual([
-        "http://localhost:12112",
-        "http://localhost:12111",
-      ]);
-    }),
-  );
+  it.layer(
+    stripeHttp({ uploadsBaseUrl: "http://localhost:12112", baseUrl: "http://localhost:12111" }),
+  )((it) => {
+    it.effect("honours a configured uploads origin, and keeps the API origin for the rest", () =>
+      Effect.gen(function* () {
+        const { result, calls } = over(
+          Effect.all(
+            [File.create({ purpose: "dispute_evidence", file: "evidence" }), File.list()],
+            { concurrency: 1 },
+          ),
+        );
+        yield* result;
+        expect(calls.map((call) => call.url.origin)).toEqual([
+          "http://localhost:12112",
+          "http://localhost:12111",
+        ]);
+      }),
+    );
+  });
 });
 
-describe("StripeHttp configuration", () => {
+layer(FetchHttpClient.layer)("StripeHttp configuration", (it) => {
   it.effect("fails an empty key with PaymentConfigError", () =>
     Effect.gen(function* () {
-      const { http } = stubFetch(() => jsonResponse(200, {}));
-      const error = yield* Effect.flip(
-        make({ apiKey: Redacted.make("") }).pipe(Effect.provide(http)),
-      );
+      const error = yield* Effect.flip(make({ apiKey: Redacted.make("") }));
       expect(error).toBeInstanceOf(PaymentConfigError);
     }),
   );
 
-  it.effect("reads the key for layerFromEnv from configuration, while the layer is built", () =>
-    Effect.gen(function* () {
-      const { http, calls } = stubFetch(() => jsonResponse(200, { id: "cus_1" }));
-      yield* Customer.retrieve("cus_1").pipe(
-        Effect.provide(
-          Layer.provideMerge(
-            Layer.provideMerge(layerFromEnv(), http),
-            Layer.provideMerge(
-              Layer.provideMerge(layerFromEnv(), http),
-              ConfigProvider.layer(ConfigProvider.fromUnknown({ STRIPE_API_KEY: TEST_KEY })),
-            ),
-          ),
-        ),
-      );
-      expect(calls[0]?.headers.get("authorization")).toBe(`Bearer ${TEST_KEY}`);
-    }),
-  );
+  it.layer(
+    Layer.provideMerge(
+      layerFromEnv(),
+      Layer.merge(
+        FetchHttpClient.layer,
+        ConfigProvider.layer(ConfigProvider.fromUnknown({ STRIPE_API_KEY: TEST_KEY })),
+      ),
+    ),
+  )((it) => {
+    it.effect("reads the key for layerFromEnv from configuration, while the layer is built", () =>
+      Effect.gen(function* () {
+        const { fetch, calls } = stubFetch(() => jsonResponse(200, { id: "cus_1" }));
+        yield* Customer.retrieve("cus_1").pipe(Effect.provideService(FetchHttpClient.Fetch, fetch));
+        expect(calls[0]?.headers.get("authorization")).toBe(`Bearer ${TEST_KEY}`);
+      }),
+    );
+  });
 
+  // The subject of the next two cases is the layer's construction failing, so
+  // each builds `layerFromEnv` itself, reading the configuration the case sets.
   it.effect("fails layerFromEnv with PaymentConfigError naming an absent variable", () =>
     Effect.gen(function* () {
-      const { http } = stubFetch(() => jsonResponse(200, {}));
-      const error = yield* Effect.flip(
-        Layer.build(layerFromEnv("MY_STRIPE_KEY")).pipe(
-          Effect.scoped,
-          Effect.provide(
-            Layer.provideMerge(http, ConfigProvider.layer(ConfigProvider.fromUnknown({}))),
-          ),
-        ),
+      const error = yield* Effect.flip(Layer.build(layerFromEnv("MY_STRIPE_KEY"))).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
       );
       expect(error).toBeInstanceOf(PaymentConfigError);
       expect(error.message).toContain("MY_STRIPE_KEY");
@@ -643,12 +650,10 @@ describe("StripeHttp configuration", () => {
     ],
   ] as const)("treats an empty key variable as absent, %s", ([_label, provider]) =>
     Effect.gen(function* () {
-      const { http, calls } = stubFetch(() => jsonResponse(200, {}));
-      const error = yield* Effect.flip(
-        Layer.build(layerFromEnv()).pipe(
-          Effect.scoped,
-          Effect.provide(Layer.provideMerge(http, ConfigProvider.layer(provider))),
-        ),
+      const { fetch, calls } = stubFetch(() => jsonResponse(200, {}));
+      const error = yield* Effect.flip(Layer.build(layerFromEnv())).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
       );
       expect(error).toBeInstanceOf(PaymentConfigError);
       expect(error.message).toContain("STRIPE_API_KEY");

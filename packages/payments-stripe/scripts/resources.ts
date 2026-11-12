@@ -37,6 +37,7 @@
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
+import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -241,9 +242,9 @@ export const UNEXPOSED: ReadonlyArray<Unexposed> = [
 /** An operation the naming rule does not place or name as it should. */
 interface Override {
   /** The subpath, when the operation's path is under none of its {@link Resource.paths}. */
-  readonly subpath?: string | undefined;
+  readonly subpath?: string;
   /** The name, when the rule's is not the one to publish. */
-  readonly name?: string | undefined;
+  readonly name?: string;
 }
 
 /** Overrides by Distilled operation name. */
@@ -295,8 +296,8 @@ const retypedOf = (
 ): ReadonlyArray<readonly [string, string]> => R.toEntries(paramTypes[name] ?? R.empty());
 
 /** The override of the operation Distilled names `name`, if there is one. */
-const overrideOf = (name: string, overrides: Overrides = OVERRIDES): Override | undefined =>
-  overrides[name];
+const overrideOf = (name: string, overrides: Overrides = OVERRIDES): Option.Option<Override> =>
+  R.get(overrides, name);
 
 /** One Distilled operation, as the planner reads it. */
 export interface DistilledOperation {
@@ -386,12 +387,12 @@ const TEST_HELPERS = "/v1/test_helpers";
 const testHelperPath = (path: string): string => `${TEST_HELPERS}${path.slice("/v1".length)}`;
 
 /** The path segments of `path` after `prefix`, if `path` is `prefix` or under it. */
-const restOf = (path: string, prefix: string): ReadonlyArray<string> | undefined =>
+const restOf = (path: string, prefix: string): Option.Option<ReadonlyArray<string>> =>
   path === prefix
-    ? []
+    ? Option.some([])
     : path.startsWith(`${prefix}/`)
-      ? path.slice(prefix.length + 1).split("/")
-      : undefined;
+      ? Option.some(path.slice(prefix.length + 1).split("/"))
+      : Option.none();
 
 const isId = (segment: string): boolean => segment.startsWith("{");
 
@@ -424,57 +425,72 @@ type Placement =
   | { readonly kind: "unexposed" }
   | { readonly kind: "unassigned" };
 
+/** A prefix an operation's path falls under, and the path segments after it. */
+interface Match {
+  readonly prefix: string;
+  readonly rest: ReadonlyArray<string>;
+  readonly testHelper: boolean;
+}
+
+/** Whichever of two matches has the longer prefix (the first, on a tie). */
+const longer = <M extends { readonly prefix: string }>(
+  best: Option.Option<M>,
+  match: M,
+): Option.Option<M> =>
+  Option.isNone(best) || match.prefix.length > best.value.prefix.length ? Option.some(match) : best;
+
 /** The longest of `prefixes` an operation's path falls under, directly or as a test helper. */
-const longestMatch = (
-  path: string,
-  prefixes: ReadonlyArray<string>,
-): { readonly prefix: string; rest: ReadonlyArray<string>; testHelper: boolean } | undefined =>
+const longestMatch = (path: string, prefixes: ReadonlyArray<string>): Option.Option<Match> =>
   prefixes
-    .flatMap((prefix) => {
-      const direct = restOf(path, prefix);
-      const helper = prefix.startsWith("/v1/") ? restOf(path, testHelperPath(prefix)) : undefined;
-      return [
-        ...(direct === undefined ? [] : [{ prefix, rest: direct, testHelper: false }]),
-        ...(helper === undefined ? [] : [{ prefix, rest: helper, testHelper: true }]),
-      ];
+    .flatMap((prefix): ReadonlyArray<Match> => {
+      const direct = Option.map(restOf(path, prefix), (rest) => ({
+        prefix,
+        rest,
+        testHelper: false,
+      }));
+      const helper = prefix.startsWith("/v1/")
+        ? Option.map(restOf(path, testHelperPath(prefix)), (rest) => ({
+            prefix,
+            rest,
+            testHelper: true,
+          }))
+        : Option.none();
+      return [...Option.toArray(direct), ...Option.toArray(helper)];
     })
-    .reduce<
-      { readonly prefix: string; rest: ReadonlyArray<string>; testHelper: boolean } | undefined
-    >(
-      (best, match) =>
-        best === undefined || match.prefix.length > best.prefix.length ? match : best,
-      undefined,
-    );
+    .reduce<Option.Option<Match>>(longer, Option.none());
 
 const place = (operation: DistilledOperation): Placement => {
-  const override = overrideOf(operation.name)?.subpath;
-  if (override !== undefined) {
-    return { kind: "resource", subpath: override, rest: [], testHelper: false };
+  const override = Option.flatMapNullishOr(overrideOf(operation.name), ({ subpath }) => subpath);
+  if (Option.isSome(override)) {
+    return { kind: "resource", subpath: override.value, rest: [], testHelper: false };
   }
-  const match = RESOURCES.flatMap((resource) => {
-    const found = longestMatch(operation.path, resource.paths);
-    return found === undefined ? [] : [{ ...found, subpath: resource.subpath }];
-  }).reduce<
-    | { readonly prefix: string; subpath: string; rest: ReadonlyArray<string>; testHelper: boolean }
-    | undefined
-  >(
-    (best, found) =>
-      best === undefined || found.prefix.length > best.prefix.length ? found : best,
-    undefined,
-  );
+  const match = RESOURCES.flatMap((resource) =>
+    Option.toArray(
+      Option.map(longestMatch(operation.path, resource.paths), (found) => ({
+        ...found,
+        subpath: resource.subpath,
+      })),
+    ),
+  ).reduce<Option.Option<Match & { readonly subpath: string }>>(longer, Option.none());
   const unexposed = longestMatch(
     operation.path,
     UNEXPOSED.map((entry) => entry.path),
   );
   if (
-    unexposed !== undefined &&
-    (match === undefined || unexposed.prefix.length > match.prefix.length)
+    Option.isSome(unexposed) &&
+    (Option.isNone(match) || unexposed.value.prefix.length > match.value.prefix.length)
   ) {
     return { kind: "unexposed" };
   }
-  return match === undefined
-    ? { kind: "unassigned" }
-    : { kind: "resource", subpath: match.subpath, rest: match.rest, testHelper: match.testHelper };
+  return Option.match(match, {
+    onNone: (): Placement => ({ kind: "unassigned" }),
+    onSome: (found): Placement => ({
+      kind: "resource",
+      subpath: found.subpath,
+      rest: found.rest,
+      testHelper: found.testHelper,
+    }),
+  });
 };
 
 /** What naming an operation reads: the operation, the words of the rest of its path, every operation. */
@@ -540,7 +556,8 @@ const NAMERS = {
 } satisfies Namers;
 
 /** The rule for a shape, if it has one. */
-const namerOf = (pattern: string, namers: Namers = NAMERS): Namer | undefined => namers[pattern];
+const namerOf = (pattern: string, namers: Namers = NAMERS): Option.Option<Namer> =>
+  R.get(namers, pattern);
 
 /** The rule's name for an operation, from the rest of its path. */
 const ruleName = (
@@ -550,7 +567,7 @@ const ruleName = (
 ): string => {
   const words = rest.filter((segment) => !isId(segment));
   const pattern = rest.map((segment) => (isId(segment) ? "{}" : "w")).join("/");
-  const namer = namerOf(pattern) ?? (() => camel(words.join("_")));
+  const namer = Option.getOrElse(namerOf(pattern), () => () => camel(words.join("_")));
   return namer({ operation, words, all });
 };
 
@@ -560,7 +577,9 @@ const exportedName = (
   placement: Extract<Placement, { readonly kind: "resource" }>,
   all: ReadonlyArray<DistilledOperation>,
 ): string => {
-  const base = overrideOf(operation.name)?.name ?? ruleName(operation, placement.rest, all);
+  const base = Option.flatMapNullishOr(overrideOf(operation.name), ({ name }) => name).pipe(
+    Option.getOrElse(() => ruleName(operation, placement.rest, all)),
+  );
   return placement.testHelper ? `testHelpers${pascal(base)}` : base;
 };
 
@@ -617,7 +636,8 @@ const staleEntries = (operations: ReadonlyArray<DistilledOperation>): ReadonlyAr
             );
     }),
     ...UNEXPOSED.filter(
-      ({ path }) => !operations.some((operation) => longestMatch(operation.path, [path])),
+      ({ path }) =>
+        !operations.some((operation) => Option.isSome(longestMatch(operation.path, [path]))),
     ).map(({ path }) => `UNEXPOSED lists ${path}, which no operation is under`),
   ];
 };

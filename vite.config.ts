@@ -17,6 +17,16 @@
 import { defineConfig } from "vite-plus";
 import { recommended } from "@effect/tsgo/oxlint-presets";
 import effect from "@enfect/oxlint";
+import * as R from "effect/Record";
+
+/**
+ * `@effect/tsgo`'s `recommended` preset with no warn tier: every rule it turns
+ * on is an error here, as every other rule in the family's standard set is.
+ */
+const effectTsgo: typeof recommended = {
+  ...recommended,
+  rules: R.map(recommended.rules ?? {}, (level) => (level === "warn" ? "error" : level)),
+};
 
 /** Every published package, in dependency order. A new package adds itself here. */
 const packages = ["@thomasfosterau/effect-biz", "@thomasfosterau/effect-biz-payments-stripe"];
@@ -64,9 +74,11 @@ export default defineConfig({
     // `@effect/tsgo`'s preset (the `effecttsgo/*` rules the patched oxlint
     // carries) and `@enfect/oxlint`'s `recommended` (every `effect/*` rule,
     // anti-slop included, at `error`; registered as a JS plugin).
-    // The `effect/*` rules still below `error` (globally or in an override)
-    // are tracked in #161.
-    extends: [recommended, effect.configs.recommended],
+    // Every rule is at `error`, with no warn tier and no inline disables
+    // (owner decision, #161); an override below turns a rule off only where it
+    // cannot apply, with its reason. `pedantic`, `nursery`, `style` and
+    // `restriction` stay off: many of their rules contradict the conventions.
+    extends: [effectTsgo, effect.configs.recommended],
     // oxlint's default plugins plus `import`, `promise`, `vitest` and `jsdoc`,
     // each contributing its rules to the categories below.
     plugins: ["eslint", "typescript", "unicorn", "oxc", "import", "promise", "vitest", "jsdoc"],
@@ -81,13 +93,13 @@ export default defineConfig({
       // Entities and errors are nominal: `Schema.Class<Self, { readonly brand: unique symbol }>`.
       "effecttsgo/schema-class-missing-brand": "error",
       "eslint/no-unused-vars": [
-        "warn",
+        "error",
         {
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
         },
       ],
-      "eslint/prefer-const": "warn",
+      "eslint/prefer-const": "error",
       // `@effect/tsgo` reads its own JSDoc tags: `@effect-leakable-service`
       // marks a request-scoped context (the tenant, the actor) that every
       // repository method is meant to require.
@@ -133,18 +145,6 @@ export default defineConfig({
       // rule takes no config (`RuleNoConfig` in `@effect/tsgo`'s
       // oxlint-schema.json), so there is no allowlist.
       "effecttsgo/unstable-api-usage": "off",
-
-      // ---- Effect preset: rules this workspace's conventions cut across ----
-      // `prefer-option-over-null` fires on `?: T | undefined`, which is the
-      // ONLY spelling of an optional member `exactOptionalPropertyTypes` lets
-      // a caller forward an optional of its own into — the spelling AGENTS.md
-      // mandates — and on the `NullOr` columns a SQL row decodes to.
-      "effect/prefer-option-over-null": "off",
-      "effect/no-unknown-returns": "warn",
-      "typescript/no-explicit-any": "off",
-      "typescript/no-empty-object-type": "off",
-      "typescript/ban-ts-comment": "off",
-      "unicorn/no-empty-file": "off",
       "vite-plus/prefer-vite-plus-imports": "error",
     },
     overrides: [
@@ -163,9 +163,6 @@ export default defineConfig({
           "effect/use-console-service": "off",
           "effect/use-filesystem-service": "off",
           "effect/use-path-service": "off",
-          // `...(process.env.X ? { x } : {})` is how a vitest option is left
-          // unset under `exactOptionalPropertyTypes`.
-          "effect/no-conditional-empty-object-spread": "off",
         },
       },
       // The assertions no typing removes (10 sites, each with a `// SAFETY:`
@@ -201,6 +198,17 @@ export default defineConfig({
         rules: {
           "typescript/no-unsafe-type-assertion": "off",
           "effect/casting-awareness": "off",
+        },
+      },
+      // The SDK-based `Webhook.constructEvent*` wrappers take the SDK's own
+      // `string | Buffer` payload, and their suite must hand them a `Buffer`
+      // (2 sites); `node:buffer` is refused in tests too, so the global is the
+      // only way to build one. The WebCrypto `verify` (effect-finance#41) takes
+      // `string | Uint8Array` and its suite keeps the rule.
+      {
+        files: ["packages/payments-stripe/tests/Webhook.test.ts"],
+        rules: {
+          "eslint/no-restricted-globals": "off",
         },
       },
       // Type-level tests: every binding exists to be asserted against, never
@@ -274,15 +282,9 @@ export default defineConfig({
           // `layer(L)(name, (it) => …)` hands its cases the layer-aware `it`,
           // which shadows the file's own (`@effect/vitest`'s documented form).
           "eslint/no-shadow": ["error", { allow: ["it"] }],
-          // A test is an application entry point: each case provides its own
-          // stub layers, which is exactly where `Effect.provide` belongs.
-          "effecttsgo/strict-effect-provide": "off",
           // A helper declared inside the `it` that uses it keeps each case
           // self-contained; `src/` still hoists them.
           "unicorn/consistent-function-scoping": "off",
-          // The webhook suite exercises the `Buffer` payload the SDK-based
-          // verifier accepts; the WebCrypto verifier (effect-finance#41) drops it.
-          "eslint/no-restricted-globals": "warn",
         },
       },
     ],

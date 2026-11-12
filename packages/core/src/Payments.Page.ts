@@ -4,6 +4,8 @@
  * @module
  */
 
+import type * as Option from "effect/Option";
+
 /**
  * A single page of results returned by a `list` operation.
  *
@@ -15,12 +17,12 @@ export interface Page<A> {
   readonly data: ReadonlyArray<A>;
   readonly hasMore: boolean;
   /**
-   * The cursor of the next page, present when {@link Page.hasMore} is: pass it
+   * The cursor of the next page, `Some` when {@link Page.hasMore} is: pass it
    * as `startingAfter`, with the same `limit` and filters, to list that page.
    * It is opaque, and only the provider that returned it reads it (the last
    * item's id, say, or an encoded page number).
    */
-  readonly nextCursor?: string | undefined;
+  readonly nextCursor: Option.Option<string>;
 }
 
 /**

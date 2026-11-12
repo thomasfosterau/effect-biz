@@ -1,7 +1,9 @@
 import { describe, expect } from "vite-plus/test";
-import { it } from "@effect/vitest";
+import { it, layer } from "@effect/vitest";
+import { FetchHttpClient } from "effect/http";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
@@ -42,7 +44,10 @@ import basilSubscription from "./fixtures/basil/subscription.json" with { type: 
 
 const config = { apiKey: Redacted.make(TEST_KEY) };
 
-/** Run `effect` on the default `StripePayments.layer`, answered with `body`. */
+/** The default `StripePayments.layer` over a `fetch` each case points at its stub. */
+const defaultLayer = Layer.provideMerge(StripePayments.layer(config), FetchHttpClient.layer);
+
+/** Run `effect` answered with `body`; it needs the default `StripePayments.layer` (see {@link defaultLayer}). */
 const onDefaultLayer = <A, E>(
   effect: Effect.Effect<
     A,
@@ -54,10 +59,8 @@ const onDefaultLayer = <A, E>(
   >,
   body: Schema.Json,
 ) => {
-  const { http, calls } = stubFetch(() => jsonResponse(200, body));
-  const result = effect.pipe(
-    Effect.provide(Layer.provideMerge(StripePayments.layer(config), http)),
-  );
+  const { fetch, calls } = stubFetch(() => jsonResponse(200, body));
+  const result = effect.pipe(Effect.provideService(FetchHttpClient.Fetch, fetch));
   return { result, calls };
 };
 
@@ -74,10 +77,11 @@ const strictly = (
   schema: Schema.Top,
   body: Schema.Json,
   options?: SchemaAST.ParseOptions,
-): unknown =>
+): void => {
   // SAFETY: Distilled's generated schemas are plain structs, unions and
   // suspensions over `effect/Schema` built-ins, which need no services.
   Schema.decodeSync(schema as Schema.Codec<unknown, unknown>, options)(body);
+};
 
 /**
  * Reject excess properties too. Only for the fixtures Distilled models in
@@ -174,7 +178,7 @@ describe("endive fixtures", () => {
   );
 });
 
-describe("the default layer decodes endive responses", () => {
+layer(defaultLayer)("the default layer decodes endive responses", (it) => {
   it.effect("maps an endive subscription", () =>
     Effect.gen(function* () {
       const { result, calls } = onDefaultLayer(
@@ -232,10 +236,10 @@ describe("the default layer decodes endive responses", () => {
         amount: endivePaymentIntent.amount,
         currency: endivePaymentIntent.currency,
         status: "succeeded",
-        customerId: endivePaymentIntent.customer,
-        paymentMethodId: endivePaymentIntent.payment_method,
-        clientSecret: endivePaymentIntent.client_secret,
-        description: endivePaymentIntent.description,
+        customerId: Option.fromNullishOr(endivePaymentIntent.customer),
+        paymentMethodId: Option.fromNullishOr(endivePaymentIntent.payment_method),
+        clientSecret: Option.fromNullishOr(endivePaymentIntent.client_secret),
+        description: Option.fromNullishOr(endivePaymentIntent.description),
         metadata: endivePaymentIntent.metadata,
         created: endivePaymentIntent.created,
       });
@@ -253,7 +257,7 @@ describe("the default layer decodes endive responses", () => {
       expect(product).toMatchObject({
         id: endiveProduct.id,
         name: endiveProduct.name,
-        description: endiveProduct.description,
+        description: Option.fromNullishOr(endiveProduct.description),
         active: true,
         metadata: endiveProduct.metadata,
         created: endiveProduct.created,
@@ -263,21 +267,21 @@ describe("the default layer decodes endive responses", () => {
       expect(calls[0]?.headers.get("stripe-version")).toBe(StripePayments.DISTILLED_API_VERSION);
     }),
   );
+});
 
-  it.effect(
-    "returns an endive subscription from the resource module as sent, under strict validation too",
-    () =>
-      Effect.gen(function* () {
-        const { http } = stubFetch(() => jsonResponse(200, endiveSubscription));
-        const subscription = yield* StripeSubscription.retrieve(endiveSubscription.id).pipe(
-          Effect.provide(
-            Layer.provideMerge(
-              Layer.provideMerge(StripeHttp.layer(config), http),
-              strictValidation,
-            ),
-          ),
-        );
-        expect(subscription).toEqual(endiveSubscription);
-      }),
+layer(
+  Layer.provideMerge(
+    Layer.provideMerge(StripeHttp.layer(config), FetchHttpClient.layer),
+    strictValidation,
+  ),
+)("the resource modules return endive responses as sent", (it) => {
+  it.effect("returns an endive subscription as sent, under strict validation too", () =>
+    Effect.gen(function* () {
+      const { fetch } = stubFetch(() => jsonResponse(200, endiveSubscription));
+      const subscription = yield* StripeSubscription.retrieve(endiveSubscription.id).pipe(
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+      );
+      expect(subscription).toEqual(endiveSubscription);
+    }),
   );
 });

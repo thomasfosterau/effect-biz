@@ -31,7 +31,7 @@ const notPositive = (value: BigDecimal.BigDecimal): BusinessRuleViolation =>
   new BusinessRuleViolation({
     code: "core.rate-not-positive",
     reason: "A rate must be greater than zero",
-    details: { value: BigDecimal.format(value) },
+    details: Option.some({ value: BigDecimal.format(value) }),
   });
 
 /** A rate from a decimal, or a `core.rate-not-positive` violation when it is zero or negative. */

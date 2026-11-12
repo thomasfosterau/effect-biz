@@ -1,26 +1,21 @@
 import type * as Schema from "effect/Schema";
-import { describe, expect } from "vite-plus/test";
-import { it } from "@effect/vitest";
+import { expect } from "vite-plus/test";
+import { FetchHttpClient } from "effect/http";
+import { layer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Price from "@thomasfosterau/effect-biz/Payments.Price";
 import * as PaymentIntent from "@thomasfosterau/effect-biz/Payments.PaymentIntent";
 import * as Subscription from "@thomasfosterau/effect-biz/Payments.Subscription";
 import * as Refund from "@thomasfosterau/effect-biz/Payments.Refund";
-import * as StripePayments from "../src/StripePayments.ts";
-import { stubStripe } from "./support.ts";
+import { capabilitiesOverStub, stubStripe } from "./support.ts";
 
 /**
  * A value Stripe adds to an enumeration later must decode to `Other` carrying
  * the raw string, never fail the object or the list page it sits in (effect-finance#58).
  */
-const run = <A, E>(
-  effect: Effect.Effect<A, E, Layer.Success<typeof StripePayments.capabilities>>,
-  body: Schema.Json,
-): Effect.Effect<A, E> => {
-  const stub = stubStripe(() => body);
-  return effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer)));
-};
+const run = <A, E, R>(effect: Effect.Effect<A, E, R>, body: Schema.Json) =>
+  effect.pipe(Effect.provideService(FetchHttpClient.Fetch, stubStripe(() => body).fetch));
 
 const page = (...data: Array<Schema.Json>) => ({ object: "list", has_more: false, data });
 
@@ -68,7 +63,7 @@ const price = (id: string, type: string, interval: string) => ({
 
 const other = (raw: string) => ({ _tag: "Other", raw });
 
-describe("StripePayments lenient enumerations", () => {
+layer(capabilitiesOverStub)("StripePayments lenient enumerations", (it) => {
   it.effect("decodes an unknown payment status to Other with the raw value", () =>
     Effect.gen(function* () {
       const result = yield* run(PaymentIntent.retrieve("pi_1"), intent("pi_1", "brand_new_status"));
@@ -97,7 +92,9 @@ describe("StripePayments lenient enumerations", () => {
     Effect.gen(function* () {
       const result = yield* run(Price.retrieve("price_1"), price("price_1", "metered", "decade"));
       expect(result.type).toEqual(other("metered"));
-      expect(result.recurring?.interval).toEqual(other("decade"));
+      expect(Option.map(result.recurring, (recurring) => recurring.interval)).toEqual(
+        Option.some(other("decade")),
+      );
     }),
   );
 
@@ -149,7 +146,9 @@ describe("StripePayments lenient enumerations", () => {
         page(price("price_1", "one_time", "month"), price("price_2", "metered", "decade")),
       );
       expect(result.data.map((item) => item.type)).toEqual(["one_time", other("metered")]);
-      expect(result.data[1]?.recurring?.interval).toEqual(other("decade"));
+      expect(
+        Option.map(result.data[1]?.recurring ?? Option.none(), (recurring) => recurring.interval),
+      ).toEqual(Option.some(other("decade")));
     }),
   );
 
@@ -208,11 +207,13 @@ describe("StripePayments lenient enumerations", () => {
         "recurring",
         "recurring",
       ]);
-      expect(prices.data.map((item) => item.recurring?.interval)).toEqual([
-        "day",
-        "week",
-        "month",
-        "year",
+      expect(
+        prices.data.map((item) => Option.map(item.recurring, (recurring) => recurring.interval)),
+      ).toEqual([
+        Option.some("day"),
+        Option.some("week"),
+        Option.some("month"),
+        Option.some("year"),
       ]);
     }),
   );

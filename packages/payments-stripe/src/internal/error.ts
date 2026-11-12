@@ -48,15 +48,26 @@ export interface StripeFailure {
   readonly kind: string;
   readonly message: string;
   /** Stripe's own error code (`resource_missing`, `card_declined`, …). */
-  readonly code?: string | undefined;
-  readonly statusCode?: number | undefined;
+  readonly code: Option.Option<string>;
+  readonly statusCode: Option.Option<number>;
   /** The offending parameter, when Stripe names one. */
-  readonly param?: string | undefined;
+  readonly param: Option.Option<string>;
   /** Seconds to wait, from a `Retry-After` header. */
-  readonly retryAfter?: number | undefined;
+  readonly retryAfter: Option.Option<number>;
   /** The vendor error object (never the request, never the key). */
   readonly raw?: unknown;
 }
+
+/** A failure with only a kind and a message (no response behind it): no code, status, parameter or retry delay. */
+export const bareFailure = (kind: string, message: string): StripeFailure => ({
+  kind,
+  message,
+  code: Option.none(),
+  statusCode: Option.none(),
+  param: Option.none(),
+  retryAfter: Option.none(),
+  raw: undefined,
+});
 
 /** A string Stripe may send, omit, or send as `null` (`"code": null`). */
 const Text = Schema.optional(Schema.NullOr(Schema.String));
@@ -85,10 +96,10 @@ const StripeErrorEnvelope = Schema.Struct({
 
 /** The classification's view of an error body, `null`s read as absent. */
 interface StripeErrorFields {
-  readonly type: string | undefined;
-  readonly code: string | undefined;
-  readonly message: string | undefined;
-  readonly param: string | undefined;
+  readonly type: Option.Option<string>;
+  readonly code: Option.Option<string>;
+  readonly message: Option.Option<string>;
+  readonly param: Option.Option<string>;
   /**
    * The vendor error object exactly as received — every field, including the
    * ones not decoded (`decline_code`, `payment_intent`, `advice_code`, …) —
@@ -99,29 +110,31 @@ interface StripeErrorFields {
 
 const decodeEnvelope = Schema.decodeUnknownOption(StripeErrorEnvelope);
 
-const orUndefined = (value: string | null | undefined): string | undefined => value ?? undefined;
-
 /** The error fields of a response body, normalising the OAuth form. */
-const errorFieldsOf = (body: Schema.Json | undefined): StripeErrorFields | undefined =>
-  Option.match(decodeEnvelope(body), {
-    onNone: () => undefined,
-    onSome: ({ error, error_description }): StripeErrorFields =>
+const errorFieldsOf = (body: Option.Option<Schema.Json>): Option.Option<StripeErrorFields> =>
+  Option.map(
+    Option.flatMap(body, decodeEnvelope),
+    ({ error, error_description }): StripeErrorFields =>
       P.isString(error)
         ? {
-            type: error,
-            code: undefined,
-            message: orUndefined(error_description),
-            param: undefined,
-            raw: body,
+            type: Option.some(error),
+            code: Option.none(),
+            message: Option.fromNullishOr(error_description),
+            param: Option.none(),
+            raw: Option.getOrUndefined(body),
           }
         : {
-            type: orUndefined(error.type),
-            code: orUndefined(error.code),
-            message: orUndefined(error.message),
-            param: orUndefined(error.param),
-            raw: P.hasProperty(body, "error") ? body.error : undefined,
+            type: Option.fromNullishOr(error.type),
+            code: Option.fromNullishOr(error.code),
+            message: Option.fromNullishOr(error.message),
+            param: Option.fromNullishOr(error.param),
+            raw: Option.getOrUndefined(
+              Option.flatMap(body, (json) =>
+                P.hasProperty(json, "error") ? Option.some(json.error) : Option.none(),
+              ),
+            ),
           },
-  });
+  );
 
 /** The SDK's `type` → error class dispatch (`StripeError.generate`). */
 const KIND_BY_TYPE: R.ReadonlyRecord<string, StripeErrorKind> = {
@@ -145,20 +158,18 @@ const KIND_BY_STATUS: R.ReadonlyRecord<string, StripeErrorKind> = {
  * The status wins over the body's `type` for 401 / 403 / 429, as in the SDK's
  * response handler; otherwise the body's `type` decides.
  */
-const kindOf = (status: number, type: string | undefined): StripeErrorKind =>
+const kindOf = (status: number, type: Option.Option<string>): StripeErrorKind =>
   R.get(KIND_BY_STATUS, String(status)).pipe(
-    Option.orElse(() =>
-      Option.flatMap(Option.fromNullishOr(type), (known) => R.get(KIND_BY_TYPE, known)),
-    ),
+    Option.orElse(() => Option.flatMap(type, (known) => R.get(KIND_BY_TYPE, known))),
     Option.getOrElse((): StripeErrorKind => "StripeUnknownError"),
   );
 
 /** Parse a `Retry-After` header given in whole seconds. */
-export const retryAfterOf = (header: string | undefined): number | undefined => {
-  if (header === undefined) return undefined;
-  const parsed = Number.parseInt(header, 10);
-  return Number.isNaN(parsed) ? undefined : parsed;
-};
+export const retryAfterOf = (header: Option.Option<string>): Option.Option<number> =>
+  Option.filter(
+    Option.map(header, (text) => Number.parseInt(text, 10)),
+    (parsed) => !Number.isNaN(parsed),
+  );
 
 /**
  * Classify a non-2xx HTTP response from its status, its `Retry-After` header
@@ -166,27 +177,31 @@ export const retryAfterOf = (header: string | undefined): number | undefined => 
  */
 export const classifyResponse = (
   status: number,
-  retryAfter: string | undefined,
-  body: Schema.Json | undefined,
+  retryAfter: Option.Option<string>,
+  body: Option.Option<Schema.Json>,
 ): StripeFailure => {
+  const fallback = `Stripe request failed with status ${status}`;
   const error = errorFieldsOf(body);
-  if (error === undefined) {
+  if (Option.isNone(error)) {
     // Not a Stripe error envelope — typically a proxy or load-balancer page.
     return {
-      kind: kindOf(status, "api_error"),
-      message: `Stripe request failed with status ${status}`,
-      statusCode: status,
+      kind: kindOf(status, Option.some("api_error")),
+      message: fallback,
+      code: Option.none(),
+      statusCode: Option.some(status),
+      param: Option.none(),
       retryAfter: retryAfterOf(retryAfter),
+      raw: undefined,
     };
   }
   return {
-    kind: kindOf(status, error.type),
-    message: error.message ?? `Stripe request failed with status ${status}`,
-    code: error.code,
-    statusCode: status,
-    param: error.param,
+    kind: kindOf(status, error.value.type),
+    message: Option.getOrElse(error.value.message, () => fallback),
+    code: error.value.code,
+    statusCode: Option.some(status),
+    param: error.value.param,
     retryAfter: retryAfterOf(retryAfter),
-    raw: error.raw,
+    raw: error.value.raw,
   };
 };
 
@@ -203,7 +218,8 @@ export const classifyResponse = (
  *   none.
  */
 export const toPaymentsError = (failure: StripeFailure): PaymentsError => {
-  const { kind, message, statusCode } = failure;
+  const { kind, message } = failure;
+  const { statusCode } = failure;
   return Match.value(kind).pipe(
     Match.when(
       "StripeAuthenticationError",
@@ -211,25 +227,34 @@ export const toPaymentsError = (failure: StripeFailure): PaymentsError => {
     ),
     Match.when(
       "StripeRateLimitError",
-      (): PaymentsError => new PaymentRateLimitError({ message, retryAfter: failure.retryAfter }),
+      (): PaymentsError =>
+        new PaymentRateLimitError({
+          message,
+          retryAfter: failure.retryAfter,
+        }),
     ),
     Match.when(
       "StripeInvalidRequestError",
       (): PaymentsError =>
-        new PaymentInvalidRequestError({ message, param: failure.param, statusCode }),
+        new PaymentInvalidRequestError({
+          message,
+          param: failure.param,
+          statusCode,
+        }),
     ),
     Match.when(
       "StripeConnectionError",
-      (): PaymentsError => new PaymentNetworkError({ message, cause: failure.raw }),
+      (): PaymentsError =>
+        new PaymentNetworkError({ message, cause: Option.fromNullishOr(failure.raw) }),
     ),
     Match.orElse(
       (): PaymentsError =>
         new PaymentProviderError({
           message,
           provider: PROVIDER,
-          code: failure.code ?? kind,
+          code: Option.some(Option.getOrElse(failure.code, () => kind)),
           statusCode,
-          cause: failure.raw,
+          cause: Option.fromNullishOr(failure.raw),
         }),
     ),
   );

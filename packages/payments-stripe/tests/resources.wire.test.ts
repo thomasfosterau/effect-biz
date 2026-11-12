@@ -1,12 +1,14 @@
 import { assert, describe, expect } from "vite-plus/test";
-import { it } from "@effect/vitest";
+import { layer as testLayer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Exit from "effect/Exit";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import * as Redacted from "effect/Redacted";
+import { FetchHttpClient } from "effect/http";
 import {
   PaymentInvalidRequestError,
   PaymentProviderError,
@@ -52,10 +54,7 @@ const decodeModule = Schema.decodeUnknownSync(
 );
 
 const load = (subpath: string) =>
-  Effect.map(
-    awaitTestPromise((): Promise<unknown> => import(`../src/${subpath}.ts`)),
-    (loaded) => decodeModule(loaded),
-  );
+  awaitTestPromise(async () => decodeModule(await import(`../src/${subpath}.ts`)));
 
 /** The arguments of a call: an id per path id, `{}` for params, no options. */
 const argsOf = (operation: Planned): ReadonlyArray<unknown> => [
@@ -70,149 +69,166 @@ const pathOf = (operation: Planned): string =>
     operation.path,
   );
 
-/** Run one call over a stubbed `fetch`, never retried. */
+/** The client, never retrying, over `FetchHttpClient.layer`: each case points `Fetch` at its stub (see {@link run}). */
+const neverRetried = Layer.provideMerge(
+  layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }),
+  FetchHttpClient.layer,
+);
+
+/** Run one call over a stubbed `fetch`. It needs {@link neverRetried}. */
 const run = (
   call: Effect.Effect<unknown, PaymentsError, StripeHttp>,
   respond: (request: CapturedRequest) => Response,
 ) => {
-  const { http, calls } = stubFetch(respond);
-  const exit = Effect.exit(
-    call.pipe(
-      Effect.provide(
-        Layer.provideMerge(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }), http),
-      ),
-    ),
-  );
+  const { fetch, calls } = stubFetch(respond);
+  const exit = Effect.exit(call.pipe(Effect.provideService(FetchHttpClient.Fetch, fetch)));
   return { exit, calls };
 };
 
 const BODY = { id: "obj_1", object: "stub", livemode: false };
 
 describe.each(R.toEntries(modules))("%s", (subpath, operations) => {
-  it.effect.each(operations.map((operation) => [operation.exported, operation] as const))(
-    "%s reaches its route with the pinned Stripe-Version",
-    ([exported, operation]) =>
-      Effect.gen(function* () {
-        const module = yield* load(subpath);
-        const call = module[exported];
-        expect(call, `${subpath}.${exported}`).toBeTypeOf("function");
-        assert.isDefined(call, `${subpath}.${exported}`);
-        const { exit, calls } = run(call(...argsOf(operation)), () => jsonResponse(200, BODY));
-        expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: BODY }));
-        expect(calls).toHaveLength(1);
-        const [request] = calls;
-        expect(request?.method).toBe(operation.method);
-        expect(request?.url.origin).toBe(
-          operation.upload ? "https://files.stripe.com" : "https://api.stripe.com",
-        );
-        expect(request?.url.pathname).toBe(pathOf(operation));
-        expect(request?.headers.get("stripe-version")).toBe(DISTILLED_API_VERSION);
-        expect(request?.headers.get("authorization")).toBe(`Bearer ${TEST_KEY}`);
-      }),
-  );
-
-  const [first] = operations;
-
-  it.effect(`maps a Stripe error from ${first?.exported} onto PaymentInvalidRequestError`, () =>
-    Effect.gen(function* () {
-      assert.isDefined(first, `${subpath} has no operation`);
-      const module = yield* load(subpath);
-      const call = module[first.exported];
-      assert.isDefined(call, `${subpath}.${first.exported}`);
-      const { exit } = run(call(...argsOf(first)), () =>
-        jsonResponse(400, {
-          error: { type: "invalid_request_error", message: "No such thing", param: "id" },
+  testLayer(neverRetried)((it) => {
+    it.effect.each(operations.map((operation) => [operation.exported, operation] as const))(
+      "%s reaches its route with the pinned Stripe-Version",
+      ([exported, operation]) =>
+        Effect.gen(function* () {
+          const module = yield* load(subpath);
+          const call = module[exported];
+          expect(call, `${subpath}.${exported}`).toBeTypeOf("function");
+          assert.isDefined(call, `${subpath}.${exported}`);
+          const { exit, calls } = run(call(...argsOf(operation)), () => jsonResponse(200, BODY));
+          expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: BODY }));
+          expect(calls).toHaveLength(1);
+          const [request] = calls;
+          expect(request?.method).toBe(operation.method);
+          expect(request?.url.origin).toBe(
+            operation.upload ? "https://files.stripe.com" : "https://api.stripe.com",
+          );
+          expect(request?.url.pathname).toBe(pathOf(operation));
+          expect(request?.headers.get("stripe-version")).toBe(DISTILLED_API_VERSION);
+          expect(request?.headers.get("authorization")).toBe(`Bearer ${TEST_KEY}`);
         }),
-      );
-      const result = yield* exit;
-      expect(result._tag).toBe("Failure");
-      const error = Exit.isFailure(result) ? result.cause.reasons[0] : undefined;
-      expect(error).toMatchObject({ _tag: "Fail", error: expect.any(PaymentInvalidRequestError) });
-      expect(error).toMatchObject({ error: { message: "No such thing", param: "id" } });
-    }),
-  );
+    );
 
-  it.effect(`fails a malformed 2xx from ${first?.exported} with PaymentProviderError`, () =>
-    Effect.gen(function* () {
-      assert.isDefined(first, `${subpath} has no operation`);
-      const module = yield* load(subpath);
-      const call = module[first.exported];
-      assert.isDefined(call, `${subpath}.${first.exported}`);
-      const { exit } = run(
-        call(...argsOf(first)),
-        () => new Response("<html>not json</html>", { status: 200 }),
-      );
-      const result = yield* exit;
-      const error = Exit.isFailure(result) ? result.cause.reasons[0] : undefined;
-      expect(error).toMatchObject({
-        _tag: "Fail",
-        error: expect.any(PaymentProviderError),
-      });
-      expect(error).toMatchObject({
-        error: { message: "Invalid JSON received from the Stripe API", statusCode: 200 },
-      });
-    }),
-  );
+    const [first] = operations;
+
+    it.effect(`maps a Stripe error from ${first?.exported} onto PaymentInvalidRequestError`, () =>
+      Effect.gen(function* () {
+        assert.isDefined(first, `${subpath} has no operation`);
+        const module = yield* load(subpath);
+        const call = module[first.exported];
+        assert.isDefined(call, `${subpath}.${first.exported}`);
+        const { exit } = run(call(...argsOf(first)), () =>
+          jsonResponse(400, {
+            error: { type: "invalid_request_error", message: "No such thing", param: "id" },
+          }),
+        );
+        const result = yield* exit;
+        expect(result._tag).toBe("Failure");
+        const error = Exit.isFailure(result) ? result.cause.reasons[0] : undefined;
+        expect(error).toMatchObject({
+          _tag: "Fail",
+          error: expect.any(PaymentInvalidRequestError),
+        });
+        expect(error).toMatchObject({
+          error: { message: "No such thing", param: Option.some("id") },
+        });
+      }),
+    );
+
+    it.effect(`fails a malformed 2xx from ${first?.exported} with PaymentProviderError`, () =>
+      Effect.gen(function* () {
+        assert.isDefined(first, `${subpath} has no operation`);
+        const module = yield* load(subpath);
+        const call = module[first.exported];
+        assert.isDefined(call, `${subpath}.${first.exported}`);
+        const { exit } = run(
+          call(...argsOf(first)),
+          () => new Response("<html>not json</html>", { status: 200 }),
+        );
+        const result = yield* exit;
+        const error = Exit.isFailure(result) ? result.cause.reasons[0] : undefined;
+        expect(error).toMatchObject({
+          _tag: "Fail",
+          error: expect.any(PaymentProviderError),
+        });
+        expect(error).toMatchObject({
+          error: {
+            message: "Invalid JSON received from the Stripe API",
+            statusCode: Option.some(200),
+          },
+        });
+      }),
+    );
+  });
 });
 
-describe("the resources published for every remaining operation (effect-finance#154)", () => {
-  it.effect("form-encode a /v1 write (CreditNote.create)", () =>
-    Effect.gen(function* () {
-      const { exit, calls } = run(
-        CreditNote.create({ invoice: "in_1", memo: "Goodwill", metadata: { order: "42" } }),
-        () => jsonResponse(200, BODY),
-      );
-      expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: BODY }));
-      const [request] = calls;
-      expect(request?.url.pathname).toBe("/v1/credit_notes");
-      expect(request?.headers.get("content-type")).toBe("application/x-www-form-urlencoded");
-      expect(R.fromEntries(new URLSearchParams(request?.body))).toEqual({
-        invoice: "in_1",
-        memo: "Goodwill",
-        "metadata[order]": "42",
-      });
-    }),
-  );
+testLayer(neverRetried)(
+  "the resources published for every remaining operation (effect-finance#154)",
+  (it) => {
+    it.effect("form-encode a /v1 write (CreditNote.create)", () =>
+      Effect.gen(function* () {
+        const { exit, calls } = run(
+          CreditNote.create({ invoice: "in_1", memo: "Goodwill", metadata: { order: "42" } }),
+          () => jsonResponse(200, BODY),
+        );
+        expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: BODY }));
+        const [request] = calls;
+        expect(request?.url.pathname).toBe("/v1/credit_notes");
+        expect(request?.headers.get("content-type")).toBe("application/x-www-form-urlencoded");
+        expect(R.fromEntries(new URLSearchParams(request?.body))).toEqual({
+          invoice: "in_1",
+          memo: "Goodwill",
+          "metadata[order]": "42",
+        });
+      }),
+    );
 
-  it.effect("send a /v2 write as JSON, under the pinned Stripe-Version and the caller's key", () =>
-    Effect.gen(function* () {
-      const { exit, calls } = run(
-        V2CoreAccount.update(
-          "acct_1",
-          { display_name: "Jenny Rosen", metadata: { order: "42" } },
-          { idempotencyKey: "account-update-1" },
-        ),
-        () => jsonResponse(200, BODY),
-      );
-      expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: BODY }));
-      const [request] = calls;
-      expect(request?.method).toBe("POST");
-      expect(request?.url.pathname).toBe("/v2/core/accounts/acct_1");
-      expect(request?.headers.get("content-type")).toBe("application/json");
-      expect(
-        yield* Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown))(request?.body ?? "null"),
-      ).toEqual({
-        display_name: "Jenny Rosen",
-        metadata: { order: "42" },
-      });
-      expect(request?.headers.get("stripe-version")).toBe(DISTILLED_API_VERSION);
-      expect(request?.headers.get("idempotency-key")).toBe("account-update-1");
-    }),
-  );
+    it.effect(
+      "send a /v2 write as JSON, under the pinned Stripe-Version and the caller's key",
+      () =>
+        Effect.gen(function* () {
+          const { exit, calls } = run(
+            V2CoreAccount.update(
+              "acct_1",
+              { display_name: "Jenny Rosen", metadata: { order: "42" } },
+              { idempotencyKey: "account-update-1" },
+            ),
+            () => jsonResponse(200, BODY),
+          );
+          expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: BODY }));
+          const [request] = calls;
+          expect(request?.method).toBe("POST");
+          expect(request?.url.pathname).toBe("/v2/core/accounts/acct_1");
+          expect(request?.headers.get("content-type")).toBe("application/json");
+          expect(
+            yield* Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown))(
+              request?.body ?? "null",
+            ),
+          ).toEqual({
+            display_name: "Jenny Rosen",
+            metadata: { order: "42" },
+          });
+          expect(request?.headers.get("stripe-version")).toBe(DISTILLED_API_VERSION);
+          expect(request?.headers.get("idempotency-key")).toBe("account-update-1");
+        }),
+    );
 
-  it.effect("read a /v2 page's params from the query string (V2.Core.Event.list)", () =>
-    Effect.gen(function* () {
-      const page = { data: [], next_page_url: null, previous_page_url: null };
-      const { exit, calls } = run(V2CoreEvent.list({ limit: 2, object_id: "acct_1" }), () =>
-        jsonResponse(200, page),
-      );
-      expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: page }));
-      const [request] = calls;
-      expect(request?.method).toBe("GET");
-      expect(request?.url.pathname).toBe("/v2/core/events");
-      expect(request?.url.searchParams.get("limit")).toBe("2");
-      expect(request?.url.searchParams.get("object_id")).toBe("acct_1");
-      expect(request?.body).toBeUndefined();
-    }),
-  );
-});
+    it.effect("read a /v2 page's params from the query string (V2.Core.Event.list)", () =>
+      Effect.gen(function* () {
+        const page = { data: [], next_page_url: null, previous_page_url: null };
+        const { exit, calls } = run(V2CoreEvent.list({ limit: 2, object_id: "acct_1" }), () =>
+          jsonResponse(200, page),
+        );
+        expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: page }));
+        const [request] = calls;
+        expect(request?.method).toBe("GET");
+        expect(request?.url.pathname).toBe("/v2/core/events");
+        expect(request?.url.searchParams.get("limit")).toBe("2");
+        expect(request?.url.searchParams.get("object_id")).toBe("acct_1");
+        expect(request?.body).toBeUndefined();
+      }),
+    );
+  },
+);
