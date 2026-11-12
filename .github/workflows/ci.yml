@@ -3,8 +3,8 @@ name: CI
 # One workflow, one command: `vp run ci`, the root task in vite.config.ts that
 # runs every gate in order (format + lint, the type gates, the unit tests, the
 # build, the docs examples, the dependency audit), so a local `vp run ci` is
-# the CI run. It runs on the newest LTS and the latest Current Node.js; the
-# final `ci` job is the one stable check a ruleset requires.
+# the CI run. It runs on the newest LTS and the latest Current Node.js; a
+# ruleset requires each leg by name: `ci (node lts)` and `ci (node latest)`.
 
 on:
   pull_request:
@@ -20,7 +20,7 @@ concurrency:
 permissions: {}
 
 jobs:
-  test:
+  ci:
     name: ci (node ${{ matrix.node }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -69,17 +69,3 @@ jobs:
       - name: CI
         run: vp run ci
 
-  # The one check a ruleset requires: green only when every matrix leg is.
-  ci:
-    name: ci
-    needs: [test]
-    if: always()
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    steps:
-      - name: Every Node.js version passed
-        env:
-          RESULT: ${{ needs.test.result }}
-        run: test "$RESULT" = "success"

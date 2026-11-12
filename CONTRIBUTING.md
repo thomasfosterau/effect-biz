@@ -20,7 +20,7 @@ Hooks are managed by Vite+; the editable [.vite-hooks/pre-commit](.vite-hooks/pr
 
 ## CI expectations
 
-[ci.yml](.github/workflows/ci.yml) runs `vp run ci` (steps 1–6 of the gates in [AGENTS.md → Verification](AGENTS.md#verification), in that order) on Node.js `lts` and `latest`; its final `ci` job is the one required check. Run `vp run ci` to reproduce it locally. [release.yml](.github/workflows/release.yml) runs changesets/action on `trunk`: it opens the version PR while unreleased changesets exist and publishes to npmjs once it merges, via OIDC trusted publishing (see [PUBLISHING.md](PUBLISHING.md)).
+[ci.yml](.github/workflows/ci.yml) runs `vp run ci` (steps 1–6 of the gates in [AGENTS.md → Verification](AGENTS.md#verification), in that order) on Node.js `lts` and `latest`; the required checks are its legs, `ci (node lts)` and `ci (node latest)`. Run `vp run ci` to reproduce it locally. [release.yml](.github/workflows/release.yml) runs changesets/action on `trunk`: it opens the version PR while unreleased changesets exist and publishes to npmjs once it merges, via OIDC trusted publishing (see [PUBLISHING.md](PUBLISHING.md)).
 
 ## Docs to update with a change
 
