@@ -29,7 +29,11 @@ const effectTsgo: typeof recommended = {
 };
 
 /** Every published package, in dependency order. A new package adds itself here. */
-const packages = ["@thomasfosterau/effect-biz", "@thomasfosterau/effect-biz-payments-stripe"];
+const packages = [
+  "@thomasfosterau/effect-biz",
+  "@thomasfosterau/effect-biz-payments-stripe",
+  "@thomasfosterau/effect-biz-sql",
+];
 
 export default defineConfig({
   // Staged-file checks run by `vp staged` (pre-commit): format WITH fixes,
@@ -137,11 +141,12 @@ export default defineConfig({
       "effecttsgo/effect-succeed-with-undefined": "error",
       "effecttsgo/prefer-typed-schema-decoder": "error",
       // Off: it fires on every use of an API tagged `@stability unstable`
-      // (73 sites today), and the architecture mandates those modules
-      // (`effect/http` for the Stripe client and Distilled, plus
-      // `effect/FileSystem`, `effect/Path` and `@effect/platform-node` in the
-      // generator script; `effect/rpc`, `effect/workflow` and `effect/sql` are
-      // planned). Effect 4 has no stable `HttpClient`/`FileSystem`, and the
+      // (73 sites before the sql package, which adds more), and the
+      // architecture mandates those modules (`effect/http` for the Stripe
+      // client and Distilled, `effect/sql` and its `@effect/sql-*` clients in
+      // the sql package, plus `effect/FileSystem`, `effect/Path` and
+      // `@effect/platform-node` in the generator script; `effect/rpc` and
+      // `effect/workflow` are planned). Effect 4 has no stable `HttpClient`/`FileSystem`, and the
       // rule takes no config (`RuleNoConfig` in `@effect/tsgo`'s
       // oxlint-schema.json), so there is no allowlist.
       "effecttsgo/unstable-api-usage": "off",

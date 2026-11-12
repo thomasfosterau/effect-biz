@@ -4,6 +4,7 @@
   "references": [
     { "path": "packages/core" },
     { "path": "packages/payments-stripe" },
+    { "path": "packages/sql" },
     { "path": "tests/dist-consumer" }
   ]
 }
