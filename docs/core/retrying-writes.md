@@ -5,7 +5,7 @@ How to repeat a payments write without applying it twice.
 A write that fails with a `PaymentNetworkError` (a timeout, a dropped connection), or a provider 5xx, has an **unknown outcome**: the provider may have applied it. Repeating it blindly can charge, refund or create twice. Pass an `idempotencyKey` and the provider recognises the repeat as the same write and answers with the original outcome instead of applying it again.
 
 ```typescript
-import { Effect, Schedule } from "effect";
+import { Effect, Option, Schedule } from "effect";
 import * as IdempotencyKey from "@thomasfosterau/effect-biz/Payments.IdempotencyKey";
 import * as Refund from "@thomasfosterau/effect-biz/Payments.Refund";
 import type { PaymentsError } from "@thomasfosterau/effect-biz/Payments";
@@ -14,7 +14,8 @@ import type { PaymentsError } from "@thomasfosterau/effect-biz/Payments";
 const isUnknownOutcome = (error: PaymentsError) =>
   error._tag === "PaymentNetworkError" ||
   error._tag === "PaymentRateLimitError" ||
-  (error._tag === "PaymentProviderError" && (error.statusCode ?? 0) >= 500);
+  (error._tag === "PaymentProviderError" &&
+    Option.exists(error.statusCode, (status) => status >= 500));
 
 const refund = (paymentIntent: string) =>
   Effect.gen(function* () {

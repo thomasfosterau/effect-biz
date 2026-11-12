@@ -52,13 +52,13 @@ export class Price extends Schema.Class<Price, { readonly brand: unique symbol }
 )({
   id: Schema.String,
   /** The id of the product this price is attached to, if any. */
-  productId: Schema.NullOr(Schema.String),
+  productId: Schema.OptionFromNullOr(Schema.String),
   active: Schema.Boolean,
   currency: Schema.String,
-  /** Amount in the smallest currency unit, or `null` for some price types. */
-  unitAmount: Schema.NullOr(Schema.Int),
+  /** Amount in the smallest currency unit, or `None` for some price types. */
+  unitAmount: Schema.OptionFromNullOr(Schema.Int),
   type: PriceType,
-  recurring: Schema.NullOr(Recurring),
+  recurring: Schema.OptionFromNullOr(Recurring),
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
   created: Schema.Int,
@@ -72,41 +72,39 @@ export interface CreateParams {
   /** Unit amount in the smallest currency unit (e.g. `2000` = $20.00). */
   readonly unitAmount: number;
   /**
-   * The billing schedule. Omit it, or pass `undefined`, for a one-time price,
-   * which a recurring-only provider refuses.
+   * The billing schedule. Omit it for a one-time price, which a
+   * recurring-only provider refuses.
    */
-  readonly recurring?:
-    | {
-        readonly interval: KnownRecurringInterval;
-        readonly intervalCount?: number | undefined;
-      }
-    | undefined;
-  readonly active?: boolean | undefined;
-  readonly metadata?: Record<string, string> | undefined;
+  readonly recurring?: {
+    readonly interval: KnownRecurringInterval;
+    readonly intervalCount?: number;
+  };
+  readonly active?: boolean;
+  readonly metadata?: Record<string, string>;
   /**
    * Makes this write safe to repeat: create one with `IdempotencyKey.generate`
    * before the first attempt and pass the same key on every retry (see
    * `IdempotencyKey` for the contract).
    */
-  readonly idempotencyKey?: IdempotencyKey | undefined;
+  readonly idempotencyKey?: IdempotencyKey;
 }
 
 /** Parameters for updating a price. */
 export interface UpdateParams {
-  readonly active?: boolean | undefined;
-  readonly metadata?: Record<string, string> | undefined;
+  readonly active?: boolean;
+  readonly metadata?: Record<string, string>;
 }
 
 /** Parameters for listing prices. */
 export interface ListParams {
-  readonly limit?: number | undefined;
-  readonly product?: string | undefined;
-  readonly active?: boolean | undefined;
+  readonly limit?: number;
+  readonly product?: string;
+  readonly active?: boolean;
   /**
    * The previous page's `nextCursor`, to list the page after it. A provider
    * whose cursor is an item id also takes any item id here.
    */
-  readonly startingAfter?: string | undefined;
+  readonly startingAfter?: string;
 }
 
 /**

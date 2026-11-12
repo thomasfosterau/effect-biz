@@ -25,7 +25,7 @@ export interface PackageConfigOptions {
    * package's `docgen` task. Set on the one package whose dependencies
    * resolve every import those blocks make.
    */
-  readonly rootReadme?: boolean | undefined;
+  readonly rootReadme?: boolean;
 }
 
 /**

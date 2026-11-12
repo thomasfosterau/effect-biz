@@ -14,13 +14,14 @@ The failure channel is the neutral `PaymentsError` union:
 Outside the union: `PaymentConfigError` (raised while building a provider layer) and `SignatureVerificationError` (webhook verification).
 
 ```typescript
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import * as Customer from "@thomasfosterau/effect-biz/Payments.Customer";
 
 const program = Customer.create({ email: "jane@example.com" }).pipe(
   Effect.catchTags({
     PaymentAuthenticationError: (e) => Effect.logError(`Auth failed: ${e.message}`),
-    PaymentRateLimitError: (e) => Effect.logError(`Rate limited; retry after ${e.retryAfter}s`),
+    PaymentRateLimitError: (e) =>
+      Effect.logError(`Rate limited; retry after ${Option.getOrElse(e.retryAfter, () => 0)}s`),
   }),
 );
 ```

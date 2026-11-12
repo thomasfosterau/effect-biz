@@ -1,6 +1,7 @@
 import { describe, expect } from "vite-plus/test";
 import { it } from "@effect/vitest";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -167,8 +168,8 @@ describe("StripePayments request policy", () => {
         Effect.provide(Layer.provideMerge(StripePayments.layer(config()), http)),
         Effect.provideService(FetchHttpClient.RequestInit, { credentials: "omit" }),
       );
-      expect(calls[0]?.init?.redirect).toBe("error");
-      expect(calls[0]?.init?.credentials).toBe("omit");
+      expect(calls[0]?.init.redirect).toBe("error");
+      expect(calls[0]?.init.credentials).toBe("omit");
     }),
   );
 
@@ -242,7 +243,7 @@ describe("StripePayments request policy", () => {
         );
         const error = yield* result;
         expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-        expect(error).toMatchObject({ param: "id" });
+        expect(error).toMatchObject({ param: Option.some("id") });
         expect(error.message).toBe(`The ${resource} id must be a non-empty string`);
         expect(calls).toHaveLength(0);
       }),
@@ -284,7 +285,7 @@ describe("StripePayments request policy", () => {
       const error = yield* result;
       expect(calls).toHaveLength(2);
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error).toMatchObject({ statusCode: 409 });
+      expect(error).toMatchObject({ statusCode: Option.some(409) });
     }),
   );
 
@@ -317,7 +318,10 @@ describe("StripePayments request policy", () => {
           error: { type: "invalid_request_error", message: "No such customer" },
         }),
       );
-      expect(yield* result).toMatchObject({ _tag: "PaymentInvalidRequestError", statusCode: 404 });
+      expect(yield* result).toMatchObject({
+        _tag: "PaymentInvalidRequestError",
+        statusCode: Option.some(404),
+      });
       expect(calls).toHaveLength(1);
     }),
   );
@@ -350,7 +354,7 @@ describe("StripePayments request policy", () => {
         Effect.flip(Customer.retrieve("cus_1")),
         (request) =>
           new Promise<Response>((_resolve, reject) => {
-            request.init?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+            request.init.signal?.addEventListener("abort", () => reject(new Error("aborted")));
           }),
         { maxNetworkRetries: 0, timeout: 5_000 },
       );
@@ -399,8 +403,8 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
       expect(error).toMatchObject({
         message: "You passed an empty string for 'email'.",
-        param: "email",
-        statusCode: 400,
+        param: Option.some("email"),
+        statusCode: Option.some(400),
       });
     }),
   );
@@ -417,12 +421,12 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
       const error = yield* failure(402, { error: vendor });
       expect(error).toBeInstanceOf(PaymentProviderError);
       expect(error).toMatchObject({
-        code: "card_declined",
-        statusCode: 402,
+        code: Option.some("card_declined"),
+        statusCode: Option.some(402),
         provider: "stripe",
         message: "Your card has insufficient funds.",
       });
-      expect(error).toHaveProperty("cause", vendor);
+      expect(error).toHaveProperty("cause", Option.some(vendor));
     }),
   );
 
@@ -432,7 +436,10 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
         error: { type: "idempotency_error", message: "Keys can only be reused with the same body" },
       });
       expect(error).toBeInstanceOf(PaymentProviderError);
-      expect(error).toMatchObject({ code: "StripeIdempotencyError", statusCode: 400 });
+      expect(error).toMatchObject({
+        code: Option.some("StripeIdempotencyError"),
+        statusCode: Option.some(400),
+      });
     }),
   );
 
@@ -443,9 +450,9 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
       });
       expect(error).toBeInstanceOf(PaymentProviderError);
       expect(error).toMatchObject({
-        code: "StripeAPIError",
+        code: Option.some("StripeAPIError"),
         message: "Something broke",
-        statusCode: 500,
+        statusCode: Option.some(500),
       });
     }),
   );
@@ -456,7 +463,10 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
         error: { type: "payment_error", code: "payment_failed", message: "Payment failed" },
       });
       expect(error).toBeInstanceOf(PaymentProviderError);
-      expect(error).toMatchObject({ code: "payment_failed", statusCode: 402 });
+      expect(error).toMatchObject({
+        code: Option.some("payment_failed"),
+        statusCode: Option.some(402),
+      });
     }),
   );
 
@@ -466,7 +476,10 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
         error: { type: "external_dependency_error", message: "Upstream failed" },
       });
       expect(error).toBeInstanceOf(PaymentProviderError);
-      expect(error).toMatchObject({ code: "StripeUnknownError", statusCode: 424 });
+      expect(error).toMatchObject({
+        code: Option.some("StripeUnknownError"),
+        statusCode: Option.some(424),
+      });
     }),
   );
 
@@ -475,7 +488,10 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
       const error = yield* failure(503, "<html>gateway</html>");
       expect(error).toBeInstanceOf(PaymentProviderError);
       expect(error.message).toContain("503");
-      expect(error).toMatchObject({ statusCode: 503, code: "StripeAPIError" });
+      expect(error).toMatchObject({
+        statusCode: Option.some(503),
+        code: Option.some("StripeAPIError"),
+      });
     }),
   );
 
@@ -487,7 +503,7 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
           error: { type, message: "Invalid API Key provided: sk_test_****4242" },
         });
         expect(error).toBeInstanceOf(PaymentAuthenticationError);
-        expect(error).toMatchObject({ statusCode: 401 });
+        expect(error).toMatchObject({ statusCode: Option.some(401) });
       }),
   );
 
@@ -497,7 +513,10 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
         error: { type: "invalid_request_error", message: "The provided key does not have access" },
       });
       expect(error).toBeInstanceOf(PaymentProviderError);
-      expect(error).toMatchObject({ code: "StripePermissionError", statusCode: 403 });
+      expect(error).toMatchObject({
+        code: Option.some("StripePermissionError"),
+        statusCode: Option.some(403),
+      });
     }),
   );
 
@@ -509,7 +528,7 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
         { "retry-after": "7" },
       );
       expect(error).toBeInstanceOf(PaymentRateLimitError);
-      expect(error).toMatchObject({ message: "Too many requests", retryAfter: 7 });
+      expect(error).toMatchObject({ message: "Too many requests", retryAfter: Option.some(7) });
     }),
   );
 
@@ -523,7 +542,7 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
         },
       });
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error).toMatchObject({ statusCode: 404 });
+      expect(error).toMatchObject({ statusCode: Option.some(404) });
     }),
   );
 
@@ -569,7 +588,7 @@ describe("StripePayments maps every Distilled failure onto the neutral channel",
         Effect.flip(Customer.retrieve("cus_1")),
         (request) =>
           new Promise<Response>((_resolve, reject) => {
-            request.init?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+            request.init.signal?.addEventListener("abort", () => reject(new Error("aborted")));
           }),
         { maxNetworkRetries: 0, timeout: 5_000 },
       ).result;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import * as Schema from "effect/Schema";
+import * as Option from "effect/Option";
 import * as BizError from "../src/BizError.ts";
 import * as Decimal from "../src/Decimal.ts";
 import * as Quantity from "../src/Quantity.ts";
@@ -29,7 +30,7 @@ describe("Quantity", () => {
       const violation = failed(operation(qty("1", "kg"), qty("1", "each")));
       expect(violation).toBeInstanceOf(BizError.BusinessRuleViolation);
       expect(violation.code).toBe("core.unit-mismatch");
-      expect(violation.details).toEqual({ left: "kg", right: "each" });
+      expect(violation.details).toEqual(Option.some({ left: "kg", right: "each" }));
     },
   );
 

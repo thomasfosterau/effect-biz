@@ -131,11 +131,6 @@ export default defineConfig({
       "effecttsgo/unstable-api-usage": "off",
 
       // ---- Effect preset: rules this workspace's conventions cut across ----
-      // `prefer-option-over-null` fires on `?: T | undefined`, which is the
-      // ONLY spelling of an optional member `exactOptionalPropertyTypes` lets
-      // a caller forward an optional of its own into — the spelling AGENTS.md
-      // mandates — and on the `NullOr` columns a SQL row decodes to.
-      "effect/prefer-option-over-null": "off",
       "typescript/no-explicit-any": "off",
       "typescript/no-empty-object-type": "off",
       "typescript/ban-ts-comment": "off",

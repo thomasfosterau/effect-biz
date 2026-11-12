@@ -2,6 +2,7 @@ import type * as Schema from "effect/Schema";
 import { describe, expect } from "vite-plus/test";
 import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -72,7 +73,6 @@ describe("StripePayments checkoutSessionsLayer", () => {
           line_items: [{ price: "price_monthly", quantity: 1 }],
           success_url: "https://example.test/account/billing?checkout=success",
           cancel_url: "https://example.test/pricing",
-          metadata: undefined,
           subscription_data: { metadata: { user_id: "user-1" } },
         }),
       );
@@ -97,7 +97,6 @@ describe("StripePayments checkoutSessionsLayer", () => {
         expect(calls[0]?.params).toEqual(
           formOf({
             mode: "payment",
-            customer: undefined,
             line_items: [
               { price: "price_a", quantity: 3 },
               { price: "price_b", quantity: 1 },
@@ -105,7 +104,6 @@ describe("StripePayments checkoutSessionsLayer", () => {
             success_url: "https://example.test/ok",
             cancel_url: "https://example.test/no",
             metadata: { order: "o-1" },
-            subscription_data: undefined,
           }),
         );
       }),
@@ -155,7 +153,10 @@ describe("StripePayments checkoutSessionsLayer", () => {
       }).result;
       expect(error).toBeInstanceOf(PaymentInvalidRequestError);
       expect(error.message).toContain("No such price");
-      expect(error).toMatchObject({ param: "line_items[0][price]", statusCode: 400 });
+      expect(error).toMatchObject({
+        param: Option.some("line_items[0][price]"),
+        statusCode: Option.some(400),
+      });
     }),
   );
 });
