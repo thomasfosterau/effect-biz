@@ -129,9 +129,6 @@ export default defineConfig({
       // rule takes no config (`RuleNoConfig` in `@effect/tsgo`'s
       // oxlint-schema.json), so there is no allowlist.
       "effecttsgo/unstable-api-usage": "off",
-      // `casting-awareness` is an awareness prompt, not a defect rule — it
-      // fires on every `as`. Stays visible as a warning.
-      "effect/casting-awareness": "warn",
 
       // ---- Effect preset: rules this workspace's conventions cut across ----
       // `prefer-option-over-null` fires on `?: T | undefined`, which is the
@@ -139,7 +136,6 @@ export default defineConfig({
       // a caller forward an optional of its own into — the spelling AGENTS.md
       // mandates — and on the `NullOr` columns a SQL row decodes to.
       "effect/prefer-option-over-null": "off",
-      "effect/no-unsafe-dictionary-type": "warn",
       "typescript/no-explicit-any": "off",
       "typescript/no-empty-object-type": "off",
       "typescript/ban-ts-comment": "off",
@@ -192,7 +188,12 @@ export default defineConfig({
           // 1: a partial SDK client.
           "packages/payments-stripe/tests/Webhook.test.ts",
         ],
-        rules: { "typescript/no-unsafe-type-assertion": "off" },
+        // `effect/casting-awareness` fires on every `as`: it is held at `error`
+        // and these same files, each cast with its reason above, are exempt.
+        rules: {
+          "typescript/no-unsafe-type-assertion": "off",
+          "effect/casting-awareness": "off",
+        },
       },
       // Type-level tests: every binding exists to be asserted against, never
       // to be read.
