@@ -944,10 +944,13 @@ const renderModule = (
 };
 
 /** A generated module the formatter refused. */
-class FormatError extends Schema.TaggedError<FormatError>()("FormatError", {
-  file: Schema.String,
-  messages: Schema.Array(Schema.String),
-}) {}
+class FormatError extends Schema.TaggedError<FormatError, { readonly brand: unique symbol }>()(
+  "FormatError",
+  {
+    file: Schema.String,
+    messages: Schema.Array(Schema.String),
+  },
+) {}
 
 /** Every generated resource module, by its path under the package (`src/Customer.ts`), formatted. */
 export const render = (
