@@ -24,7 +24,7 @@ Hooks are managed by Vite+; the editable [.vite-hooks/pre-commit](.vite-hooks/pr
 
 ## Docs to update with a change
 
-The package `README.md` for any exported change (it is the API reference npm shows); the package `AGENTS.md` for a new term or invariant; the package table in the root `README.md` (and the checklist in [AGENTS.md → Packages](AGENTS.md#packages)) for a new package.
+Documentation has three homes, and a README is never one of the detailed ones. Per-export detail (the contract, errors, options) goes in the export's doc comment; cross-cutting how-to goes in a focused guide in `docs/<package>/*.md` (`docs/core`, `docs/payments-stripe`), whose `ts` blocks `vp run docgen` runs; the package `README.md` stays short (what it is, install, one example, an entry-points table, links) and links to guides by absolute GitHub URL (npm renders it out of context). Update the doc comment and the guide for any exported change, and the README only when an entry point changes; the package `AGENTS.md` for a new term or invariant; the package table in the root `README.md` (and the checklist in [AGENTS.md → Packages](AGENTS.md#packages)) for a new package.
 
 ## Commands
 
@@ -33,7 +33,7 @@ The package `README.md` for any exported change (it is the API reference npm sho
 - `vp run -r test:unit` — unit tests.
 - `vp run -r build` — `vp pack` → every package's `dist/`.
 - `vp run --filter ./packages/payments-stripe generate:resources` (offline) — regenerate the Stripe resource modules from the installed `@distilled.cloud/stripe` and `scripts/resources.ts`; run it after a Distilled bump or a change to `scripts/`.
-- `vp run docgen` — every package's `@effect/docgen`: type-checks and runs each JSDoc example and README block against `dist/` (it builds first), and writes the git-ignored API reference to `packages/*/docs/`.
+- `vp run docgen` — every package's `@effect/docgen`: type-checks and runs each JSDoc example, README block and guide block (`docs/<package>/*.md`) against `dist/` (it builds first), and writes the git-ignored API reference to `packages/*/docs/`.
 - `vp run test:coverage` — every package's unit suite under one Istanbul map at `coverage/coverage-final.json`, which `fallow audit` reads for exact per-function CRAP scores.
 - `vp exec fallow dead-code` / `vp exec fallow audit --base origin/trunk` — dead code, duplication, complexity and the package boundaries (`.fallowrc.json`: core imports no provider, a provider imports only core), and the change-set gate.
 - `pnpm changeset` — add a changeset.
