@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { PaymentProviderError } from "@thomasfosterau/effect-biz/Payments";
@@ -32,8 +33,12 @@ const callWith = (failure: DistilledOnlyError | Untagged) => {
       Effect.flatMap(StripeHttp, (client) =>
         Effect.asVoid(client.call("GET", () => Effect.fail(failure), {})),
       ).pipe(
-        Effect.provide(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 })),
-        Effect.provide(http),
+        Effect.provide(
+          Layer.provideMerge(
+            layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }),
+            http,
+          ),
+        ),
       ),
     ),
   );

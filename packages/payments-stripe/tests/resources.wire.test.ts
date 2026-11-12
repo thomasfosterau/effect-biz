@@ -1,5 +1,6 @@
 import { assert, describe, it, expect } from "vite-plus/test";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Exit from "effect/Exit";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -69,8 +70,9 @@ const run = (
   const { http, calls } = stubFetch(respond);
   const exit = Effect.runPromiseExit(
     call.pipe(
-      Effect.provide(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 })),
-      Effect.provide(http),
+      Effect.provide(
+        Layer.provideMerge(layer({ apiKey: Redacted.make(TEST_KEY), maxNetworkRetries: 0 }), http),
+      ),
     ),
   );
   return { exit, calls };
