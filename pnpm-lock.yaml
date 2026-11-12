@@ -27,6 +27,12 @@ catalogs:
     '@effect/platform-node':
       specifier: 4.1.3
       version: 4.1.3
+    '@effect/sql-pg':
+      specifier: 4.1.3
+      version: 4.1.3
+    '@effect/sql-sqlite-node':
+      specifier: 4.1.3
+      version: 4.1.3
     '@effect/tsgo':
       specifier: 0.67.7
       version: 0.67.7
@@ -104,6 +110,9 @@ importers:
       '@thomasfosterau/effect-biz-payments-stripe':
         specifier: workspace:*
         version: link:packages/payments-stripe
+      '@thomasfosterau/effect-biz-sql':
+        specifier: workspace:*
+        version: link:packages/sql
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -195,6 +204,37 @@ importers:
       stripe:
         specifier: 'catalog:'
         version: 23.0.1(@types/node@26.6.6)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-preview@5.1.0)(@vitest/coverage-istanbul@5.1.0)(@vitest/ui@5.1.0)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@26.6.6)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
+
+  packages/sql:
+    dependencies:
+      '@thomasfosterau/effect-biz':
+        specifier: workspace:^
+        version: link:../core
+    devDependencies:
+      '@effect/language-service':
+        specifier: 'catalog:'
+        version: 0.87.5
+      '@effect/sql-pg':
+        specifier: 'catalog:'
+        version: 4.1.3(effect@4.1.3)
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 4.1.3(effect@4.1.3)
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.1.2(effect@4.1.3)(vitest@5.1.0)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      '@vitest/coverage-istanbul':
+        specifier: 'catalog:'
+        version: 5.1.0(vitest@5.1.0)
+      effect:
+        specifier: 4.1.3
+        version: 4.1.3
       vitest:
         specifier: 'catalog:'
         version: 5.1.0(@types/node@26.6.6)(@vitest/browser-preview@5.1.0)(@vitest/coverage-istanbul@5.1.0)(@vitest/ui@5.1.0)(@voidzero-dev/vite-plus-core@1.5.0(@types/node@26.6.6)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
@@ -369,6 +409,16 @@ packages:
     peerDependencies:
       effect: 4.1.3
       redis: '>=5.1.0 <7.0.0'
+
+  '@effect/sql-pg@4.1.3':
+    resolution: {integrity: sha512-vlpIMCxSSWaYHNCyjy3oPaniXI+aMtCRMF7c+eyCz20OWyLVsTjxO+WoufoATPvzDKDgMBu2pe+F6b/SWqWKpA==}
+    peerDependencies:
+      effect: 4.1.3
+
+  '@effect/sql-sqlite-node@4.1.3':
+    resolution: {integrity: sha512-JFRfEbzlkSXarL9B1GnRPpQIaEwIyLReLcIASnrV3OkmRNBVbTbe3UCbKFaE/hUrlvmKIXqxsO/5xqxL9N6hog==}
+    peerDependencies:
+      effect: 4.1.3
 
   '@effect/tsgo-darwin-arm64@0.67.7':
     resolution: {integrity: sha512-5aqxhjyGPZvWxfWbxtS+F8YD3/edRcdAwVeksuZ56dWOIp3gnIMooTs2qr+aMbemvxpv6Da75yNTcyXXmbGcoA==}
@@ -2601,6 +2651,14 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  '@effect/sql-pg@4.1.3(effect@4.1.3)':
+    dependencies:
+      effect: 4.1.3
+
+  '@effect/sql-sqlite-node@4.1.3(effect@4.1.3)':
+    dependencies:
+      effect: 4.1.3
 
   '@effect/tsgo-darwin-arm64@0.67.7':
     optional: true

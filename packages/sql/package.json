@@ -1,0 +1,89 @@
+{
+  "$schema": "https://www.schemastore.org/package",
+  "name": "@thomasfosterau/effect-biz-sql",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The SQL foundation of effect-biz: the Postgres, SQLite and D1 dialects and the column codecs every SQL repository layer shares",
+  "keywords": [
+    "d1",
+    "effect",
+    "erp",
+    "postgres",
+    "sql",
+    "sqlite",
+    "typescript"
+  ],
+  "homepage": "https://github.com/thomasfosterau/effect-biz#readme",
+  "bugs": {
+    "url": "https://github.com/thomasfosterau/effect-biz/issues"
+  },
+  "license": "MIT",
+  "author": "Thomas Foster <me@thomasfoster.au>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomasfosterau/effect-biz.git",
+    "directory": "packages/sql"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./Column": {
+      "types": "./dist/Column.d.ts",
+      "default": "./dist/Column.js"
+    },
+    "./Dialect": {
+      "types": "./dist/Dialect.d.ts",
+      "default": "./dist/Dialect.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
+    },
+    "./testing.postgres": {
+      "types": "./dist/testing.postgres.d.ts",
+      "default": "./dist/testing.postgres.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@thomasfosterau/effect-biz": "workspace:^"
+  },
+  "devDependencies": {
+    "@effect/language-service": "catalog:",
+    "@effect/sql-pg": "catalog:",
+    "@effect/sql-sqlite-node": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-istanbul": "catalog:",
+    "effect": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@effect/sql-pg": "catalog:peers",
+    "@effect/sql-sqlite-node": "catalog:peers",
+    "effect": "catalog:peers"
+  },
+  "peerDependenciesMeta": {
+    "@effect/sql-pg": {
+      "optional": true
+    },
+    "@effect/sql-sqlite-node": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

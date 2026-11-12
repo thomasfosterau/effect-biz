@@ -35,7 +35,7 @@ Documentation has three homes, and a README is never one of the detailed ones. P
 - `vp run --filter ./packages/payments-stripe generate:resources` (offline) — regenerate the Stripe resource modules from the installed `@distilled.cloud/stripe` and `scripts/resources.ts`; run it after a Distilled bump or a change to `scripts/`.
 - `vp run docgen` — every package's `@effect/docgen`: type-checks and runs each JSDoc example, README block and guide block (`docs/<package>/*.md`) against `dist/` (it builds first), and writes the git-ignored API reference to `packages/*/docs/`.
 - `vp run test:coverage` — every package's unit suite under one Istanbul map at `coverage/coverage-final.json`, which `fallow audit` reads for exact per-function CRAP scores.
-- `vp exec fallow dead-code` / `vp exec fallow audit --base origin/trunk` — dead code, duplication, complexity and the package boundaries (`.fallowrc.json`: core imports no provider, a provider imports only core), and the change-set gate.
+- `vp exec fallow dead-code` / `vp exec fallow audit --base origin/trunk` — dead code, duplication, complexity and the package boundaries (`.fallowrc.json`: core imports no other package, a provider and the sql package import only core), and the change-set gate.
 - `pnpm changeset` — add a changeset.
 
 For a narrower run:

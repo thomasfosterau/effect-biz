@@ -31,11 +31,13 @@
   "boundaries": {
     "zones": [
       { "name": "core", "patterns": ["packages/core/src/**"] },
-      { "name": "stripe", "patterns": ["packages/payments-stripe/src/**"] }
+      { "name": "stripe", "patterns": ["packages/payments-stripe/src/**"] },
+      { "name": "sql", "patterns": ["packages/sql/src/**"] }
     ],
     "rules": [
       { "from": "core", "allow": [] },
-      { "from": "stripe", "allow": ["core"] }
+      { "from": "stripe", "allow": ["core"] },
+      { "from": "sql", "allow": ["core"] }
     ]
   },
   "health": {
