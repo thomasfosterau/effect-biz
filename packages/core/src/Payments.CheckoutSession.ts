@@ -29,9 +29,10 @@ export const CheckoutMode = Schema.Literals(["payment", "subscription"]);
 export type CheckoutMode = typeof CheckoutMode.Type;
 
 /** A hosted checkout session: the page to redirect the buyer to. */
-export class CheckoutSession extends Schema.Class<CheckoutSession>(
-  "@effect-biz/payments/CheckoutSession",
-)({
+export class CheckoutSession extends Schema.Class<
+  CheckoutSession,
+  { readonly brand: unique symbol }
+>("@effect-biz/payments/CheckoutSession")({
   id: Schema.String,
   /** The hosted checkout page. Redirect the buyer here. */
   url: Schema.String,

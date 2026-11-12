@@ -10,7 +10,7 @@
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 
 /** The parsed `Stripe-Signature` header: `t=<unix>,v1=<hex>[,v1=<hex>…]`. */
@@ -85,7 +85,7 @@ export const anyMatches = (expected: string, candidates: ReadonlyArray<string>):
 
 /** The payload as bytes: a string is UTF-8 encoded, bytes are signed as received. */
 export const toBytes = (payload: string | Uint8Array): Uint8Array =>
-  Predicate.isString(payload) ? new TextEncoder().encode(payload) : payload;
+  P.isString(payload) ? new TextEncoder().encode(payload) : payload;
 
 /** Bytes → lowercase hex, which is how Stripe encodes the `v1` digest. */
 const toHex = (buffer: ArrayBuffer): string =>

@@ -15,7 +15,7 @@
  * @module
  */
 
-import * as Predicate from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 
@@ -30,7 +30,7 @@ export type Other = typeof Other.Type;
 export const other = (raw: string): Other => ({ _tag: "Other", raw });
 
 /** Whether an enumeration value is the catch-all rather than a known literal. */
-export const isOther = (value: string | Other): value is Other => !Predicate.isString(value);
+export const isOther = (value: string | Other): value is Other => !P.isString(value);
 
 /**
  * The lenient schema for an enumeration: its known literals, or {@link Other}.
@@ -59,7 +59,7 @@ export const fromWire = <const L extends ReadonlyArray<string>>(known: Schema.Li
     Schema.decodeTo(lenient(known), {
       decode: SchemaGetter.transform((raw: string) => parse(known, raw)),
       encode: SchemaGetter.transform((value: L[number] | Other) =>
-        Predicate.isString(value) ? value : value.raw,
+        P.isString(value) ? value : value.raw,
       ),
     }),
   );

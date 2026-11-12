@@ -1,6 +1,6 @@
 # AGENTS.md
 
-`CLAUDE.md` is a symlink to this file. This repository publishes the **`@thomasfosterau/effect-biz` package family**: modular ERP and business-process services for Effect, including the money side (payments today), meant to be embedded in other applications. The plan is the roadmap epic in the issue tracker; its sub-issues are the slices.
+Guidance for coding agents working in this repository, whatever the tool. The project overview and the package table are in [README.md](README.md); setup, commands and procedures are in [CONTRIBUTING.md](CONTRIBUTING.md). Claude Code reads all three through [`.claude/CLAUDE.md`](.claude/CLAUDE.md), which adds only what is specific to Claude Code. The plan is the roadmap epic in the issue tracker; its sub-issues are the slices.
 
 ## Architecture (owner decisions)
 
@@ -22,14 +22,11 @@ These were settled with the owner before any domain code was written. Changing o
 
 ## Packages
 
-| Package | Directory | Purpose / boundary |
-| --- | --- | --- |
-| `@thomasfosterau/effect-biz` | `packages/core` | The foundation: identifiers, tenancy context, error channel, domain events and the outbox port, repository conventions. Under `./Payments` and `./Payments.<Name>`, the vendor-neutral payments core: capability services, neutral entities, `Money`, `Page`, `IdempotencyKey`, `Stub` and the `PaymentsError` channel. Peer: `effect` only. No ERP domain vocabulary; no vendor vocabulary. |
-| `@thomasfosterau/effect-biz-payments-stripe` | `packages/payments-stripe` | Stripe: the neutral capabilities as `Layer`s (`StripePayments`) over Distilled's operations (`@distilled.cloud/stripe`, a pinned dependency), plus the Stripe resource modules as a provider escape hatch: generated thin wrappers of every Distilled operation on each resource, over the same `StripeHttp` client. The `stripe` SDK is an optional peer (only the types of the SDK-based `Webhook.constructEvent*` verifier). |
+The package table (each package's purpose and boundary) is in [README.md](README.md#packages); each package's own boundary, invariants and terms are in its `AGENTS.md` (`packages/<name>/AGENTS.md`).
 
 `tests/dist-consumer` (private, `@effect-biz/dist-consumer`) type-checks a consumer fixture against the emitted declarations of the payments packages; it runs in `vp run check`.
 
-A new package adds a row here, a `CLAUDE.md` of its own, a `docgen.json`, its name in the `packages` list of the root `vite.config.ts`, its reference in the root `tsconfig.json`, and a `workspace:*` devDependency in the root `package.json`; a new payments provider also adds its `#build` edge and `paths` in `tests/dist-consumer/` (`vite.config.ts`, `tsconfig.json`).
+A new package adds a row to the README's package table, an `AGENTS.md` of its own (and a `CLAUDE.md` holding `@AGENTS.md`), a `docgen.json`, its name in the `packages` list of the root `vite.config.ts`, its reference in the root `tsconfig.json`, and a `workspace:*` devDependency in the root `package.json`; a new payments provider also adds its `#build` edge and `paths` in `tests/dist-consumer/` (`vite.config.ts`, `tsconfig.json`).
 
 ## Common pitfalls
 
@@ -41,13 +38,13 @@ A new package adds a row here, a `CLAUDE.md` of its own, a `docgen.json`, its na
 - **`vp run docgen` executes your examples.** `@effect/docgen` type-checks every fenced `ts` / `typescript` block in a JSDoc comment under the native `tsc`, then runs them with `tsx`; the package READMEs (and the root README, in core's task) are run the same way through `scripts/readme-examples.ts`. An example must be complete (import everything it uses; no `declare const`), must not throw, and must be hermetic (in-memory layers, never a live database). A deliberate fragment opts out with ` ```ts skip-type-checking `.
 - **`"sideEffects": false` is a claim about `dist/`.** Every emitted `.js` must be pure declarations: no top-level statements with effects.
 - **No application vocabulary; no vendor vocabulary in core.** Nothing here names a consuming application's tables, plans or screens. Provider-specific shapes stay in the provider package that maps the neutral payments model onto them.
-- **HTTP goes through `effect/http`.** The Stripe `StripeHttp` client and the Distilled operations the provider runs on require `HttpClient.HttpClient` and never touch `globalThis.fetch`; tests stub `FetchHttpClient.Fetch`. No Stripe module loads the SDK (`packages/payments-stripe/CLAUDE.md`). Every vendor seam is stubbed in tests; no test reaches a live account.
+- **HTTP goes through `effect/http`.** The Stripe `StripeHttp` client and the Distilled operations the provider runs on require `HttpClient.HttpClient` and never touch `globalThis.fetch`; tests stub `FetchHttpClient.Fetch`. No Stripe module loads the SDK (`packages/payments-stripe/AGENTS.md`). Every vendor seam is stubbed in tests; no test reaches a live account.
 - **A secret never reaches an error message or a log line.** Vendor error bodies are mapped onto the neutral `PaymentsError` channel; the API key stays in the client.
 - **The Stripe resource modules are generated.** Never hand-edit `packages/payments-stripe/src/<Resource>.ts`: `tests/resources.test.ts` fails when one differs from the generator's output. A Distilled bump (the `distilled` Dependabot group) is finished by hand: run `pnpm install`, rerun the generator, update the followed API version.
 - **The root README's examples run in payments-stripe's `docgen` task** (`rootReadme: true` in its `vite.config.ts`), since they import core and the Stripe package.
 - **Money is exact.** Never a JavaScript `number` for a monetary amount, a unit price or a quantity that can be fractional; use the decimal and money types the foundation provides. (The payments `Money` carries integer minor units in a `number`, as the providers' wire formats do; reconciling it with the foundation's money type is open.)
 
-Package-local terms, invariants and import boundaries live in each package's `CLAUDE.md`.
+Package-local terms, invariants and import boundaries live in each package's `AGENTS.md`.
 
 ## Conventions
 
@@ -55,22 +52,13 @@ Package-local terms, invariants and import boundaries live in each package's `CL
 - **Entities are `Schema.Class`es** with branded ids (`PartyId`, `SalesOrderId`); state machines are explicit (a document's status changes only through its service's commands).
 - **Optional members are declared `?: T | undefined`, never bare `?: T`.** The workspace compiles with `exactOptionalPropertyTypes`.
 - **Relative imports in `src/` carry `.js`** (`./Party.js`); tests import the module under test as `../src/<Module>.ts`.
+- **Effect modules are imported as namespaces by subpath, under the `effect/prefer-namespace-imports` aliases** (enforced at `error`): `import * as P from "effect/Predicate"`, `R` for `effect/Record`, `Arr` for `effect/Array`, `Str` for `effect/String`, `Eq` for `effect/Equal`, `Bool` for `effect/Boolean`; every other module keeps its own name (`Option`, `Schema`, `Effect`, `Layer`). Never a named import from `effect` or a subpath. Mind that `R` and `P` are also common generic parameter names: do not shadow the namespace.
 - **Tests import from `vite-plus/test`**, never `vitest`, and live in `packages/<name>/tests/`. Unit tests run against the in-memory layers; SQL adapter tests run against SQLite in-process (Postgres suites are opt-in).
 - **Every export is documented** with a doc comment whose first sentence says what it is for. Put an `@example` on the module's primary export, never on the module doc (the bundled `.d.ts` drops a file-level comment); the module doc points at it (`See {@link create} for an example.`).
 
 ## Commands
 
-- `pnpm install` — dependencies plus the Vite+ git hooks (pre-commit runs `vp staged`: format with fixes, then lint without them, on staged files) and the `prepare` step that patches the native `tsc` / `oxlint` / `oxlint-tsgolint` with `@effect/tsgo`.
-- `vp check` — format + lint (Oxfmt + Oxlint with `@effect/tsgo`'s preset and `@enfect/oxlint`'s `recommended` Effect rules, over oxlint's `correctness`, `suspicious` and `perf` categories and the `typescript`, `unicorn`, `oxc`, `import`, `promise`, `vitest` and `jsdoc` plugins). Lint is type-aware through oxlint-tsgolint (`typeAware` + `typeCheck`), which reads each package's `tsconfig.json` (siblings mapped to `src/`, so it needs no build). Fix a finding in code; a rule is relaxed only in `vite.config.ts`, with its reason (and a site count for an allowance). `vp run check` — the type gate: every package's `src` + `tests` (plus payments-stripe's `examples` and `scripts`) under the Effect-patched native `tsc` (`tsconfig.check.json` where a package has a sibling, which it then reads through `dist/`), plus the dist-consumer check (which builds `dist/` and asserts the emitted types). They are different commands.
-- `vp run -r test:unit` — unit tests.
-- `vp run -r build` — `vp pack` → every package's `dist/`.
-- `vp run --filter ./packages/payments-stripe generate:resources` (offline) — regenerate the Stripe resource modules from the installed `@distilled.cloud/stripe` and `scripts/resources.ts`; run it after a Distilled bump or a change to `scripts/`.
-- `vp run docgen` — every package's `@effect/docgen`: type-checks and runs each JSDoc example and README block against `dist/` (it builds first), and writes the git-ignored API reference to `packages/*/docs/`.
-- `vp run test:coverage` — every package's unit suite under one Istanbul map at `coverage/coverage-final.json`, which `fallow audit` reads for exact per-function CRAP scores.
-- `vp exec fallow dead-code` / `vp exec fallow audit --base origin/trunk` — dead code, duplication, complexity and the package boundaries (`.fallowrc.json`: core imports no provider, a provider imports only core), and the change-set gate.
-- `pnpm changeset` — add a changeset.
-
-Invoke everything through `vp` (`vp exec` instead of `npx`; `vp run <task>` instead of bare `pnpm`). The sanctioned non-`vp` invocations: `pnpm install` (`--frozen-lockfile` in CI), `pnpm changeset` / `pnpm publish` on the release path.
+The command reference is in [CONTRIBUTING.md](CONTRIBUTING.md#commands). Invoke everything through `vp` (`vp exec` instead of `npx`; `vp run <task>` instead of bare `pnpm`). The sanctioned non-`vp` invocations: `pnpm install` (`--frozen-lockfile` in CI), `pnpm changeset` / `pnpm publish` on the release path.
 
 ## Verification
 
@@ -103,13 +91,9 @@ Steps 1–6 are CI's one job, in its order ([ci.yml](.github/workflows/ci.yml)).
 
 Read the installed package before writing Effect code: `node_modules/effect/dist/*.d.ts` for the API, `node_modules/effect/src` for the implementation, and `node_modules/effect/AGENTS.md` / `ai-docs/` when the pinned version ships them. Never guess at an Effect API. The pinned version is the `effect` entry of the catalog in `pnpm-workspace.yaml`.
 
-## Agent sessions
-
-The SessionStart hook (`.claude/hooks/session-start.sh`) installs the global Vite+ CLI at the catalog's `vite-plus` pin with the official installer (npm-provenance and SHA-512 checked; the session's network must allow `vite.plus` and `viteplus.dev`), links `vp` and `vpx` into `~/.local/bin` (the CLI lives under `$VP_HOME` when set, as in the Vite+ container image, else `~/.local/share/vite-plus`), and runs `vp install --frozen-lockfile`. Nothing else goes on PATH: the global `vp` delegates to each checkout's own `vite-plus` (worktrees included), fallow runs as `vp exec fallow …`, and TypeScript scripts as `vpx <file>.ts`. If the installer can't run, `vp` falls back to this checkout's `node_modules` copy. It hydrates no secrets. `.claude/settings.json` also formats every file an Edit / Write touches (`vp fmt --write`) and runs the fallow gate before every `git commit` / `git push` (`.claude/hooks/fallow-gate.sh`, which blocks on a `fail` verdict from `fallow audit --base origin/trunk` run through `vp exec fallow`, and reads the coverage map on disk, so run `vp run test:coverage` first). The gate runs only in this checkout and its `.claude/worktrees/*`: from any other tree it runs none of that tree's tooling and skips the audit with a notice.
-
 ## Documentation surfaces
 
-The root `README.md` is the landing page; each package `README.md` is the API reference consumers read on npm; each package `CLAUDE.md` carries its boundary, invariants and terms; `CONTRIBUTING.md` carries human setup and procedures; `PUBLISHING.md` and `SECURITY.md` the release pipeline and its one-time setup. No `docs/` tree is committed (`packages/*/docs/` is git-ignored docgen output); decisions go in issue comments.
+The root `README.md` is the landing page and holds the package table; each package `README.md` is the API reference consumers read on npm; this file and each package `AGENTS.md` carry the guidance for agents (each package's boundary, invariants and terms); `CONTRIBUTING.md` carries setup, commands and procedures; `.claude/CLAUDE.md` imports this file, `CONTRIBUTING.md` and `README.md` and adds only what is specific to Claude Code (each `packages/<name>/CLAUDE.md` is `@AGENTS.md`); `PUBLISHING.md` and `SECURITY.md` the release pipeline and its one-time setup. No `docs/` tree is committed (`packages/*/docs/` is git-ignored docgen output); decisions go in issue comments.
 
 ---
 
