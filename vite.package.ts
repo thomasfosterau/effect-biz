@@ -29,6 +29,15 @@ export interface PackageConfigOptions {
 }
 
 /**
+ * The directory name of the package at `url` (`core` for `packages/core`),
+ * which names its guides directory, `docs/<name>/` at the workspace root.
+ */
+const packageDirName = (url: string): string => {
+  const parts = new URL(".", url).pathname.split("/").filter((part) => part !== "");
+  return parts[parts.length - 1] ?? "";
+};
+
+/**
  * Input fingerprint for a package's cached tasks: auto tracking minus
  * node_modules bookkeeping churn (pnpm rewrites `.modules.yaml` on every
  * install), with the lockfile back explicitly so a dependency upgrade still
@@ -93,7 +102,10 @@ export const packageConfig = ({ url, rootReadme = false }: PackageConfigOptions)
   const manifest = decodeManifest(readFileSync(new URL("./package.json", url), "utf8"));
   const srcDir = new URL("./src/", url).pathname;
   const maxWorkers = process.env.VITEST_MAX_WORKERS;
-  const readmes = rootReadme ? "README.md ../../README.md" : "README.md";
+  // The README, the root README where asked, and the package's guides
+  // (`docs/<directory name>/*.md` at the workspace root, committed).
+  const guides = `docs/${packageDirName(url)}`;
+  const readmes = `README.md ${rootReadme ? "../../README.md " : ""}../../${guides}`;
   const checkProject = checkProjectOf(url);
   return defineConfig({
     run: {
@@ -144,7 +156,8 @@ export const packageConfig = ({ url, rootReadme = false }: PackageConfigOptions)
         // build edge (which carries the sibling builds with it).
         //
         // Then the same for every `ts` / `typescript` block of the package's
-        // README.md: scripts/readme-examples.ts writes the blocks into
+        // README.md and of its guides (`docs/<package directory>/*.md` at the
+        // workspace root): scripts/readme-examples.ts writes the blocks into
         // a generated module under `docs/readme/src/`, and a second docgen run
         // over it type-checks and runs them. A fragment opts out with docgen's
         // own fence marker, `ts skip-type-checking`. The second run takes its
@@ -159,6 +172,7 @@ export const packageConfig = ({ url, rootReadme = false }: PackageConfigOptions)
             input: [
               ...cacheInputs,
               "README.md",
+              { pattern: `${guides}/**`, base: "workspace" as const },
               ...(rootReadme ? [{ pattern: "README.md", base: "workspace" as const }] : []),
               { pattern: "scripts/readme-examples.ts", base: "workspace" as const },
             ],
