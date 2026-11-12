@@ -119,6 +119,16 @@ export default defineConfig({
       "effecttsgo/flat-map-conditional-to-filter-or-fail": "error",
       "effecttsgo/map-some-to-as-some": "error",
       "effecttsgo/effect-succeed-with-undefined": "error",
+      "effecttsgo/prefer-typed-schema-decoder": "error",
+      // Off: it fires on every use of an API tagged `@stability unstable`
+      // (73 sites today), and the architecture mandates those modules
+      // (`effect/http` for the Stripe client and Distilled, plus
+      // `effect/FileSystem`, `effect/Path` and `@effect/platform-node` in the
+      // generator script; `effect/rpc`, `effect/workflow` and `effect/sql` are
+      // planned). Effect 4 has no stable `HttpClient`/`FileSystem`, and the
+      // rule takes no config (`RuleNoConfig` in `@effect/tsgo`'s
+      // oxlint-schema.json), so there is no allowlist.
+      "effecttsgo/unstable-api-usage": "off",
       // `casting-awareness` is an awareness prompt, not a defect rule — it
       // fires on every `as`. Stays visible as a warning.
       "effect/casting-awareness": "warn",
