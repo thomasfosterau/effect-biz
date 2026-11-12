@@ -76,6 +76,8 @@ export default defineConfig({
       perf: "error",
     },
     rules: {
+      // `Schema.Number` admits NaN and Infinity; use `Schema.Finite` / `Schema.Int`.
+      "effecttsgo/schema-number": "error",
       // Entities and errors are nominal: `Schema.Class<Self, { readonly brand: unique symbol }>`.
       "effecttsgo/schema-class-missing-brand": "error",
       "eslint/no-unused-vars": [
