@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
@@ -43,24 +44,25 @@ const noRetries = StripePayments.layer({
 });
 
 /** Run one operation against a stubbed API and return the `Idempotency-Key` it sent. */
-const requestOf = async (
+const requestOf = (
   operation: Effect.Effect<unknown, PaymentsError, Capabilities>,
   capabilities: Layer.Layer<
     Capabilities,
     PaymentConfigError,
     HttpClient.HttpClient | Credentials
   > = noRetries,
-): Promise<{ readonly idempotencyKey: Option.Option<string>; readonly count: number }> => {
-  const stub = stubStripe(() => ({}));
-  // The empty answer fails the decode; the request was recorded before that.
-  await Effect.runPromiseExit(
-    operation.pipe(Effect.provide(Layer.provideMerge(capabilities, stub.layer))),
-  );
-  return {
-    idempotencyKey: Option.fromNullishOr(stub.calls[0]?.headers.get("idempotency-key")),
-    count: stub.calls.length,
-  };
-};
+): Effect.Effect<{ readonly idempotencyKey: Option.Option<string>; readonly count: number }> =>
+  Effect.gen(function* () {
+    const stub = stubStripe(() => ({}));
+    // The empty answer fails the decode; the request was recorded before that.
+    yield* Effect.exit(
+      operation.pipe(Effect.provide(Layer.provideMerge(capabilities, stub.layer))),
+    );
+    return {
+      idempotencyKey: Option.fromNullishOr(stub.calls[0]?.headers.get("idempotency-key")),
+      count: stub.calls.length,
+    };
+  });
 type Capabilities = Layer.Success<typeof StripePayments.capabilities>;
 
 const operations = (
@@ -96,53 +98,62 @@ const operations = (
 };
 
 describe("Stripe maps the neutral idempotencyKey to Idempotency-Key", () => {
-  it.each(operations(KEY))("%s", async (_name, op) => {
-    expect(await requestOf(op)).toEqual({ idempotencyKey: Option.some(KEY), count: 1 });
-  });
+  it.effect.each(operations(KEY))("%s", ([_name, op]) =>
+    Effect.gen(function* () {
+      expect(yield* requestOf(op)).toEqual({ idempotencyKey: Option.some(KEY), count: 1 });
+    }),
+  );
 
-  it.each(operations())("%s sends none without a key", async (_name, op) => {
-    expect(await requestOf(op)).toEqual({ idempotencyKey: Option.none(), count: 1 });
-  });
+  it.effect.each(operations())("%s sends none without a key", ([_name, op]) =>
+    Effect.gen(function* () {
+      expect(yield* requestOf(op)).toEqual({ idempotencyKey: Option.none(), count: 1 });
+    }),
+  );
 
-  it.each(operations())(
+  it.effect.each(operations())(
     "%s sends a generated retry key without a caller's key, when it may be retried",
-    async (_name, op) => {
-      const { idempotencyKey } = await requestOf(op, StripePayments.capabilities);
-      expect(Option.getOrElse(idempotencyKey, () => "")).toMatch(
-        /^effect-payments-retry-[0-9a-f-]{36}$/,
-      );
-    },
+    ([_name, op]) =>
+      Effect.gen(function* () {
+        const { idempotencyKey } = yield* requestOf(op, StripePayments.capabilities);
+        expect(Option.getOrElse(idempotencyKey, () => "")).toMatch(
+          /^effect-payments-retry-[0-9a-f-]{36}$/,
+        );
+      }),
   );
 
   // SAFETY: untyped code can still pass a string the brand would have refused.
   const bad = "not a valid key" as IdempotencyKey.IdempotencyKey;
 
-  it.each(operations(bad))("%s refuses a raw string before sending anything", async (_name, op) => {
-    const stub = stubStripe(() => ({}));
-    const error = await Effect.runPromise(
-      Effect.flip(
-        Effect.asVoid(
-          op.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
-        ),
-      ),
-    );
-    expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-    expect(stub.calls).toEqual([]);
-  });
-
-  it("sends none on the cancel operations", async () => {
-    const stub = stubStripe(() => ({}));
-    await Effect.runPromiseExit(
+  it.effect.each(operations(bad))(
+    "%s refuses a raw string before sending anything",
+    ([_name, op]) =>
       Effect.gen(function* () {
-        yield* Effect.exit(Subscription.cancel("sub_1"));
-        yield* Effect.exit(PaymentIntent.cancel("pi_1"));
-      }).pipe(Effect.provide(Layer.provideMerge(noRetries, stub.layer))),
-    );
-    expect(stub.calls.map((call) => [call.method, call.headers.get("idempotency-key")])).toEqual([
-      ["DELETE", null],
-      ["POST", null],
-    ]);
-  });
+        const stub = stubStripe(() => ({}));
+        const error = yield* Effect.flip(
+          Effect.asVoid(
+            op.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
+          ),
+        );
+        expect(error).toBeInstanceOf(PaymentInvalidRequestError);
+        expect(stub.calls).toEqual([]);
+      }),
+  );
+
+  it.effect("sends none on the cancel operations", () =>
+    Effect.gen(function* () {
+      const stub = stubStripe(() => ({}));
+      yield* Effect.exit(
+        Effect.gen(function* () {
+          yield* Effect.exit(Subscription.cancel("sub_1"));
+          yield* Effect.exit(PaymentIntent.cancel("pi_1"));
+        }).pipe(Effect.provide(Layer.provideMerge(noRetries, stub.layer))),
+      );
+      expect(stub.calls.map((call) => [call.method, call.headers.get("idempotency-key")])).toEqual([
+        ["DELETE", null],
+        ["POST", null],
+      ]);
+    }),
+  );
 });
 
 describe("a retried write after a lost response is one logical write (effect-finance#66)", () => {
@@ -197,93 +208,106 @@ describe("a retried write after a lost response is one logical write (effect-fin
       }),
     );
 
-  it("with one key reused on the retry, the provider applies it once", async () => {
-    const fake = dedupingStripe(true);
-    const created = await Effect.runPromise(
-      Effect.gen(function* () {
+  it.effect("with one key reused on the retry, the provider applies it once", () =>
+    Effect.gen(function* () {
+      const fake = dedupingStripe(true);
+      const created = yield* Effect.gen(function* () {
         const key = yield* IdempotencyKey.generate; // once per logical write
         return yield* createWithRetry(key);
       }).pipe(
         Effect.provide(
           Layer.provideMerge(
-            StripePayments.layer({
-              apiKey: Redacted.make("sk_test_not_a_real_key"),
-              maxNetworkRetries: 0,
-            }),
+            Layer.provideMerge(
+              StripePayments.layer({
+                apiKey: Redacted.make("sk_test_not_a_real_key"),
+                maxNetworkRetries: 0,
+              }),
+              fake.http,
+            ),
             fake.http,
           ),
         ),
-      ),
-    );
-    expect(created.id).toBe("cus_1");
-    expect(fake.writes()).toBe(1);
-    const keys = fake.calls.map((call) => call.headers.get("idempotency-key"));
-    expect(keys).toHaveLength(2);
-    expect(keys[0]).toBe(keys[1]);
-  });
+      );
+      expect(created.id).toBe("cus_1");
+      expect(fake.writes()).toBe(1);
+      const keys = fake.calls.map((call) => call.headers.get("idempotency-key"));
+      expect(keys).toHaveLength(2);
+      expect(keys[0]).toBe(keys[1]);
+    }),
+  );
 
-  it("a vendor 5xx surfaces as PaymentProviderError (not PaymentNetworkError); retrying it with the same key is still one write", async () => {
-    const fake = dedupingStripe(false, true);
-    const key = IdempotencyKey.IdempotencyKey.make("write-5xx");
-    const created = await Effect.runPromise(
-      Customer.create({ email: "a@example.com", idempotencyKey: key }).pipe(
-        Effect.retry({
-          while: (error) =>
-            P.isTagged(error, "PaymentProviderError") &&
-            Option.exists(error.statusCode, (status) => status >= 500),
-          times: 1,
-        }),
+  it.effect(
+    "a vendor 5xx surfaces as PaymentProviderError (not PaymentNetworkError); retrying it with the same key is still one write",
+    () =>
+      Effect.gen(function* () {
+        const fake = dedupingStripe(false, true);
+        const key = IdempotencyKey.IdempotencyKey.make("write-5xx");
+        const created = yield* Customer.create({
+          email: "a@example.com",
+          idempotencyKey: key,
+        }).pipe(
+          Effect.retry({
+            while: (error) =>
+              P.isTagged(error, "PaymentProviderError") &&
+              Option.exists(error.statusCode, (status) => status >= 500),
+            times: 1,
+          }),
+          Effect.provide(
+            Layer.provideMerge(
+              StripePayments.layer({
+                apiKey: Redacted.make("sk_test_not_a_real_key"),
+                maxNetworkRetries: 0,
+              }),
+              fake.http,
+            ),
+          ),
+        );
+        expect(created.id).toBe("cus_1");
+        expect(fake.writes()).toBe(1);
+      }),
+  );
+
+  it.effect("without a key, the same retry creates a duplicate (the hazard being fixed)", () =>
+    Effect.gen(function* () {
+      const fake = dedupingStripe(true);
+      const created = yield* createWithRetry().pipe(
         Effect.provide(
           Layer.provideMerge(
-            StripePayments.layer({
-              apiKey: Redacted.make("sk_test_not_a_real_key"),
-              maxNetworkRetries: 0,
-            }),
+            Layer.provideMerge(
+              StripePayments.layer({
+                apiKey: Redacted.make("sk_test_not_a_real_key"),
+                maxNetworkRetries: 0,
+              }),
+              fake.http,
+            ),
             fake.http,
           ),
         ),
-      ),
-    );
-    expect(created.id).toBe("cus_1");
-    expect(fake.writes()).toBe(1);
-  });
+      );
+      expect(fake.writes()).toBe(2);
+      expect(created.id).toBe("cus_2");
+    }),
+  );
 
-  it("without a key, the same retry creates a duplicate (the hazard being fixed)", async () => {
-    const fake = dedupingStripe(true);
-    const created = await Effect.runPromise(
-      createWithRetry().pipe(
-        Effect.provide(
-          Layer.provideMerge(
-            StripePayments.layer({
-              apiKey: Redacted.make("sk_test_not_a_real_key"),
-              maxNetworkRetries: 0,
-            }),
-            fake.http,
+  it.effect(
+    "surfaces the lost response as PaymentNetworkError when the caller does not retry",
+    () =>
+      Effect.gen(function* () {
+        const fake = dedupingStripe(true);
+        const error = yield* Customer.create({ email: "a@example.com", idempotencyKey: KEY }).pipe(
+          Effect.flip,
+          Effect.provide(
+            Layer.provideMerge(
+              StripePayments.layer({
+                apiKey: Redacted.make("sk_test_not_a_real_key"),
+                maxNetworkRetries: 0,
+              }),
+              fake.http,
+            ),
           ),
-        ),
-      ),
-    );
-    expect(fake.writes()).toBe(2);
-    expect(created.id).toBe("cus_2");
-  });
-
-  it("surfaces the lost response as PaymentNetworkError when the caller does not retry", async () => {
-    const fake = dedupingStripe(true);
-    const error = await Effect.runPromise(
-      Customer.create({ email: "a@example.com", idempotencyKey: KEY }).pipe(
-        Effect.flip,
-        Effect.provide(
-          Layer.provideMerge(
-            StripePayments.layer({
-              apiKey: Redacted.make("sk_test_not_a_real_key"),
-              maxNetworkRetries: 0,
-            }),
-            fake.http,
-          ),
-        ),
-      ),
-    );
-    expect(error).toBeInstanceOf(PaymentNetworkError);
-    expect(fake.writes()).toBe(1);
-  });
+        );
+        expect(error).toBeInstanceOf(PaymentNetworkError);
+        expect(fake.writes()).toBe(1);
+      }),
+  );
 });

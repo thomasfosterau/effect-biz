@@ -8,7 +8,8 @@
 
 // oxlint-disable-next-line effect/use-filesystem-service -- a test listing the examples on disk, outside any Effect runtime
 import { readdirSync } from "node:fs";
-import { afterAll, afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterAll, afterEach, describe, expect, vi } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Arr from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
@@ -22,7 +23,7 @@ import { FetchHttpClient } from "effect/http";
 import * as basic from "../examples/basic.ts";
 import * as subscription from "../examples/subscription.ts";
 import * as webhooks from "../examples/webhooks.ts";
-import { formOf, jsonResponse, stubStripeTable, TEST_KEY } from "./support.ts";
+import { awaitTestPromise, formOf, jsonResponse, stubStripeTable, TEST_KEY } from "./support.ts";
 
 // The examples are imported statically below, before any test can spy on
 // `fetch`: an example that ran on import would reach the live API (with
@@ -53,23 +54,24 @@ const exampleFiles = Arr.sort(
  * `FetchHttpClient.Fetch`: the examples bring their own
  * `FetchHttpClient.layer`, which reads the implementation per request.
  */
-const runExample = async <A, E>(
+const runExample = <A, E>(
   program: Effect.Effect<A, E>,
   fetch: typeof globalThis.fetch,
-): Promise<{ readonly exit: Exit.Exit<A, E>; readonly lines: ReadonlyArray<string> }> => {
-  const lines: Array<string> = [];
-  const record = (...args: ReadonlyArray<unknown>) => {
-    lines.push(args.map(String).join(" "));
-  };
-  const console: Console.Console = { ...globalThis.console, log: record, error: record };
-  const exit = await Effect.runPromiseExit(
-    program.pipe(
-      Effect.provideService(Console.Console, console),
-      Effect.provideService(FetchHttpClient.Fetch, fetch),
-    ),
-  );
-  return { exit, lines };
-};
+): Effect.Effect<{ readonly exit: Exit.Exit<A, E>; readonly lines: ReadonlyArray<string> }> =>
+  Effect.gen(function* () {
+    const lines: Array<string> = [];
+    const record = (...args: ReadonlyArray<unknown>) => {
+      lines.push(args.map(String).join(" "));
+    };
+    const console: Console.Console = { ...globalThis.console, log: record, error: record };
+    const exit = yield* Effect.exit(
+      program.pipe(
+        Effect.provideService(Console.Console, console),
+        Effect.provideService(FetchHttpClient.Fetch, fetch),
+      ),
+    );
+    return { exit, lines };
+  });
 
 /** A `fetch` that fails the test if anything reaches the network. */
 const noNetwork: typeof globalThis.fetch = () =>
@@ -145,186 +147,222 @@ const stripeError = (status: number, error: Readonly<Record<string, string>>) =>
  */
 const suites = {
   "basic.ts": () => {
-    it("creates the customer, then a payment intent for it", async () => {
-      const stripe = stubStripeTable({
-        "POST /v1/customers": customer,
-        "POST /v1/payment_intents": paymentIntent,
-      });
-      const { exit, lines } = await runExample(
-        basic.program.pipe(Effect.provide(basic.layer)),
-        stripe.fetch,
-      );
+    it.effect("creates the customer, then a payment intent for it", () =>
+      Effect.gen(function* () {
+        const stripe = stubStripeTable({
+          "POST /v1/customers": customer,
+          "POST /v1/payment_intents": paymentIntent,
+        });
+        const { exit, lines } = yield* runExample(
+          basic.program.pipe(Effect.provide(basic.layer)),
+          stripe.fetch,
+        );
 
-      expect(Exit.isSuccess(exit) && exit.value.customer.id).toBe("cus_1");
-      expect(Exit.isSuccess(exit) && exit.value.paymentIntent.id).toBe("pi_1");
-      expect(stripe.calls.map((call) => [call.method, call.path, call.params])).toEqual([
-        [
-          "POST",
-          "/v1/customers",
-          formOf({
-            email: "customer@example.com",
-            name: "John Doe",
-            metadata: { userId: "user_123" },
+        expect(Exit.isSuccess(exit) && exit.value.customer.id).toBe("cus_1");
+        expect(Exit.isSuccess(exit) && exit.value.paymentIntent.id).toBe("pi_1");
+        expect(stripe.calls.map((call) => [call.method, call.path, call.params])).toEqual([
+          [
+            "POST",
+            "/v1/customers",
+            formOf({
+              email: "customer@example.com",
+              name: "John Doe",
+              metadata: { userId: "user_123" },
+            }),
+          ],
+          [
+            "POST",
+            "/v1/payment_intents",
+            formOf({
+              amount: 2000,
+              currency: "usd",
+              customer: "cus_1",
+              metadata: { orderId: "order_456" },
+            }),
+          ],
+        ]);
+        expect(lines).toEqual([
+          "Creating customer...",
+          "Customer created: cus_1",
+          "Creating payment intent...",
+          "Payment intent created: pi_1",
+          "Status: requires_payment_method",
+          "Amount: $20",
+        ]);
+      }),
+    );
+
+    it.effect("logs a rejected key as a neutral authentication failure and keeps the failure", () =>
+      Effect.gen(function* () {
+        const stripe = stubStripeTable({
+          "POST /v1/customers": stripeError(401, {
+            type: "invalid_request_error",
+            message: "Invalid API Key provided",
           }),
-        ],
-        [
-          "POST",
-          "/v1/payment_intents",
-          formOf({
-            amount: 2000,
-            currency: "usd",
-            customer: "cus_1",
-            metadata: { orderId: "order_456" },
+        });
+        const { exit, lines } = yield* runExample(
+          basic.program.pipe(Effect.provide(basic.layer)),
+          stripe.fetch,
+        );
+
+        expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({
+          _tag: "PaymentAuthenticationError",
+        });
+        expect(stripe.calls).toHaveLength(1);
+        expect(lines.at(-1)).toMatch(/^Authentication failed: /);
+      }),
+    );
+
+    it.effect("logs a declined payment as a neutral provider error and keeps the failure", () =>
+      Effect.gen(function* () {
+        const stripe = stubStripeTable({
+          "POST /v1/customers": customer,
+          "POST /v1/payment_intents": stripeError(402, {
+            type: "card_error",
+            message: "Your card was declined.",
+            code: "card_declined",
           }),
-        ],
-      ]);
-      expect(lines).toEqual([
-        "Creating customer...",
-        "Customer created: cus_1",
-        "Creating payment intent...",
-        "Payment intent created: pi_1",
-        "Status: requires_payment_method",
-        "Amount: $20",
-      ]);
-    });
+        });
+        const { exit, lines } = yield* runExample(
+          basic.program.pipe(Effect.provide(basic.layer)),
+          stripe.fetch,
+        );
 
-    it("logs a rejected key as a neutral authentication failure and keeps the failure", async () => {
-      const stripe = stubStripeTable({
-        "POST /v1/customers": stripeError(401, {
-          type: "invalid_request_error",
-          message: "Invalid API Key provided",
-        }),
-      });
-      const { exit, lines } = await runExample(
-        basic.program.pipe(Effect.provide(basic.layer)),
-        stripe.fetch,
-      );
-
-      expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({
-        _tag: "PaymentAuthenticationError",
-      });
-      expect(stripe.calls).toHaveLength(1);
-      expect(lines.at(-1)).toMatch(/^Authentication failed: /);
-    });
-
-    it("logs a declined payment as a neutral provider error and keeps the failure", async () => {
-      const stripe = stubStripeTable({
-        "POST /v1/customers": customer,
-        "POST /v1/payment_intents": stripeError(402, {
-          type: "card_error",
-          message: "Your card was declined.",
-          code: "card_declined",
-        }),
-      });
-      const { exit, lines } = await runExample(
-        basic.program.pipe(Effect.provide(basic.layer)),
-        stripe.fetch,
-      );
-
-      expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({
-        _tag: "PaymentProviderError",
-      });
-      expect(lines.at(-1)).toMatch(/^Provider error from stripe \(card_declined\): /);
-    });
+        expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({
+          _tag: "PaymentProviderError",
+        });
+        expect(lines.at(-1)).toMatch(/^Provider error from stripe \(card_declined\): /);
+      }),
+    );
   },
 
   "subscription.ts": () => {
-    it("creates a customer, product, recurring price and subscription with the key from STRIPE_API_KEY", async () => {
-      const stripe = stubStripeTable({
-        "POST /v1/customers": { ...customer, email: "subscriber@example.com", name: "Jane Smith" },
-        "POST /v1/products": product,
-        "POST /v1/prices": price,
-        "POST /v1/subscriptions": stripeSubscription,
-      });
-      const env = ConfigProvider.layer(ConfigProvider.fromUnknown({ STRIPE_API_KEY: TEST_KEY }));
-      const { exit, lines } = await runExample(
-        subscription.program.pipe(Effect.provide(subscription.layer.pipe(Layer.provide(env)))),
-        stripe.fetch,
-      );
+    it.effect(
+      "creates a customer, product, recurring price and subscription with the key from STRIPE_API_KEY",
+      () =>
+        Effect.gen(function* () {
+          const stripe = stubStripeTable({
+            "POST /v1/customers": {
+              ...customer,
+              email: "subscriber@example.com",
+              name: "Jane Smith",
+            },
+            "POST /v1/products": product,
+            "POST /v1/prices": price,
+            "POST /v1/subscriptions": stripeSubscription,
+          });
+          const env = ConfigProvider.layer(
+            ConfigProvider.fromUnknown({ STRIPE_API_KEY: TEST_KEY }),
+          );
+          const { exit, lines } = yield* runExample(
+            subscription.program.pipe(Effect.provide(subscription.layer.pipe(Layer.provide(env)))),
+            stripe.fetch,
+          );
 
-      expect(Exit.isSuccess(exit) && exit.value.subscription.id).toBe("sub_1");
-      expect(stripe.calls.map((call) => [call.method, call.path, call.params])).toEqual([
-        ["POST", "/v1/customers", formOf({ email: "subscriber@example.com", name: "Jane Smith" })],
-        [
-          "POST",
-          "/v1/products",
-          formOf({ name: "Premium Subscription", description: "Monthly premium subscription" }),
-        ],
-        [
-          "POST",
-          "/v1/prices",
-          formOf({
-            product: "prod_1",
-            unit_amount: 1999,
-            currency: "usd",
-            recurring: { interval: "month" },
-          }),
-        ],
-        ["POST", "/v1/subscriptions", formOf({ customer: "cus_1", items: [{ price: "price_1" }] })],
-      ]);
-      expect(stripe.calls.map((call) => call.headers.get("authorization"))).toEqual(
-        Array.from({ length: 4 }, () => `Bearer ${TEST_KEY}`),
-      );
-      expect(lines).toEqual([
-        "Creating customer...",
-        "Customer created: cus_1",
-        "Creating product...",
-        "Product created: prod_1",
-        "Creating price...",
-        "Price created: price_1",
-        "Creating subscription...",
-        "Subscription created: sub_1",
-        "Status: incomplete",
-      ]);
-    });
+          expect(Exit.isSuccess(exit) && exit.value.subscription.id).toBe("sub_1");
+          expect(stripe.calls.map((call) => [call.method, call.path, call.params])).toEqual([
+            [
+              "POST",
+              "/v1/customers",
+              formOf({ email: "subscriber@example.com", name: "Jane Smith" }),
+            ],
+            [
+              "POST",
+              "/v1/products",
+              formOf({ name: "Premium Subscription", description: "Monthly premium subscription" }),
+            ],
+            [
+              "POST",
+              "/v1/prices",
+              formOf({
+                product: "prod_1",
+                unit_amount: 1999,
+                currency: "usd",
+                recurring: { interval: "month" },
+              }),
+            ],
+            [
+              "POST",
+              "/v1/subscriptions",
+              formOf({ customer: "cus_1", items: [{ price: "price_1" }] }),
+            ],
+          ]);
+          expect(stripe.calls.map((call) => call.headers.get("authorization"))).toEqual(
+            Array.from({ length: 4 }, () => `Bearer ${TEST_KEY}`),
+          );
+          expect(lines).toEqual([
+            "Creating customer...",
+            "Customer created: cus_1",
+            "Creating product...",
+            "Product created: prod_1",
+            "Creating price...",
+            "Price created: price_1",
+            "Creating subscription...",
+            "Subscription created: sub_1",
+            "Status: incomplete",
+          ]);
+        }),
+    );
 
-    it("fails with PaymentConfigError, sending nothing, when STRIPE_API_KEY is unset", async () => {
-      const stripe = stubStripeTable({});
-      const env = ConfigProvider.layer(ConfigProvider.fromUnknown({}));
-      const { exit } = await runExample(
-        subscription.program.pipe(Effect.provide(subscription.layer.pipe(Layer.provide(env)))),
-        stripe.fetch,
-      );
+    it.effect("fails with PaymentConfigError, sending nothing, when STRIPE_API_KEY is unset", () =>
+      Effect.gen(function* () {
+        const stripe = stubStripeTable({});
+        const env = ConfigProvider.layer(ConfigProvider.fromUnknown({}));
+        const { exit } = yield* runExample(
+          subscription.program.pipe(Effect.provide(subscription.layer.pipe(Layer.provide(env)))),
+          stripe.fetch,
+        );
 
-      expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({ _tag: "PaymentConfigError" });
-      expect(stripe.calls).toHaveLength(0);
-    });
+        expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({
+          _tag: "PaymentConfigError",
+        });
+        expect(stripe.calls).toHaveLength(0);
+      }),
+    );
   },
 
   "webhooks.ts": () => {
-    it("answers each signed or refused test delivery with its documented status, offline", async () => {
-      const { exit, lines } = await runExample(webhooks.program, noNetwork);
+    it.effect(
+      "answers each signed or refused test delivery with its documented status, offline",
+      () =>
+        Effect.gen(function* () {
+          const { exit, lines } = yield* runExample(webhooks.program, noNetwork);
 
-      expect(Exit.isSuccess(exit)).toBe(true);
-      expect(lines.filter((line) => /: \d{3}$/.test(line))).toEqual([
-        "Signed checkout.session.completed: 200",
-        "Signed charge.succeeded (unhandled type): 200",
-        "Signed customer.subscription.updated that fails to decode: 500",
-        "Tampered body: 400",
-        "Missing header: 400",
-        "Signed with another secret: 400",
-        "Signed ten minutes ago: 400",
-      ]);
-      expect(lines).toContain(
-        "Checkout session cs_test_123 completed (customer cus_test_123, subscription sub_test_123)",
-      );
-      expect(lines).toContain("Acknowledged unhandled event type charge.succeeded");
-      // The undecodable delivery's error log goes through the captured console.
-      expect(lines.some((line) => line.includes("Handled Stripe event failed to decode"))).toBe(
-        true,
-      );
-    });
+          expect(Exit.isSuccess(exit)).toBe(true);
+          expect(lines.filter((line) => /: \d{3}$/.test(line))).toEqual([
+            "Signed checkout.session.completed: 200",
+            "Signed charge.succeeded (unhandled type): 200",
+            "Signed customer.subscription.updated that fails to decode: 500",
+            "Tampered body: 400",
+            "Missing header: 400",
+            "Signed with another secret: 400",
+            "Signed ten minutes ago: 400",
+          ]);
+          expect(lines).toContain(
+            "Checkout session cs_test_123 completed (customer cus_test_123, subscription sub_test_123)",
+          );
+          expect(lines).toContain("Acknowledged unhandled event type charge.succeeded");
+          // The undecodable delivery's error log goes through the captured console.
+          expect(lines.some((line) => line.includes("Handled Stripe event failed to decode"))).toBe(
+            true,
+          );
+        }),
+    );
 
-    it("fails to build the handler with a ConfigError when STRIPE_WEBHOOK_SECRET is unset", async () => {
-      const { exit } = await runExample(
-        webhooks
-          .makeWebhookHandler()
-          .pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))),
-        noNetwork,
-      );
+    it.effect(
+      "fails to build the handler with a ConfigError when STRIPE_WEBHOOK_SECRET is unset",
+      () =>
+        Effect.gen(function* () {
+          const { exit } = yield* runExample(
+            webhooks
+              .makeWebhookHandler()
+              .pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))),
+            noNetwork,
+          );
 
-      expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({ _tag: "ConfigError" });
-    });
+          expect(Option.getOrUndefined(failureOf(exit))).toMatchObject({ _tag: "ConfigError" });
+        }),
+    );
   },
 } satisfies Record<string, () => void>;
 
@@ -338,28 +376,30 @@ describe("examples", () => {
     expect(Arr.sort(R.keys(suites), Order.String)).toEqual(exampleFiles);
   });
 
-  it.each(exampleFiles)("importing %s runs nothing", async (file) => {
-    // Mocked, never spied through: an example that ran on import would
-    // otherwise reach the live API (with whatever key the environment holds)
-    // and print into the test output.
-    const fetch = vi
-      .spyOn(globalThis, "fetch")
-      .mockRejectedValue(new Error("an example called fetch on import"));
-    const log = vi.spyOn(globalThis.console, "log").mockImplementation(() => {});
-    const error = vi.spyOn(globalThis.console, "error").mockImplementation(() => {});
-    vi.resetModules();
+  it.effect.each(exampleFiles)("importing %s runs nothing", (file) =>
+    Effect.gen(function* () {
+      // Mocked, never spied through: an example that ran on import would
+      // otherwise reach the live API (with whatever key the environment holds)
+      // and print into the test output.
+      const fetch = vi
+        .spyOn(globalThis, "fetch")
+        .mockRejectedValue(new Error("an example called fetch on import"));
+      const log = vi.spyOn(globalThis.console, "log").mockImplementation(() => {});
+      const error = vi.spyOn(globalThis.console, "error").mockImplementation(() => {});
+      vi.resetModules();
 
-    await import(new URL(file, EXAMPLES).href);
-    // A top-level `Effect.runPromise(program)` starts its fiber on import but
-    // reaches `fetch` or the console only after a few turns of the event loop;
-    // waiting a little gives it the time to do so, so it cannot slip past the
-    // assertions below.
-    await new Promise((resolve) => setTimeout(resolve, 50));
+      yield* awaitTestPromise(() => import(new URL(file, EXAMPLES).href));
+      // A top-level `Effect.runPromise(program)` starts its fiber on import but
+      // reaches `fetch` or the console only after a few turns of the event loop;
+      // waiting a little gives it the time to do so, so it cannot slip past the
+      // assertions below.
+      yield* awaitTestPromise(() => new Promise((resolve) => setTimeout(resolve, 50)));
 
-    expect(fetch).not.toHaveBeenCalled();
-    expect(log).not.toHaveBeenCalled();
-    expect(error).not.toHaveBeenCalled();
-  });
+      expect(fetch).not.toHaveBeenCalled();
+      expect(log).not.toHaveBeenCalled();
+      expect(error).not.toHaveBeenCalled();
+    }),
+  );
 
   Arr.forEach(R.toEntries(suites), ([file, suite]) => {
     describe(`examples/${file}`, () => {

@@ -1,4 +1,5 @@
-import { describe, expectTypeOf, it } from "vite-plus/test";
+import { describe, expectTypeOf } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import type { Effect } from "effect";
 import type { PaymentsError } from "@thomasfosterau/effect-biz/Payments";
 import * as Price from "@thomasfosterau/effect-biz/Payments.Price";

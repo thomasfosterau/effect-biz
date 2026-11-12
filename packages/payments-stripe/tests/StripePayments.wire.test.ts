@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -34,6 +35,7 @@ import {
   stubStripe,
   TEST_KEY,
   withTestClock,
+  throwing,
 } from "./support.ts";
 import customer from "./fixtures/basil/customer.json" with { type: "json" };
 import basilSubscription from "./fixtures/basil/subscription.json" with { type: "json" };
@@ -68,10 +70,8 @@ const over = <A, E>(
   options: Partial<StripeHttpConfig> = {},
 ) => {
   const { http, calls } = stubFetch(handler);
-  const result = Effect.runPromise(
-    withTestClock(
-      effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.layer(config(options)), http))),
-    ),
+  const result = withTestClock(
+    effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.layer(config(options)), http))),
   );
   return { result, calls };
 };
@@ -108,76 +108,96 @@ const everyCall: ReadonlyArray<
 ];
 
 describe("StripePayments pins the API version", () => {
-  it.each(everyCall)("%s sends Stripe-Version: DISTILLED_API_VERSION", async (_, call, route) => {
-    const stub = stubStripe(() => ({}));
-    await Effect.runPromiseExit(
-      call.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
-    );
-    expect(stub.calls).toHaveLength(1);
-    expect(`${stub.calls[0]?.method} ${stub.calls[0]?.path}`).toBe(route);
-    expect(stub.calls[0]?.headers.get("stripe-version")).toBe(DISTILLED_API_VERSION);
-  });
+  it.effect.each(everyCall)("%s sends Stripe-Version: DISTILLED_API_VERSION", ([_, call, route]) =>
+    Effect.gen(function* () {
+      const stub = stubStripe(() => ({}));
+      yield* Effect.exit(
+        call.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
+      );
+      expect(stub.calls).toHaveLength(1);
+      expect(`${stub.calls[0]?.method} ${stub.calls[0]?.path}`).toBe(route);
+      expect(stub.calls[0]?.headers.get("stripe-version")).toBe(DISTILLED_API_VERSION);
+    }),
+  );
 
-  it("pins it on every attempt of a retried request", async () => {
-    const { result, calls } = over(Customer.retrieve("cus_1"), (_request, attempt) =>
-      attempt < 3 ? jsonResponse(503, {}) : jsonResponse(200, customer),
-    );
-    await result;
-    expect(calls.map((call) => call.headers.get("stripe-version"))).toEqual([
-      DISTILLED_API_VERSION,
-      DISTILLED_API_VERSION,
-      DISTILLED_API_VERSION,
-    ]);
-  });
+  it.effect("pins it on every attempt of a retried request", () =>
+    Effect.gen(function* () {
+      const { result, calls } = over(Customer.retrieve("cus_1"), (_request, attempt) =>
+        attempt < 3 ? jsonResponse(503, {}) : jsonResponse(200, customer),
+      );
+      yield* result;
+      expect(calls.map((call) => call.headers.get("stripe-version"))).toEqual([
+        DISTILLED_API_VERSION,
+        DISTILLED_API_VERSION,
+        DISTILLED_API_VERSION,
+      ]);
+    }),
+  );
 
-  it("sends a configured version and base URL instead", async () => {
-    const { result, calls } = over(Customer.retrieve("cus_1"), () => jsonResponse(200, customer), {
-      apiVersion: "2025-07-30.basil",
-      baseUrl: "http://localhost:12111",
-    });
-    await result;
-    expect(calls[0]?.url.toString()).toBe("http://localhost:12111/v1/customers/cus_1");
-    expect(calls[0]?.headers.get("stripe-version")).toBe("2025-07-30.basil");
-  });
+  it.effect("sends a configured version and base URL instead", () =>
+    Effect.gen(function* () {
+      const { result, calls } = over(
+        Customer.retrieve("cus_1"),
+        () => jsonResponse(200, customer),
+        {
+          apiVersion: "2025-07-30.basil",
+          baseUrl: "http://localhost:12111",
+        },
+      );
+      yield* result;
+      expect(calls[0]?.url.toString()).toBe("http://localhost:12111/v1/customers/cus_1");
+      expect(calls[0]?.headers.get("stripe-version")).toBe("2025-07-30.basil");
+    }),
+  );
 });
 
 describe("StripePayments request policy", () => {
-  it("authenticates with the key as a bearer token and accepts JSON", async () => {
-    const { result, calls } = over(Customer.retrieve("cus_1"), () => jsonResponse(200, customer));
-    await result;
-    expect(calls[0]?.headers.get("authorization")).toBe(`Bearer ${TEST_KEY}`);
-    expect(calls[0]?.headers.get("accept")).toBe("application/json");
-  });
+  it.effect("authenticates with the key as a bearer token and accepts JSON", () =>
+    Effect.gen(function* () {
+      const { result, calls } = over(Customer.retrieve("cus_1"), () => jsonResponse(200, customer));
+      yield* result;
+      expect(calls[0]?.headers.get("authorization")).toBe(`Bearer ${TEST_KEY}`);
+      expect(calls[0]?.headers.get("accept")).toBe("application/json");
+    }),
+  );
 
-  it("refuses redirects, keeping other fetch defaults", async () => {
-    const { http, calls } = stubFetch(() => jsonResponse(200, customer));
-    await Effect.runPromise(
-      Customer.retrieve("cus_1").pipe(
+  it.effect("refuses redirects, keeping other fetch defaults", () =>
+    Effect.gen(function* () {
+      const { http, calls } = stubFetch(() => jsonResponse(200, customer));
+      yield* Customer.retrieve("cus_1").pipe(
         Effect.provide(Layer.provideMerge(StripePayments.layer(config()), http)),
         Effect.provideService(FetchHttpClient.RequestInit, { credentials: "omit" }),
-      ),
-    );
-    expect(calls[0]?.init.redirect).toBe("error");
-    expect(calls[0]?.init.credentials).toBe("omit");
-  });
+      );
+      expect(calls[0]?.init.redirect).toBe("error");
+      expect(calls[0]?.init.credentials).toBe("omit");
+    }),
+  );
 
-  it("sends the configured connected account", async () => {
-    const { result, calls } = over(Customer.retrieve("cus_1"), () => jsonResponse(200, customer), {
-      stripeAccount: "acct_config",
-    });
-    await result;
-    expect(calls[0]?.headers.get("stripe-account")).toBe("acct_config");
-  });
+  it.effect("sends the configured connected account", () =>
+    Effect.gen(function* () {
+      const { result, calls } = over(
+        Customer.retrieve("cus_1"),
+        () => jsonResponse(200, customer),
+        {
+          stripeAccount: "acct_config",
+        },
+      );
+      yield* result;
+      expect(calls[0]?.headers.get("stripe-account")).toBe("acct_config");
+    }),
+  );
 
-  it("refuses an empty connected account before sending anything", async () => {
-    const { result, calls } = over(
-      Effect.flip(Customer.retrieve("cus_1")),
-      () => jsonResponse(200, customer),
-      { stripeAccount: "" },
-    );
-    expect(await result).toBeInstanceOf(PaymentInvalidRequestError);
-    expect(calls).toHaveLength(0);
-  });
+  it.effect("refuses an empty connected account before sending anything", () =>
+    Effect.gen(function* () {
+      const { result, calls } = over(
+        Effect.flip(Customer.retrieve("cus_1")),
+        () => jsonResponse(200, customer),
+        { stripeAccount: "" },
+      );
+      expect(yield* result).toBeInstanceOf(PaymentInvalidRequestError);
+      expect(calls).toHaveLength(0);
+    }),
+  );
 
   /** Every operation that takes a path id, as the resource it names and the call for an id. */
   const pathIdCalls: ReadonlyArray<
@@ -214,125 +234,144 @@ describe("StripePayments request policy", () => {
       ] as const
     ).map(([label, id]) => [name, label, resource, call(id)] as const),
   );
-  it.each(badIds)(
+  it.effect.each(badIds)(
     "%s refuses %s id instead of addressing another endpoint",
-    async (_, _id, resource, call) => {
-      const { result, calls } = over(Effect.flip(Effect.asVoid(call)), () =>
-        jsonResponse(200, customer),
-      );
-      const error = await result;
-      expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-      expect(error).toMatchObject({ param: Option.some("id") });
-      expect(error.message).toBe(`The ${resource} id must be a non-empty string`);
-      expect(calls).toHaveLength(0);
-    },
+    ([_, _id, resource, call]) =>
+      Effect.gen(function* () {
+        const { result, calls } = over(Effect.flip(Effect.asVoid(call)), () =>
+          jsonResponse(200, customer),
+        );
+        const error = yield* result;
+        expect(error).toBeInstanceOf(PaymentInvalidRequestError);
+        expect(error).toMatchObject({ param: Option.some("id") });
+        expect(error.message).toBe(`The ${resource} id must be a non-empty string`);
+        expect(calls).toHaveLength(0);
+      }),
   );
 
-  it("encodes an id as one path segment", async () => {
-    const { result, calls } = over(Effect.exit(Customer.retrieve("cus/../1")), () =>
-      jsonResponse(200, customer),
-    );
-    await result;
-    expect(calls[0]?.url.pathname).toBe("/v1/customers/cus%2F..%2F1");
-  });
+  it.effect("encodes an id as one path segment", () =>
+    Effect.gen(function* () {
+      const { result, calls } = over(Effect.exit(Customer.retrieve("cus/../1")), () =>
+        jsonResponse(200, customer),
+      );
+      yield* result;
+      expect(calls[0]?.url.pathname).toBe("/v1/customers/cus%2F..%2F1");
+    }),
+  );
 
-  it("retries a 5xx, reusing one generated Idempotency-Key, then succeeds", async () => {
-    const { result, calls } = over(Customer.create({ email: "a@example.com" }), (_r, attempt) =>
-      attempt < 3
-        ? jsonResponse(500, { error: { type: "api_error" } })
-        : jsonResponse(200, customer),
-    );
-    expect((await result).id).toBe(customer.id);
-    const keys = calls.map((call) => call.headers.get("idempotency-key"));
-    expect(keys).toHaveLength(3);
-    expect(keys[0]).toMatch(/^effect-payments-retry-/);
-    expect(Arr.dedupe(keys)).toHaveLength(1);
-  });
+  it.effect("retries a 5xx, reusing one generated Idempotency-Key, then succeeds", () =>
+    Effect.gen(function* () {
+      const { result, calls } = over(Customer.create({ email: "a@example.com" }), (_r, attempt) =>
+        attempt < 3
+          ? jsonResponse(500, { error: { type: "api_error" } })
+          : jsonResponse(200, customer),
+      );
+      expect((yield* result).id).toBe(customer.id);
+      const keys = calls.map((call) => call.headers.get("idempotency-key"));
+      expect(keys).toHaveLength(3);
+      expect(keys[0]).toMatch(/^effect-payments-retry-/);
+      expect(Arr.dedupe(keys)).toHaveLength(1);
+    }),
+  );
 
-  it("gives up after maxNetworkRetries, failing with the last error", async () => {
-    const { result, calls } = over(
-      Effect.flip(Customer.create({ email: "a@example.com" })),
-      () =>
-        jsonResponse(409, { error: { type: "invalid_request_error", message: "Lock timeout" } }),
-      { maxNetworkRetries: 1 },
-    );
-    const error = await result;
-    expect(calls).toHaveLength(2);
-    expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-    expect(error).toMatchObject({ statusCode: Option.some(409) });
-  });
+  it.effect("gives up after maxNetworkRetries, failing with the last error", () =>
+    Effect.gen(function* () {
+      const { result, calls } = over(
+        Effect.flip(Customer.create({ email: "a@example.com" })),
+        () =>
+          jsonResponse(409, { error: { type: "invalid_request_error", message: "Lock timeout" } }),
+        { maxNetworkRetries: 1 },
+      );
+      const error = yield* result;
+      expect(calls).toHaveLength(2);
+      expect(error).toBeInstanceOf(PaymentInvalidRequestError);
+      expect(error).toMatchObject({ statusCode: Option.some(409) });
+    }),
+  );
 
-  it("defers to Stripe-Should-Retry", async () => {
-    const never = over(Effect.flip(Customer.create({ email: "a@example.com" })), () =>
-      jsonResponse(500, { error: { type: "api_error" } }, { "stripe-should-retry": "false" }),
-    );
-    await never.result;
-    expect(never.calls).toHaveLength(1);
+  it.effect("defers to Stripe-Should-Retry", () =>
+    Effect.gen(function* () {
+      const never = over(Effect.flip(Customer.create({ email: "a@example.com" })), () =>
+        jsonResponse(500, { error: { type: "api_error" } }, { "stripe-should-retry": "false" }),
+      );
+      yield* never.result;
+      expect(never.calls).toHaveLength(1);
 
-    const always = over(Customer.create({ email: "a@example.com" }), (_r, attempt) =>
-      attempt === 1
-        ? jsonResponse(
-            400,
-            { error: { type: "invalid_request_error", message: "retry me" } },
-            { "stripe-should-retry": "true" },
-          )
-        : jsonResponse(200, customer),
-    );
-    await always.result;
-    expect(always.calls).toHaveLength(2);
-  });
+      const always = over(Customer.create({ email: "a@example.com" }), (_r, attempt) =>
+        attempt === 1
+          ? jsonResponse(
+              400,
+              { error: { type: "invalid_request_error", message: "retry me" } },
+              { "stripe-should-retry": "true" },
+            )
+          : jsonResponse(200, customer),
+      );
+      yield* always.result;
+      expect(always.calls).toHaveLength(2);
+    }),
+  );
 
-  it("does not retry a 4xx", async () => {
-    const { result, calls } = over(Effect.flip(Customer.retrieve("cus_x")), () =>
-      jsonResponse(404, { error: { type: "invalid_request_error", message: "No such customer" } }),
-    );
-    expect(await result).toMatchObject({
-      _tag: "PaymentInvalidRequestError",
-      statusCode: Option.some(404),
-    });
-    expect(calls).toHaveLength(1);
-  });
-
-  it("waits out Retry-After before retrying", async () => {
-    const { result, calls } = over(Customer.retrieve("cus_1"), (_r, attempt) =>
-      attempt === 1 ? jsonResponse(503, {}, { "retry-after": "3" }) : jsonResponse(200, customer),
-    );
-    await result;
-    expect(calls).toHaveLength(2);
-  });
-
-  it("retries a connection failure, then reports it as PaymentNetworkError", async () => {
-    const { result, calls } = over(Effect.flip(Customer.retrieve("cus_1")), () => {
-      throw new TypeError("fetch failed");
-    });
-    const error = await result;
-    expect(calls).toHaveLength(3);
-    expect(error).toBeInstanceOf(PaymentNetworkError);
-    expect(error.message).toContain("Request was retried 2 times");
-  });
-
-  it("times out a hung attempt as a network error", async () => {
-    const { result } = over(
-      Effect.flip(Customer.retrieve("cus_1")),
-      (request) =>
-        new Promise<Response>((_resolve, reject) => {
-          request.init.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+  it.effect("does not retry a 4xx", () =>
+    Effect.gen(function* () {
+      const { result, calls } = over(Effect.flip(Customer.retrieve("cus_x")), () =>
+        jsonResponse(404, {
+          error: { type: "invalid_request_error", message: "No such customer" },
         }),
-      { maxNetworkRetries: 0, timeout: 5_000 },
-    );
-    const error = await result;
-    expect(error).toBeInstanceOf(PaymentNetworkError);
-    expect(error.message).toContain("timed out after 5000 ms");
-  });
+      );
+      expect(yield* result).toMatchObject({
+        _tag: "PaymentInvalidRequestError",
+        statusCode: Option.some(404),
+      });
+      expect(calls).toHaveLength(1);
+    }),
+  );
 
-  it("keeps lenient validation when the caller asks Distilled for strict", async () => {
-    // A layer configured with an older API version than the one Distilled's
-    // schemas describe (2025-08-27.basil, before DISTILLED_API_VERSION) gets
-    // responses strict validation would refuse: this basil subscription lacks
-    // fields Distilled marks required.
-    const { http, calls } = stubFetch(() => jsonResponse(200, basilSubscription));
-    const subscription = await Effect.runPromise(
-      Subscription.retrieve(basilSubscription.id).pipe(
+  it.effect("waits out Retry-After before retrying", () =>
+    Effect.gen(function* () {
+      const { result, calls } = over(Customer.retrieve("cus_1"), (_r, attempt) =>
+        attempt === 1 ? jsonResponse(503, {}, { "retry-after": "3" }) : jsonResponse(200, customer),
+      );
+      yield* result;
+      expect(calls).toHaveLength(2);
+    }),
+  );
+
+  it.effect("retries a connection failure, then reports it as PaymentNetworkError", () =>
+    Effect.gen(function* () {
+      const { result, calls } = over(Effect.flip(Customer.retrieve("cus_1")), () =>
+        throwing(new TypeError("fetch failed")),
+      );
+      const error = yield* result;
+      expect(calls).toHaveLength(3);
+      expect(error).toBeInstanceOf(PaymentNetworkError);
+      expect(error.message).toContain("Request was retried 2 times");
+    }),
+  );
+
+  it.effect("times out a hung attempt as a network error", () =>
+    Effect.gen(function* () {
+      const { result } = over(
+        Effect.flip(Customer.retrieve("cus_1")),
+        (request) =>
+          new Promise<Response>((_resolve, reject) => {
+            request.init.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+          }),
+        { maxNetworkRetries: 0, timeout: 5_000 },
+      );
+      const error = yield* result;
+      expect(error).toBeInstanceOf(PaymentNetworkError);
+      expect(error.message).toContain("timed out after 5000 ms");
+    }),
+  );
+
+  it.effect("keeps lenient validation when the caller asks Distilled for strict", () =>
+    Effect.gen(function* () {
+      // A layer configured with an older API version than the one Distilled's
+      // schemas describe (2025-08-27.basil, before DISTILLED_API_VERSION) gets
+      // responses strict validation would refuse: this basil subscription lacks
+      // fields Distilled marks required.
+      const { http, calls } = stubFetch(() => jsonResponse(200, basilSubscription));
+      const subscription = yield* Subscription.retrieve(basilSubscription.id).pipe(
         Effect.provide(
           Layer.provideMerge(
             Layer.provideMerge(
@@ -342,232 +381,258 @@ describe("StripePayments request policy", () => {
             strictValidation,
           ),
         ),
-      ),
-    );
-    expect(subscription.id).toBe(basilSubscription.id);
-    expect(calls[0]?.headers.get("stripe-version")).toBe("2025-08-27.basil");
-  });
+      );
+      expect(subscription.id).toBe(basilSubscription.id);
+      expect(calls[0]?.headers.get("stripe-version")).toBe("2025-08-27.basil");
+    }),
+  );
 });
 
 describe("StripePayments maps every Distilled failure onto the neutral channel", () => {
-  it("InvalidRequestError → PaymentInvalidRequestError with the param", async () => {
-    const error = await failure(400, {
-      error: {
-        type: "invalid_request_error",
-        code: "parameter_invalid_empty",
-        message: "You passed an empty string for 'email'.",
-        param: "email",
-        doc_url: null,
-      },
-    });
-    expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-    expect(error).toMatchObject({
-      message: "You passed an empty string for 'email'.",
-      param: Option.some("email"),
-      statusCode: Option.some(400),
-    });
-  });
-
-  it("CardError → PaymentProviderError with Stripe's code and the whole vendor error", async () => {
-    const vendor = {
-      type: "card_error",
-      code: "card_declined",
-      decline_code: "insufficient_funds",
-      message: "Your card has insufficient funds.",
-      payment_intent: { id: "pi_1", status: "requires_payment_method" },
-    };
-    const error = await failure(402, { error: vendor });
-    expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error).toMatchObject({
-      code: Option.some("card_declined"),
-      statusCode: Option.some(402),
-      provider: "stripe",
-      message: "Your card has insufficient funds.",
-    });
-    expect(error).toHaveProperty("cause", Option.some(vendor));
-  });
-
-  it("IdempotencyError → PaymentProviderError coded as the SDK's error kind", async () => {
-    const error = await failure(400, {
-      error: { type: "idempotency_error", message: "Keys can only be reused with the same body" },
-    });
-    expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error).toMatchObject({
-      code: Option.some("StripeIdempotencyError"),
-      statusCode: Option.some(400),
-    });
-  });
-
-  it("ApiError → PaymentProviderError", async () => {
-    const error = await failure(500, { error: { type: "api_error", message: "Something broke" } });
-    expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error).toMatchObject({
-      code: Option.some("StripeAPIError"),
-      message: "Something broke",
-      statusCode: Option.some(500),
-    });
-  });
-
-  it("PaymentError (a 402 of no known type) → PaymentProviderError", async () => {
-    const error = await failure(402, {
-      error: { type: "payment_error", code: "payment_failed", message: "Payment failed" },
-    });
-    expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error).toMatchObject({
-      code: Option.some("payment_failed"),
-      statusCode: Option.some(402),
-    });
-  });
-
-  it("ExternalDependencyFailed (a 424) → PaymentProviderError", async () => {
-    const error = await failure(424, {
-      error: { type: "external_dependency_error", message: "Upstream failed" },
-    });
-    expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error).toMatchObject({
-      code: Option.some("StripeUnknownError"),
-      statusCode: Option.some(424),
-    });
-  });
-
-  it("UnknownStripeError (no error envelope) → PaymentProviderError from the status", async () => {
-    const error = await failure(503, "<html>gateway</html>");
-    expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error.message).toContain("503");
-    expect(error).toMatchObject({
-      statusCode: Option.some(503),
-      code: Option.some("StripeAPIError"),
-    });
-  });
-
-  it.each(["authentication_error", "invalid_request_error"])(
-    "Unauthorized → PaymentAuthenticationError, whatever the body's type (%s)",
-    async (type) => {
-      const error = await failure(401, {
-        error: { type, message: "Invalid API Key provided: sk_test_****4242" },
-      });
-      expect(error).toBeInstanceOf(PaymentAuthenticationError);
-      expect(error).toMatchObject({ statusCode: Option.some(401) });
-    },
-  );
-
-  it("Forbidden → PaymentProviderError coded as a permission error", async () => {
-    const error = await failure(403, {
-      error: { type: "invalid_request_error", message: "The provided key does not have access" },
-    });
-    expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error).toMatchObject({
-      code: Option.some("StripePermissionError"),
-      statusCode: Option.some(403),
-    });
-  });
-
-  it("TooManyRequests → PaymentRateLimitError with Retry-After", async () => {
-    const error = await failure(
-      429,
-      { error: { type: "rate_limit_error", message: "Too many requests" } },
-      { "retry-after": "7" },
-    );
-    expect(error).toBeInstanceOf(PaymentRateLimitError);
-    expect(error).toMatchObject({ message: "Too many requests", retryAfter: Option.some(7) });
-  });
-
-  it("NotFound → PaymentInvalidRequestError (Stripe's resource_missing)", async () => {
-    const error = await failure(404, {
-      error: {
-        type: "invalid_request_error",
-        code: "resource_missing",
-        message: "No such customer",
-      },
-    });
-    expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-    expect(error).toMatchObject({ statusCode: Option.some(404) });
-  });
-
-  it("an operation's own error class (ProductHasPrices) → PaymentInvalidRequestError", async () => {
-    const { result } = over(Effect.flip(Product.del("prod_1")), () =>
-      jsonResponse(400, {
+  it.effect("InvalidRequestError → PaymentInvalidRequestError with the param", () =>
+    Effect.gen(function* () {
+      const error = yield* failure(400, {
         error: {
           type: "invalid_request_error",
-          message: "This product cannot be deleted because it has one or more user-created prices.",
+          code: "parameter_invalid_empty",
+          message: "You passed an empty string for 'email'.",
+          param: "email",
+          doc_url: null,
         },
+      });
+      expect(error).toBeInstanceOf(PaymentInvalidRequestError);
+      expect(error).toMatchObject({
+        message: "You passed an empty string for 'email'.",
+        param: Option.some("email"),
+        statusCode: Option.some(400),
+      });
+    }),
+  );
+
+  it.effect("CardError → PaymentProviderError with Stripe's code and the whole vendor error", () =>
+    Effect.gen(function* () {
+      const vendor = {
+        type: "card_error",
+        code: "card_declined",
+        decline_code: "insufficient_funds",
+        message: "Your card has insufficient funds.",
+        payment_intent: { id: "pi_1", status: "requires_payment_method" },
+      };
+      const error = yield* failure(402, { error: vendor });
+      expect(error).toBeInstanceOf(PaymentProviderError);
+      expect(error).toMatchObject({
+        code: Option.some("card_declined"),
+        statusCode: Option.some(402),
+        provider: "stripe",
+        message: "Your card has insufficient funds.",
+      });
+      expect(error).toHaveProperty("cause", Option.some(vendor));
+    }),
+  );
+
+  it.effect("IdempotencyError → PaymentProviderError coded as the SDK's error kind", () =>
+    Effect.gen(function* () {
+      const error = yield* failure(400, {
+        error: { type: "idempotency_error", message: "Keys can only be reused with the same body" },
+      });
+      expect(error).toBeInstanceOf(PaymentProviderError);
+      expect(error).toMatchObject({
+        code: Option.some("StripeIdempotencyError"),
+        statusCode: Option.some(400),
+      });
+    }),
+  );
+
+  it.effect("ApiError → PaymentProviderError", () =>
+    Effect.gen(function* () {
+      const error = yield* failure(500, {
+        error: { type: "api_error", message: "Something broke" },
+      });
+      expect(error).toBeInstanceOf(PaymentProviderError);
+      expect(error).toMatchObject({
+        code: Option.some("StripeAPIError"),
+        message: "Something broke",
+        statusCode: Option.some(500),
+      });
+    }),
+  );
+
+  it.effect("PaymentError (a 402 of no known type) → PaymentProviderError", () =>
+    Effect.gen(function* () {
+      const error = yield* failure(402, {
+        error: { type: "payment_error", code: "payment_failed", message: "Payment failed" },
+      });
+      expect(error).toBeInstanceOf(PaymentProviderError);
+      expect(error).toMatchObject({
+        code: Option.some("payment_failed"),
+        statusCode: Option.some(402),
+      });
+    }),
+  );
+
+  it.effect("ExternalDependencyFailed (a 424) → PaymentProviderError", () =>
+    Effect.gen(function* () {
+      const error = yield* failure(424, {
+        error: { type: "external_dependency_error", message: "Upstream failed" },
+      });
+      expect(error).toBeInstanceOf(PaymentProviderError);
+      expect(error).toMatchObject({
+        code: Option.some("StripeUnknownError"),
+        statusCode: Option.some(424),
+      });
+    }),
+  );
+
+  it.effect("UnknownStripeError (no error envelope) → PaymentProviderError from the status", () =>
+    Effect.gen(function* () {
+      const error = yield* failure(503, "<html>gateway</html>");
+      expect(error).toBeInstanceOf(PaymentProviderError);
+      expect(error.message).toContain("503");
+      expect(error).toMatchObject({
+        statusCode: Option.some(503),
+        code: Option.some("StripeAPIError"),
+      });
+    }),
+  );
+
+  it.effect.each(["authentication_error", "invalid_request_error"])(
+    "Unauthorized → PaymentAuthenticationError, whatever the body's type (%s)",
+    (type) =>
+      Effect.gen(function* () {
+        const error = yield* failure(401, {
+          error: { type, message: "Invalid API Key provided: sk_test_****4242" },
+        });
+        expect(error).toBeInstanceOf(PaymentAuthenticationError);
+        expect(error).toMatchObject({ statusCode: Option.some(401) });
       }),
-    );
-    const error = await result;
-    expect(error).toBeInstanceOf(PaymentInvalidRequestError);
-    expect(error.message).toContain("user-created prices");
-  });
+  );
 
-  it("a 2xx whose body is not JSON → PaymentProviderError", async () => {
-    const error = await failure(200, "not json");
-    expect(error).toBeInstanceOf(PaymentProviderError);
-    expect(error.message).toBe("Invalid JSON received from the Stripe API");
-  });
+  it.effect("Forbidden → PaymentProviderError coded as a permission error", () =>
+    Effect.gen(function* () {
+      const error = yield* failure(403, {
+        error: { type: "invalid_request_error", message: "The provided key does not have access" },
+      });
+      expect(error).toBeInstanceOf(PaymentProviderError);
+      expect(error).toMatchObject({
+        code: Option.some("StripePermissionError"),
+        statusCode: Option.some(403),
+      });
+    }),
+  );
 
-  it("never carries the key in an error, at any depth", async () => {
-    const auth = await failure(401, {
-      error: { type: "authentication_error", message: "Invalid API Key" },
-    });
-    const card = await failure(402, {
-      error: { type: "card_error", code: "card_declined", message: "Your card was declined." },
-    });
-    const network = await over(
-      Effect.flip(Customer.retrieve("cus_1")),
-      () => {
-        throw new TypeError("fetch failed");
-      },
-      { maxNetworkRetries: 0 },
-    ).result;
-    const timeout = await over(
-      Effect.flip(Customer.retrieve("cus_1")),
-      (request) =>
-        new Promise<Response>((_resolve, reject) => {
-          request.init.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+  it.effect("TooManyRequests → PaymentRateLimitError with Retry-After", () =>
+    Effect.gen(function* () {
+      const error = yield* failure(
+        429,
+        { error: { type: "rate_limit_error", message: "Too many requests" } },
+        { "retry-after": "7" },
+      );
+      expect(error).toBeInstanceOf(PaymentRateLimitError);
+      expect(error).toMatchObject({ message: "Too many requests", retryAfter: Option.some(7) });
+    }),
+  );
+
+  it.effect("NotFound → PaymentInvalidRequestError (Stripe's resource_missing)", () =>
+    Effect.gen(function* () {
+      const error = yield* failure(404, {
+        error: {
+          type: "invalid_request_error",
+          code: "resource_missing",
+          message: "No such customer",
+        },
+      });
+      expect(error).toBeInstanceOf(PaymentInvalidRequestError);
+      expect(error).toMatchObject({ statusCode: Option.some(404) });
+    }),
+  );
+
+  it.effect("an operation's own error class (ProductHasPrices) → PaymentInvalidRequestError", () =>
+    Effect.gen(function* () {
+      const { result } = over(Effect.flip(Product.del("prod_1")), () =>
+        jsonResponse(400, {
+          error: {
+            type: "invalid_request_error",
+            message:
+              "This product cannot be deleted because it has one or more user-created prices.",
+          },
         }),
-      { maxNetworkRetries: 0, timeout: 5_000 },
-    ).result;
-    expect(network).toBeInstanceOf(PaymentNetworkError);
-    expect(timeout).toBeInstanceOf(PaymentNetworkError);
-    Arr.forEach([auth, card, network, timeout], (error) => {
-      // `JSON.stringify` (which `toJson` runs) and `String` go through
-      // Effect's `Headers` redaction, so they would miss a request kept
-      // anywhere in the error; walk every value it holds instead.
-      const reachable = reachableFrom(error);
-      expect(reachable.strings.filter((value) => value.includes(TEST_KEY))).toEqual([]);
-      expect(reachable.objects.filter(HttpClientError.isHttpClientError)).toEqual([]);
-      expect(reachable.objects.filter(HttpClientRequest.isHttpClientRequest)).toEqual([]);
-      expect(toJson(error)).not.toContain(TEST_KEY);
-      expect(String(error)).not.toContain(TEST_KEY);
-    });
-  });
+      );
+      const error = yield* result;
+      expect(error).toBeInstanceOf(PaymentInvalidRequestError);
+      expect(error.message).toContain("user-created prices");
+    }),
+  );
+
+  it.effect("a 2xx whose body is not JSON → PaymentProviderError", () =>
+    Effect.gen(function* () {
+      const error = yield* failure(200, "not json");
+      expect(error).toBeInstanceOf(PaymentProviderError);
+      expect(error.message).toBe("Invalid JSON received from the Stripe API");
+    }),
+  );
+
+  it.effect("never carries the key in an error, at any depth", () =>
+    Effect.gen(function* () {
+      const auth = yield* failure(401, {
+        error: { type: "authentication_error", message: "Invalid API Key" },
+      });
+      const card = yield* failure(402, {
+        error: { type: "card_error", code: "card_declined", message: "Your card was declined." },
+      });
+      const network = yield* over(
+        Effect.flip(Customer.retrieve("cus_1")),
+        () => throwing(new TypeError("fetch failed")),
+        { maxNetworkRetries: 0 },
+      ).result;
+      const timeout = yield* over(
+        Effect.flip(Customer.retrieve("cus_1")),
+        (request) =>
+          new Promise<Response>((_resolve, reject) => {
+            request.init.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+          }),
+        { maxNetworkRetries: 0, timeout: 5_000 },
+      ).result;
+      expect(network).toBeInstanceOf(PaymentNetworkError);
+      expect(timeout).toBeInstanceOf(PaymentNetworkError);
+      Arr.forEach([auth, card, network, timeout], (error) => {
+        // `JSON.stringify` (which `toJson` runs) and `String` go through
+        // Effect's `Headers` redaction, so they would miss a request kept
+        // anywhere in the error; walk every value it holds instead.
+        const reachable = reachableFrom(error);
+        expect(reachable.strings.filter((value) => value.includes(TEST_KEY))).toEqual([]);
+        expect(reachable.objects.filter(HttpClientError.isHttpClientError)).toEqual([]);
+        expect(reachable.objects.filter(HttpClientRequest.isHttpClientRequest)).toEqual([]);
+        expect(toJson(error)).not.toContain(TEST_KEY);
+        expect(String(error)).not.toContain(TEST_KEY);
+      });
+    }),
+  );
 });
 
 describe("StripePayments configuration", () => {
-  it("fails an empty key with PaymentConfigError", async () => {
-    const error = await Effect.runPromise(
-      Effect.flip(
+  it.effect("fails an empty key with PaymentConfigError", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
         Layer.build(StripePayments.layer(config({ apiKey: Redacted.make("") }))).pipe(
           Effect.scoped,
           Effect.provide(stubFetch(() => jsonResponse(200, {})).http),
         ),
-      ),
-    );
-    expect(error).toBeInstanceOf(PaymentConfigError);
-  });
+      );
+      expect(error).toBeInstanceOf(PaymentConfigError);
+    }),
+  );
 
-  it("reads the key for layerFromEnv while the layer is built", async () => {
-    const { http, calls } = stubFetch(() => jsonResponse(200, customer));
-    const withKey = (values: Record<string, string>) =>
-      Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(values)));
-    await Effect.runPromise(
-      Customer.retrieve("cus_1").pipe(
+  it.effect("reads the key for layerFromEnv while the layer is built", () =>
+    Effect.gen(function* () {
+      const { http, calls } = stubFetch(() => jsonResponse(200, customer));
+      const withKey = (values: Record<string, string>) =>
+        Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(values)));
+      yield* Customer.retrieve("cus_1").pipe(
         Effect.provide(Layer.provideMerge(StripePayments.layerFromEnv("BILLING_KEY"), http)),
         withKey({ BILLING_KEY: TEST_KEY }),
-      ),
-    );
-    expect(calls[0]?.headers.get("authorization")).toBe(`Bearer ${TEST_KEY}`);
-    const errors = await Effect.runPromise(
-      Effect.forEach(
+      );
+      expect(calls[0]?.headers.get("authorization")).toBe(`Bearer ${TEST_KEY}`);
+      const errors = yield* Effect.forEach(
         [{}, { STRIPE_API_KEY: "" }],
         (values) =>
           Effect.flip(
@@ -577,18 +642,18 @@ describe("StripePayments configuration", () => {
             ),
           ),
         { concurrency: 1 },
-      ),
-    );
-    expect(errors).toHaveLength(2);
-    Arr.forEach(errors, (error) => {
-      expect(error).toBeInstanceOf(PaymentConfigError);
-      expect(error.message).toBe("Environment variable STRIPE_API_KEY is not set");
-    });
-  });
+      );
+      expect(errors).toHaveLength(2);
+      Arr.forEach(errors, (error) => {
+        expect(error).toBeInstanceOf(PaymentConfigError);
+        expect(error.message).toBe("Environment variable STRIPE_API_KEY is not set");
+      });
+    }),
+  );
 
-  it("maps an unreadable key variable for layerFromEnv to PaymentConfigError", async () => {
-    const error = await Effect.runPromise(
-      Effect.flip(
+  it.effect("maps an unreadable key variable for layerFromEnv to PaymentConfigError", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
         Customer.retrieve("cus_1").pipe(
           Effect.provide(
             Layer.provideMerge(
@@ -602,8 +667,8 @@ describe("StripePayments configuration", () => {
             ),
           ),
         ),
-      ),
-    );
-    expect(error).toBeInstanceOf(PaymentConfigError);
-  });
+      );
+      expect(error).toBeInstanceOf(PaymentConfigError);
+    }),
+  );
 });

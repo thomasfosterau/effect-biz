@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Arr from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as BigDecimal from "effect/BigDecimal";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -44,14 +46,16 @@ describe("Decimal schema", () => {
     expect(encode(decode("1000000000000000.000000000001"))).toBe("1000000000000000.000000000001");
   });
 
-  it("round-trips any generated decimal", () => {
-    expect(
-      counterexample(decimals, (value) => BigDecimal.equals(decode(encode(value)), value)),
-    ).toEqual(Option.none());
-    expect(
-      counterexample(decimals, (value) => encode(decode(encode(value))) === encode(value)),
-    ).toEqual(Option.none());
-  });
+  it.effect("round-trips any generated decimal", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* counterexample(decimals, (value) => BigDecimal.equals(decode(encode(value)), value)),
+      ).toEqual(Option.none());
+      expect(
+        yield* counterexample(decimals, (value) => encode(decode(encode(value))) === encode(value)),
+      ).toEqual(Option.none());
+    }),
+  );
 });
 
 describe("Decimal helpers", () => {
@@ -88,27 +92,31 @@ describe("Decimal helpers", () => {
     ).toBe(true);
   });
 
-  it("addition is commutative and associative", () => {
-    expect(
-      counterexample(triples, ({ a, b }) =>
-        BigDecimal.equals(BigDecimal.sum(a, b), BigDecimal.sum(b, a)),
-      ),
-    ).toEqual(Option.none());
-    expect(
-      counterexample(triples, ({ a, b, c }) =>
-        BigDecimal.equals(
-          BigDecimal.sum(BigDecimal.sum(a, b), c),
-          BigDecimal.sum(a, BigDecimal.sum(b, c)),
+  it.effect("addition is commutative and associative", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* counterexample(triples, ({ a, b }) =>
+          BigDecimal.equals(BigDecimal.sum(a, b), BigDecimal.sum(b, a)),
         ),
-      ),
-    ).toEqual(Option.none());
-  });
+      ).toEqual(Option.none());
+      expect(
+        yield* counterexample(triples, ({ a, b, c }) =>
+          BigDecimal.equals(
+            BigDecimal.sum(BigDecimal.sum(a, b), c),
+            BigDecimal.sum(a, BigDecimal.sum(b, c)),
+          ),
+        ),
+      ).toEqual(Option.none());
+    }),
+  );
 
-  it("multiplication is commutative", () => {
-    expect(
-      counterexample(triples, ({ a, b }) =>
-        BigDecimal.equals(BigDecimal.multiply(a, b), BigDecimal.multiply(b, a)),
-      ),
-    ).toEqual(Option.none());
-  });
+  it.effect("multiplication is commutative", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* counterexample(triples, ({ a, b }) =>
+          BigDecimal.equals(BigDecimal.multiply(a, b), BigDecimal.multiply(b, a)),
+        ),
+      ).toEqual(Option.none());
+    }),
+  );
 });

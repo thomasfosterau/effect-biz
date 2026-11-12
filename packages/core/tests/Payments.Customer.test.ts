@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Customer from "@thomasfosterau/effect-biz/Payments.Customer";
@@ -29,32 +30,34 @@ describe("core domain types", () => {
 });
 
 describe("Customer accessors", () => {
-  it("create dispatches to whichever Customers service is provided", async () => {
-    const customer = new Customer.Customer({
-      id: "cus_test",
-      email: Option.some("test@example.com"),
-      name: Option.none(),
-      phone: Option.none(),
-      description: Option.none(),
-      metadata: {},
-      created: 0,
-      livemode: false,
-    });
+  it.effect("create dispatches to whichever Customers service is provided", () =>
+    Effect.gen(function* () {
+      const customer = new Customer.Customer({
+        id: "cus_test",
+        email: Option.some("test@example.com"),
+        name: Option.none(),
+        phone: Option.none(),
+        description: Option.none(),
+        metadata: {},
+        created: 0,
+        livemode: false,
+      });
 
-    // A fake, vendor-agnostic implementation of the capability.
-    const fake = Customer.Customers.of({
-      create: () => Effect.succeed(customer),
-      retrieve: () => Effect.succeed(customer),
-      update: () => Effect.succeed(customer),
-      del: (id) => Effect.succeed({ id, deleted: true as const }),
-      list: () => Effect.succeed({ data: [customer], hasMore: false, nextCursor: Option.none() }),
-    });
+      // A fake, vendor-agnostic implementation of the capability.
+      const fake = Customer.Customers.of({
+        create: () => Effect.succeed(customer),
+        retrieve: () => Effect.succeed(customer),
+        update: () => Effect.succeed(customer),
+        del: (id) => Effect.succeed({ id, deleted: true as const }),
+        list: () => Effect.succeed({ data: [customer], hasMore: false, nextCursor: Option.none() }),
+      });
 
-    const program = Customer.create({ email: "test@example.com" }).pipe(
-      Effect.provideService(Customer.Customers, fake),
-    );
+      const program = Customer.create({ email: "test@example.com" }).pipe(
+        Effect.provideService(Customer.Customers, fake),
+      );
 
-    const result = await Effect.runPromise(program);
-    expect(result.id).toBe("cus_test");
-  });
+      const result = yield* program;
+      expect(result.id).toBe("cus_test");
+    }),
+  );
 });

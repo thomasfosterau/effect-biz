@@ -241,15 +241,27 @@ export default defineConfig({
           "effecttsgo/strict-effect-provide": "off",
         },
       },
-      // Test suites ARE the runtime boundary: `Effect.runPromise` in a test
-      // body is the harness running the effect under test (117 sites), and a
-      // bare `new Error(…)` there is a fixture standing for what `fetch` or
-      // the Stripe SDK throws, which the code under test must map (7 sites).
+      // Effect tests run through `@effect/vitest`'s `it.effect`, so no test
+      // body runs an effect itself. A bare `new Error(…)` there is a fixture
+      // standing for what `fetch` or the Stripe SDK throws, which the code
+      // under test must map (7 sites).
       {
         files: ["**/tests/**/*.ts"],
         rules: {
-          "effect/effect-run-in-body": "off",
           "effect/avoid-untagged-errors": "off",
+          // `@effect/vitest`'s `it.effect` / `it.live` / `it.layer` bodies are
+          // test blocks, but the rule only knows `it` and `test`.
+          "vitest/no-standalone-expect": [
+            "error",
+            {
+              additionalTestBlockFunctions: [
+                "it.effect",
+                "it.live",
+                "it.effect.each",
+                "it.live.each",
+              ],
+            },
+          ],
           // A test is an application entry point: each case provides its own
           // stub layers, which is exactly where `Effect.provide` belongs.
           "effecttsgo/strict-effect-provide": "off",

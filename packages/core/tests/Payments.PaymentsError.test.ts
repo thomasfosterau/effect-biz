@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vite-plus/test";
-import * as Option from "effect/Option";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import {
   PaymentAuthenticationError,
@@ -76,17 +77,19 @@ describe("PaymentsError", () => {
     expect(decode(encode(full)).code).toEqual(Option.some("card_declined"));
   });
 
-  it("is usable in the Effect error channel via catchTag", async () => {
-    const program = Effect.fail(
-      new PaymentProviderError({ message: "nope", provider: "stripe" }),
-    ).pipe(
-      Effect.catchTag("PaymentProviderError", (error) =>
-        Effect.succeed({ caught: true, message: error.message }),
-      ),
-    );
+  it.effect("is usable in the Effect error channel via catchTag", () =>
+    Effect.gen(function* () {
+      const program = Effect.fail(
+        new PaymentProviderError({ message: "nope", provider: "stripe" }),
+      ).pipe(
+        Effect.catchTag("PaymentProviderError", (error) =>
+          Effect.succeed({ caught: true, message: error.message }),
+        ),
+      );
 
-    const result = await Effect.runPromise(program);
-    expect(result.caught).toBe(true);
-    expect(result.message).toBe("nope");
-  });
+      const result = yield* program;
+      expect(result.caught).toBe(true);
+      expect(result.message).toBe("nope");
+    }),
+  );
 });

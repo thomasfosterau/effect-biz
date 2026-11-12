@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Clock from "effect/Clock";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -14,6 +15,8 @@ import { DISTILLED_API_VERSION } from "../src/StripePayments.ts";
 /** A test event's body: the event serialised as `JSON.stringify` does. */
 const toJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 
+// `it.live`: the SDK-based verifiers read the real wall clock, so the tests that sign
+// with `Clock` (the default timestamp, "an hour ago") must share it, not `TestClock`.
 describe("Webhook", () => {
   const mockStripe = new Stripe("sk_test_mock", {
     apiVersion: DISTILLED_API_VERSION,
@@ -22,163 +25,175 @@ describe("Webhook", () => {
   const testLayer = Layer.succeed(StripeService, mockStripe);
 
   describe("constructEvent", () => {
-    it("should construct event with valid signature", async () => {
-      const payload = toJson({
-        id: "evt_test",
-        type: "payment_intent.succeeded",
-        data: { object: { id: "pi_test" } },
-      });
-      const secret = "whsec_test_secret";
+    it.live("should construct event with valid signature", () =>
+      Effect.gen(function* () {
+        const payload = toJson({
+          id: "evt_test",
+          type: "payment_intent.succeeded",
+          data: { object: { id: "pi_test" } },
+        });
+        const secret = "whsec_test_secret";
 
-      const program = Effect.fn("program")(function* () {
-        // Generate test signature
-        const signature = yield* Webhook.generateTestHeaderString(payload, secret);
+        const program = Effect.fn("program")(function* () {
+          // Generate test signature
+          const signature = yield* Webhook.generateTestHeaderString(payload, secret);
 
-        // Verify signature and construct event
-        const event = yield* Webhook.constructEvent(payload, signature, secret);
+          // Verify signature and construct event
+          const event = yield* Webhook.constructEvent(payload, signature, secret);
 
-        return event;
-      });
+          return event;
+        });
 
-      const result = await Effect.runPromise(program().pipe(Effect.provide(testLayer)));
+        const result = yield* program().pipe(Effect.provide(testLayer));
 
-      expect(result).toBeDefined();
-      expect(result.type).toBe("payment_intent.succeeded");
-    });
+        expect(result).toBeDefined();
+        expect(result.type).toBe("payment_intent.succeeded");
+      }),
+    );
 
-    it("should fail with invalid signature", async () => {
-      const payload = toJson({
-        id: "evt_test",
-        type: "payment_intent.succeeded",
-        data: { object: { id: "pi_test" } },
-      });
-      const secret = "whsec_test_secret";
-      const invalidSignature = "t=1234567890,v1=invalid_signature";
+    it.live("should fail with invalid signature", () =>
+      Effect.gen(function* () {
+        const payload = toJson({
+          id: "evt_test",
+          type: "payment_intent.succeeded",
+          data: { object: { id: "pi_test" } },
+        });
+        const secret = "whsec_test_secret";
+        const invalidSignature = "t=1234567890,v1=invalid_signature";
 
-      const program = Webhook.constructEvent(payload, invalidSignature, secret);
+        const program = Webhook.constructEvent(payload, invalidSignature, secret);
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(testLayer), Effect.flip));
+        const result = yield* program.pipe(Effect.provide(testLayer), Effect.flip);
 
-      expect(result).toBeInstanceOf(SignatureVerificationError);
-      expect(result._tag).toBe("SignatureVerificationError");
-    });
+        expect(result).toBeInstanceOf(SignatureVerificationError);
+        expect(result._tag).toBe("SignatureVerificationError");
+      }),
+    );
 
-    it("should fail with wrong secret", async () => {
-      const payload = toJson({
-        id: "evt_test",
-        type: "payment_intent.succeeded",
-        data: { object: { id: "pi_test" } },
-      });
-      const secret = "whsec_test_secret";
-      const wrongSecret = "whsec_wrong_secret";
+    it.live("should fail with wrong secret", () =>
+      Effect.gen(function* () {
+        const payload = toJson({
+          id: "evt_test",
+          type: "payment_intent.succeeded",
+          data: { object: { id: "pi_test" } },
+        });
+        const secret = "whsec_test_secret";
+        const wrongSecret = "whsec_wrong_secret";
 
-      const program = Effect.fn("program")(function* () {
-        const signature = yield* Webhook.generateTestHeaderString(payload, secret);
-        return yield* Webhook.constructEvent(payload, signature, wrongSecret);
-      });
+        const program = Effect.fn("program")(function* () {
+          const signature = yield* Webhook.generateTestHeaderString(payload, secret);
+          return yield* Webhook.constructEvent(payload, signature, wrongSecret);
+        });
 
-      const result = await Effect.runPromise(
-        program().pipe(Effect.provide(testLayer), Effect.flip),
-      );
+        const result = yield* program().pipe(Effect.provide(testLayer), Effect.flip);
 
-      expect(result).toBeInstanceOf(SignatureVerificationError);
-    });
+        expect(result).toBeInstanceOf(SignatureVerificationError);
+      }),
+    );
 
-    it("should work with Buffer payload", async () => {
-      const payloadString = toJson({
-        id: "evt_test",
-        type: "payment_intent.succeeded",
-        data: { object: { id: "pi_test" } },
-      });
-      const payload = Buffer.from(payloadString, "utf8");
-      const secret = "whsec_test_secret";
+    it.live("should work with Buffer payload", () =>
+      Effect.gen(function* () {
+        const payloadString = toJson({
+          id: "evt_test",
+          type: "payment_intent.succeeded",
+          data: { object: { id: "pi_test" } },
+        });
+        const payload = Buffer.from(payloadString, "utf8");
+        const secret = "whsec_test_secret";
 
-      const program = Effect.fn("program")(function* () {
-        const signature = yield* Webhook.generateTestHeaderString(payload, secret);
-        const event = yield* Webhook.constructEvent(payload, signature, secret);
-        return event;
-      });
+        const program = Effect.fn("program")(function* () {
+          const signature = yield* Webhook.generateTestHeaderString(payload, secret);
+          const event = yield* Webhook.constructEvent(payload, signature, secret);
+          return event;
+        });
 
-      const result = await Effect.runPromise(program().pipe(Effect.provide(testLayer)));
+        const result = yield* program().pipe(Effect.provide(testLayer));
 
-      expect(result).toBeDefined();
-      expect(result.type).toBe("payment_intent.succeeded");
-    });
+        expect(result).toBeDefined();
+        expect(result.type).toBe("payment_intent.succeeded");
+      }),
+    );
 
-    it("should respect tolerance parameter", async () => {
-      const payload = toJson({
-        id: "evt_test",
-        type: "payment_intent.succeeded",
-        data: { object: { id: "pi_test" } },
-      });
-      const secret = "whsec_test_secret";
+    it.live("should respect tolerance parameter", () =>
+      Effect.gen(function* () {
+        const payload = toJson({
+          id: "evt_test",
+          type: "payment_intent.succeeded",
+          data: { object: { id: "pi_test" } },
+        });
+        const secret = "whsec_test_secret";
 
-      const program = Effect.fn("program")(function* () {
-        const veryOldTimestamp = Math.floor((yield* Clock.currentTimeMillis) / 1000) - 3600; // 1 hour ago
-        const signature = yield* Webhook.generateTestHeaderString(
-          payload,
-          secret,
-          veryOldTimestamp,
-        );
+        const program = Effect.fn("program")(function* () {
+          const veryOldTimestamp = Math.floor((yield* Clock.currentTimeMillis) / 1000) - 3600; // 1 hour ago
+          const signature = yield* Webhook.generateTestHeaderString(
+            payload,
+            secret,
+            veryOldTimestamp,
+          );
 
-        // Should fail with default tolerance (300 seconds)
-        const failedEffect = Effect.flip(Webhook.constructEvent(payload, signature, secret));
-        const error = yield* failedEffect;
-        expect(error).toBeInstanceOf(SignatureVerificationError);
+          // Should fail with default tolerance (300 seconds)
+          const failedEffect = Effect.flip(Webhook.constructEvent(payload, signature, secret));
+          const error = yield* failedEffect;
+          expect(error).toBeInstanceOf(SignatureVerificationError);
 
-        // Should succeed with large tolerance
-        const event = yield* Webhook.constructEvent(
-          payload,
-          signature,
-          secret,
-          7200, // 2 hours
-        );
-        return event;
-      });
+          // Should succeed with large tolerance
+          const event = yield* Webhook.constructEvent(
+            payload,
+            signature,
+            secret,
+            7200, // 2 hours
+          );
+          return event;
+        });
 
-      const result = await Effect.runPromise(program().pipe(Effect.provide(testLayer)));
+        const result = yield* program().pipe(Effect.provide(testLayer));
 
-      expect(result).toBeDefined();
-      expect(result.type).toBe("payment_intent.succeeded");
-    });
+        expect(result).toBeDefined();
+        expect(result.type).toBe("payment_intent.succeeded");
+      }),
+    );
   });
 
   describe("constructEventAsync", () => {
-    it("should construct event with valid signature (async)", async () => {
-      const payload = toJson({
-        id: "evt_test",
-        type: "payment_intent.succeeded",
-        data: { object: { id: "pi_test" } },
-      });
-      const secret = "whsec_test_secret";
+    it.live("should construct event with valid signature (async)", () =>
+      Effect.gen(function* () {
+        const payload = toJson({
+          id: "evt_test",
+          type: "payment_intent.succeeded",
+          data: { object: { id: "pi_test" } },
+        });
+        const secret = "whsec_test_secret";
 
-      const program = Effect.fn("program")(function* () {
-        const signature = yield* Webhook.generateTestHeaderStringAsync(payload, secret);
-        const event = yield* Webhook.constructEventAsync(payload, signature, secret);
-        return event;
-      });
+        const program = Effect.fn("program")(function* () {
+          const signature = yield* Webhook.generateTestHeaderStringAsync(payload, secret);
+          const event = yield* Webhook.constructEventAsync(payload, signature, secret);
+          return event;
+        });
 
-      const result = await Effect.runPromise(program().pipe(Effect.provide(testLayer)));
+        const result = yield* program().pipe(Effect.provide(testLayer));
 
-      expect(result).toBeDefined();
-      expect(result.type).toBe("payment_intent.succeeded");
-    });
+        expect(result).toBeDefined();
+        expect(result.type).toBe("payment_intent.succeeded");
+      }),
+    );
 
-    it("should fail with invalid signature (async)", async () => {
-      const payload = toJson({
-        id: "evt_test",
-        type: "payment_intent.succeeded",
-        data: { object: { id: "pi_test" } },
-      });
-      const secret = "whsec_test_secret";
-      const invalidSignature = "t=1234567890,v1=invalid_signature";
+    it.live("should fail with invalid signature (async)", () =>
+      Effect.gen(function* () {
+        const payload = toJson({
+          id: "evt_test",
+          type: "payment_intent.succeeded",
+          data: { object: { id: "pi_test" } },
+        });
+        const secret = "whsec_test_secret";
+        const invalidSignature = "t=1234567890,v1=invalid_signature";
 
-      const program = Webhook.constructEventAsync(payload, invalidSignature, secret);
+        const program = Webhook.constructEventAsync(payload, invalidSignature, secret);
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(testLayer), Effect.flip));
+        const result = yield* program.pipe(Effect.provide(testLayer), Effect.flip);
 
-      expect(result).toBeInstanceOf(SignatureVerificationError);
-    });
+        expect(result).toBeInstanceOf(SignatureVerificationError);
+      }),
+    );
   });
 
   // `0` means DEFAULT_TOLERANCE (300 s) on both SDK-based paths, though the
@@ -200,64 +215,74 @@ describe("Webhook", () => {
         return yield* construct(payload, signature, secret, tolerance);
       }).pipe(Effect.provide(testLayer));
 
-    it("reads a tolerance of 0 as the default 300 s, refusing an hour-old signature", async () => {
-      const error = await Effect.runPromise(Effect.flip(hourOld(0)));
-      expect(error).toBeInstanceOf(SignatureVerificationError);
-      expect(error.message).toContain("Timestamp outside the tolerance zone");
-    });
+    it.live("reads a tolerance of 0 as the default 300 s, refusing an hour-old signature", () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(hourOld(0));
+        expect(error).toBeInstanceOf(SignatureVerificationError);
+        expect(error.message).toContain("Timestamp outside the tolerance zone");
+      }),
+    );
 
-    it("skips the timestamp check on a negative tolerance", async () => {
-      const event = await Effect.runPromise(hourOld(-1));
-      expect(event.type).toBe("payment_intent.succeeded");
-    });
+    it.live("skips the timestamp check on a negative tolerance", () =>
+      Effect.gen(function* () {
+        const event = yield* hourOld(-1);
+        expect(event.type).toBe("payment_intent.succeeded");
+      }),
+    );
   });
 
   describe("generateTestHeaderString", () => {
-    it("should generate valid test header", async () => {
-      const payload = toJson({
-        id: "evt_test",
-        type: "payment_intent.succeeded",
-      });
-      const secret = "whsec_test_secret";
+    it.live("should generate valid test header", () =>
+      Effect.gen(function* () {
+        const payload = toJson({
+          id: "evt_test",
+          type: "payment_intent.succeeded",
+        });
+        const secret = "whsec_test_secret";
 
-      const program = Webhook.generateTestHeaderString(payload, secret);
+        const program = Webhook.generateTestHeaderString(payload, secret);
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(testLayer)));
+        const result = yield* program.pipe(Effect.provide(testLayer));
 
-      expect(result).toBeDefined();
-      expect(result).toBeTypeOf("string");
-      expect(result).toMatch(/^t=\d+,v1=[a-f0-9]+/);
-    });
+        expect(result).toBeDefined();
+        expect(result).toBeTypeOf("string");
+        expect(result).toMatch(/^t=\d+,v1=[a-f0-9]+/);
+      }),
+    );
 
-    it("should use custom timestamp", async () => {
-      const payload = "test payload";
-      const secret = "whsec_test_secret";
-      const timestamp = 1234567890;
+    it.live("should use custom timestamp", () =>
+      Effect.gen(function* () {
+        const payload = "test payload";
+        const secret = "whsec_test_secret";
+        const timestamp = 1234567890;
 
-      const program = Webhook.generateTestHeaderString(payload, secret, timestamp);
+        const program = Webhook.generateTestHeaderString(payload, secret, timestamp);
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(testLayer)));
+        const result = yield* program.pipe(Effect.provide(testLayer));
 
-      expect(result).toContain(`t=${timestamp}`);
-    });
+        expect(result).toContain(`t=${timestamp}`);
+      }),
+    );
   });
 
   describe("generateTestHeaderStringAsync", () => {
-    it("should generate valid test header (async)", async () => {
-      const payload = toJson({
-        id: "evt_test",
-        type: "payment_intent.succeeded",
-      });
-      const secret = "whsec_test_secret";
+    it.live("should generate valid test header (async)", () =>
+      Effect.gen(function* () {
+        const payload = toJson({
+          id: "evt_test",
+          type: "payment_intent.succeeded",
+        });
+        const secret = "whsec_test_secret";
 
-      const program = Webhook.generateTestHeaderStringAsync(payload, secret);
+        const program = Webhook.generateTestHeaderStringAsync(payload, secret);
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(testLayer)));
+        const result = yield* program.pipe(Effect.provide(testLayer));
 
-      expect(result).toBeDefined();
-      expect(result).toBeTypeOf("string");
-      expect(result).toMatch(/^t=\d+,v1=[a-f0-9]+/);
-    });
+        expect(result).toBeDefined();
+        expect(result).toBeTypeOf("string");
+        expect(result).toMatch(/^t=\d+,v1=[a-f0-9]+/);
+      }),
+    );
   });
 
   describe("DEFAULT_TOLERANCE", () => {
@@ -267,20 +292,22 @@ describe("Webhook", () => {
   });
 
   describe("error handling", () => {
-    it("should include error details in SignatureVerificationError", async () => {
-      const payload = "invalid payload";
-      const signature = "invalid signature";
-      const secret = "whsec_test_secret";
+    it.live("should include error details in SignatureVerificationError", () =>
+      Effect.gen(function* () {
+        const payload = "invalid payload";
+        const signature = "invalid signature";
+        const secret = "whsec_test_secret";
 
-      const program = Webhook.constructEvent(payload, signature, secret);
+        const program = Webhook.constructEvent(payload, signature, secret);
 
-      const result = await Effect.runPromise(program.pipe(Effect.provide(testLayer), Effect.flip));
+        const result = yield* program.pipe(Effect.provide(testLayer), Effect.flip);
 
-      expect(result).toBeInstanceOf(SignatureVerificationError);
-      expect(result.message).toBeDefined();
-      expect(result.header).toEqual(Option.some(signature));
-      expect(result.payload).toEqual(Option.some(payload));
-    });
+        expect(result).toBeInstanceOf(SignatureVerificationError);
+        expect(result.message).toBeDefined();
+        expect(result.header).toEqual(Option.some(signature));
+        expect(result.payload).toEqual(Option.some(payload));
+      }),
+    );
 
     // Each SDK wrapper maps whatever the SDK throws the same way: the thrown
     // message (or the thrown value as a string), the header it was given, and
@@ -332,24 +359,26 @@ describe("Webhook", () => {
     ];
 
     Arr.forEach(wrappers, ([name, program, header]) => {
-      it(`${name} maps a thrown Error onto SignatureVerificationError`, async () => {
-        const error = await Effect.runPromise(
-          Effect.flip(Effect.asVoid(program)).pipe(
+      it.live(`${name} maps a thrown Error onto SignatureVerificationError`, () =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(Effect.asVoid(program)).pipe(
             Effect.provide(throwing(new Error("sdk refused"))),
-          ),
-        );
-        expect(error).toBeInstanceOf(SignatureVerificationError);
-        expect(error.message).toBe("sdk refused");
-        expect(error.header).toEqual(header);
-        expect(error.payload).toEqual(Option.some('{"id":"evt_1"}'));
-      });
+          );
+          expect(error).toBeInstanceOf(SignatureVerificationError);
+          expect(error.message).toBe("sdk refused");
+          expect(error.header).toEqual(header);
+          expect(error.payload).toEqual(Option.some('{"id":"evt_1"}'));
+        }),
+      );
 
-      it(`${name} maps a thrown non-Error by its string form`, async () => {
-        const error = await Effect.runPromise(
-          Effect.flip(Effect.asVoid(program)).pipe(Effect.provide(throwing("plain"))),
-        );
-        expect(error.message).toBe("plain");
-      });
+      it.live(`${name} maps a thrown non-Error by its string form`, () =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(Effect.asVoid(program)).pipe(
+            Effect.provide(throwing("plain")),
+          );
+          expect(error.message).toBe("plain");
+        }),
+      );
     });
   });
 });

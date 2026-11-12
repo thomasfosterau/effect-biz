@@ -35,18 +35,16 @@ export const allocations = Arbitrary.all({
 });
 
 /**
- * Runs a property over 300 generated values with a fixed seed. Returns
+ * Runs a property over 300 generated values with a fixed seed. Succeeds with
  * `None` when it holds for all of them, else `Some` description of the
  * (shrunk) counterexample.
  */
 export const counterexample = <A>(
   arbitrary: Arbitrary.Arbitrary<A>,
   property: (value: A) => boolean,
-): Option.Option<string> =>
-  Option.fromNullishOr(
-    Arbitrary.formatCheckFailure(
-      Effect.runSync(Arbitrary.checkEffect(arbitrary, property, { runs: 300, seed: 42 })),
-    ),
+): Effect.Effect<Option.Option<string>> =>
+  Effect.map(Arbitrary.checkEffect(arbitrary, property, { runs: 300, seed: 42 }), (failure) =>
+    Option.fromNullishOr(Arbitrary.formatCheckFailure(failure)),
   );
 
 /** The success of a result; throws the violation otherwise, which fails the test with its message. */

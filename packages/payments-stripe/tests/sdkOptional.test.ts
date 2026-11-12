@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 // oxlint-disable-next-line effect/use-filesystem-service -- a test inspecting the package's own source files, outside any Effect runtime
 import { readdirSync, readFileSync } from "node:fs";
 import * as Arr from "effect/Array";

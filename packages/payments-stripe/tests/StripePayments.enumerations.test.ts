@@ -1,5 +1,6 @@
 import type * as Schema from "effect/Schema";
-import { describe, it, expect } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
@@ -17,11 +18,9 @@ import { stubStripe } from "./support.ts";
 const run = <A, E>(
   effect: Effect.Effect<A, E, Layer.Success<typeof StripePayments.capabilities>>,
   body: Schema.Json,
-): Promise<A> => {
+): Effect.Effect<A, E> => {
   const stub = stubStripe(() => body);
-  return Effect.runPromise(
-    effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer))),
-  );
+  return effect.pipe(Effect.provide(Layer.provideMerge(StripePayments.capabilities, stub.layer)));
 };
 
 const page = (...data: Array<Schema.Json>) => ({ object: "list", has_more: false, data });
@@ -71,143 +70,170 @@ const price = (id: string, type: string, interval: string) => ({
 const other = (raw: string) => ({ _tag: "Other", raw });
 
 describe("StripePayments lenient enumerations", () => {
-  it("decodes an unknown payment status to Other with the raw value", async () => {
-    const result = await run(PaymentIntent.retrieve("pi_1"), intent("pi_1", "brand_new_status"));
-    expect(result.status).toEqual(other("brand_new_status"));
-  });
+  it.effect("decodes an unknown payment status to Other with the raw value", () =>
+    Effect.gen(function* () {
+      const result = yield* run(PaymentIntent.retrieve("pi_1"), intent("pi_1", "brand_new_status"));
+      expect(result.status).toEqual(other("brand_new_status"));
+    }),
+  );
 
-  it("decodes an unknown subscription status to Other with the raw value", async () => {
-    const result = await run(
-      Subscription.retrieve("sub_1"),
-      subscription("sub_1", "brand_new_status"),
-    );
-    expect(result.status).toEqual(other("brand_new_status"));
-  });
+  it.effect("decodes an unknown subscription status to Other with the raw value", () =>
+    Effect.gen(function* () {
+      const result = yield* run(
+        Subscription.retrieve("sub_1"),
+        subscription("sub_1", "brand_new_status"),
+      );
+      expect(result.status).toEqual(other("brand_new_status"));
+    }),
+  );
 
-  it("decodes an unknown refund status to Other with the raw value", async () => {
-    const result = await run(Refund.retrieve("re_1"), refund("re_1", "brand_new_status"));
-    expect(result.status).toEqual(other("brand_new_status"));
-  });
+  it.effect("decodes an unknown refund status to Other with the raw value", () =>
+    Effect.gen(function* () {
+      const result = yield* run(Refund.retrieve("re_1"), refund("re_1", "brand_new_status"));
+      expect(result.status).toEqual(other("brand_new_status"));
+    }),
+  );
 
-  it("decodes an unknown price type and recurring interval to Other", async () => {
-    const result = await run(Price.retrieve("price_1"), price("price_1", "metered", "decade"));
-    expect(result.type).toEqual(other("metered"));
-    expect(Option.map(result.recurring, (recurring) => recurring.interval)).toEqual(
-      Option.some(other("decade")),
-    );
-  });
+  it.effect("decodes an unknown price type and recurring interval to Other", () =>
+    Effect.gen(function* () {
+      const result = yield* run(Price.retrieve("price_1"), price("price_1", "metered", "decade"));
+      expect(result.type).toEqual(other("metered"));
+      expect(Option.map(result.recurring, (recurring) => recurring.interval)).toEqual(
+        Option.some(other("decade")),
+      );
+    }),
+  );
 
-  it("leaves the rest of a payment intent page decoding around an unknown status", async () => {
-    const result = await run(
-      PaymentIntent.list(),
-      page(
-        intent("pi_1", "succeeded"),
-        intent("pi_2", "brand_new_status"),
-        intent("pi_3", "canceled"),
-      ),
-    );
-    expect(result.data.map((item) => item.status)).toEqual([
-      "succeeded",
-      other("brand_new_status"),
-      "canceled",
-    ]);
-  });
+  it.effect("leaves the rest of a payment intent page decoding around an unknown status", () =>
+    Effect.gen(function* () {
+      const result = yield* run(
+        PaymentIntent.list(),
+        page(
+          intent("pi_1", "succeeded"),
+          intent("pi_2", "brand_new_status"),
+          intent("pi_3", "canceled"),
+        ),
+      );
+      expect(result.data.map((item) => item.status)).toEqual([
+        "succeeded",
+        other("brand_new_status"),
+        "canceled",
+      ]);
+    }),
+  );
 
-  it("leaves the rest of a subscription page decoding around an unknown status", async () => {
-    const result = await run(
-      Subscription.list(),
-      page(subscription("sub_1", "active"), subscription("sub_2", "brand_new_status")),
-    );
-    expect(result.data.map((item) => item.status)).toEqual(["active", other("brand_new_status")]);
-  });
+  it.effect("leaves the rest of a subscription page decoding around an unknown status", () =>
+    Effect.gen(function* () {
+      const result = yield* run(
+        Subscription.list(),
+        page(subscription("sub_1", "active"), subscription("sub_2", "brand_new_status")),
+      );
+      expect(result.data.map((item) => item.status)).toEqual(["active", other("brand_new_status")]);
+    }),
+  );
 
-  it("leaves the rest of a refund page decoding around an unknown status", async () => {
-    const result = await run(
-      Refund.list(),
-      page(refund("re_1", "brand_new_status"), refund("re_2", "succeeded")),
-    );
-    expect(result.data.map((item) => item.status)).toEqual([
-      other("brand_new_status"),
-      "succeeded",
-    ]);
-  });
+  it.effect("leaves the rest of a refund page decoding around an unknown status", () =>
+    Effect.gen(function* () {
+      const result = yield* run(
+        Refund.list(),
+        page(refund("re_1", "brand_new_status"), refund("re_2", "succeeded")),
+      );
+      expect(result.data.map((item) => item.status)).toEqual([
+        other("brand_new_status"),
+        "succeeded",
+      ]);
+    }),
+  );
 
-  it("leaves the rest of a price page decoding around an unknown type or interval", async () => {
-    const result = await run(
-      Price.list(),
-      page(price("price_1", "one_time", "month"), price("price_2", "metered", "decade")),
-    );
-    expect(result.data.map((item) => item.type)).toEqual(["one_time", other("metered")]);
-    expect(
-      Option.map(result.data[1]?.recurring ?? Option.none(), (recurring) => recurring.interval),
-    ).toEqual(Option.some(other("decade")));
-  });
+  it.effect("leaves the rest of a price page decoding around an unknown type or interval", () =>
+    Effect.gen(function* () {
+      const result = yield* run(
+        Price.list(),
+        page(price("price_1", "one_time", "month"), price("price_2", "metered", "decade")),
+      );
+      expect(result.data.map((item) => item.type)).toEqual(["one_time", other("metered")]);
+      expect(
+        Option.map(result.data[1]?.recurring ?? Option.none(), (recurring) => recurring.interval),
+      ).toEqual(Option.some(other("decade")));
+    }),
+  );
 
-  it("keeps every known value unchanged", async () => {
-    const statuses = [
-      "requires_payment_method",
-      "requires_confirmation",
-      "requires_action",
-      "processing",
-      "requires_capture",
-      "canceled",
-      "succeeded",
-    ];
-    const result = await run(
-      PaymentIntent.list(),
-      page(...statuses.map((status, index) => intent(`pi_${index}`, status))),
-    );
-    expect(result.data.map((item) => item.status)).toEqual(statuses);
+  it.effect("keeps every known value unchanged", () =>
+    Effect.gen(function* () {
+      const statuses = [
+        "requires_payment_method",
+        "requires_confirmation",
+        "requires_action",
+        "processing",
+        "requires_capture",
+        "canceled",
+        "succeeded",
+      ];
+      const result = yield* run(
+        PaymentIntent.list(),
+        page(...statuses.map((status, index) => intent(`pi_${index}`, status))),
+      );
+      expect(result.data.map((item) => item.status)).toEqual(statuses);
 
-    const subscriptionStatuses = [
-      "active",
-      "past_due",
-      "unpaid",
-      "canceled",
-      "incomplete",
-      "incomplete_expired",
-      "trialing",
-      "paused",
-    ];
-    const subscriptions = await run(
-      Subscription.list(),
-      page(...subscriptionStatuses.map((status, index) => subscription(`sub_${index}`, status))),
-    );
-    expect(subscriptions.data.map((item) => item.status)).toEqual(subscriptionStatuses);
+      const subscriptionStatuses = [
+        "active",
+        "past_due",
+        "unpaid",
+        "canceled",
+        "incomplete",
+        "incomplete_expired",
+        "trialing",
+        "paused",
+      ];
+      const subscriptions = yield* run(
+        Subscription.list(),
+        page(...subscriptionStatuses.map((status, index) => subscription(`sub_${index}`, status))),
+      );
+      expect(subscriptions.data.map((item) => item.status)).toEqual(subscriptionStatuses);
 
-    const refundStatuses = ["pending", "requires_action", "succeeded", "failed", "canceled"];
-    const refunds = await run(
-      Refund.list(),
-      page(...refundStatuses.map((status, index) => refund(`re_${index}`, status))),
-    );
-    expect(refunds.data.map((item) => item.status)).toEqual(refundStatuses);
+      const refundStatuses = ["pending", "requires_action", "succeeded", "failed", "canceled"];
+      const refunds = yield* run(
+        Refund.list(),
+        page(...refundStatuses.map((status, index) => refund(`re_${index}`, status))),
+      );
+      expect(refunds.data.map((item) => item.status)).toEqual(refundStatuses);
 
-    const prices = await run(
-      Price.list(),
-      page(
-        price("price_1", "one_time", "day"),
-        price("price_2", "recurring", "week"),
-        price("price_3", "recurring", "month"),
-        price("price_4", "recurring", "year"),
-      ),
-    );
-    expect(prices.data.map((item) => item.type)).toEqual([
-      "one_time",
-      "recurring",
-      "recurring",
-      "recurring",
-    ]);
-    expect(
-      prices.data.map((item) => Option.map(item.recurring, (recurring) => recurring.interval)),
-    ).toEqual([Option.some("day"), Option.some("week"), Option.some("month"), Option.some("year")]);
-  });
+      const prices = yield* run(
+        Price.list(),
+        page(
+          price("price_1", "one_time", "day"),
+          price("price_2", "recurring", "week"),
+          price("price_3", "recurring", "month"),
+          price("price_4", "recurring", "year"),
+        ),
+      );
+      expect(prices.data.map((item) => item.type)).toEqual([
+        "one_time",
+        "recurring",
+        "recurring",
+        "recurring",
+      ]);
+      expect(
+        prices.data.map((item) => Option.map(item.recurring, (recurring) => recurring.interval)),
+      ).toEqual([
+        Option.some("day"),
+        Option.some("week"),
+        Option.some("month"),
+        Option.some("year"),
+      ]);
+    }),
+  );
 
-  it("still fails a status that is not a string", async () => {
-    const error = await run(
-      Effect.flip(PaymentIntent.retrieve("pi_1")),
-      // SAFETY: a wire status that is not a string, which the fixture's type rules out.
-      intent("pi_1", 7 as never),
-    );
-    expect(error).toMatchObject({ message: "Stripe returned a malformed payment intent response" });
-  });
+  it.effect("still fails a status that is not a string", () =>
+    Effect.gen(function* () {
+      const error = yield* run(
+        Effect.flip(PaymentIntent.retrieve("pi_1")),
+        // SAFETY: a wire status that is not a string, which the fixture's type rules out.
+        intent("pi_1", 7 as never),
+      );
+      expect(error).toMatchObject({
+        message: "Stripe returned a malformed payment intent response",
+      });
+    }),
+  );
 });

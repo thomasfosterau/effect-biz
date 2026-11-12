@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect } from "vite-plus/test";
+import { it } from "@effect/vitest";
 import * as Arr from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as BigDecimal from "effect/BigDecimal";
 import * as Order from "effect/Order";
@@ -55,22 +57,24 @@ describe("Money arithmetic", () => {
     expect(text(Money.multiply(money("19.99"), Decimal.make("3.333")))).toBe("66.62667");
   });
 
-  it("addition is commutative and associative", () => {
-    const m = (amount: BigDecimal.BigDecimal) => Money.make(amount, aud);
-    expect(
-      counterexample(triples, ({ a, b }) =>
-        Money.Equivalence(succeeded(Money.add(m(a), m(b))), succeeded(Money.add(m(b), m(a)))),
-      ),
-    ).toEqual(Option.none());
-    expect(
-      counterexample(triples, ({ a, b, c }) =>
-        Money.Equivalence(
-          succeeded(Money.add(succeeded(Money.add(m(a), m(b))), m(c))),
-          succeeded(Money.add(m(a), succeeded(Money.add(m(b), m(c))))),
+  it.effect("addition is commutative and associative", () =>
+    Effect.gen(function* () {
+      const m = (amount: BigDecimal.BigDecimal) => Money.make(amount, aud);
+      expect(
+        yield* counterexample(triples, ({ a, b }) =>
+          Money.Equivalence(succeeded(Money.add(m(a), m(b))), succeeded(Money.add(m(b), m(a)))),
         ),
-      ),
-    ).toEqual(Option.none());
-  });
+      ).toEqual(Option.none());
+      expect(
+        yield* counterexample(triples, ({ a, b, c }) =>
+          Money.Equivalence(
+            succeeded(Money.add(succeeded(Money.add(m(a), m(b))), m(c))),
+            succeeded(Money.add(m(a), succeeded(Money.add(m(b), m(c))))),
+          ),
+        ),
+      ).toEqual(Option.none());
+    }),
+  );
 
   it("zero, isZero and isNegative", () => {
     expect(Money.isZero(Money.zero(aud))).toBe(true);
@@ -129,15 +133,17 @@ describe("minor units", () => {
     expect(failed(Money.toMinorUnits(money("0.5", jpy))).code).toBe("core.money-scale");
   });
 
-  it("round-trips whole minor units", () => {
-    expect(
-      counterexample(
-        minorAmounts,
-        (minor) =>
-          Result.getOrUndefined(Money.toMinorUnits(Money.fromMinorUnits(minor, aud))) === minor,
-      ),
-    ).toEqual(Option.none());
-  });
+  it.effect("round-trips whole minor units", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* counterexample(
+          minorAmounts,
+          (minor) =>
+            Result.getOrUndefined(Money.toMinorUnits(Money.fromMinorUnits(minor, aud))) === minor,
+        ),
+      ).toEqual(Option.none());
+    }),
+  );
 });
 
 describe("Money.allocate", () => {
@@ -171,27 +177,29 @@ describe("Money.allocate", () => {
     expect(failed(split("10", ratios)).code).toBe("core.invalid-allocation");
   });
 
-  it("always sums exactly to the rounded total", () => {
-    expect(
-      counterexample(allocations, ({ minor, first, rest, currency }) => {
-        const code = Currency.make(currency);
-        const total = Money.fromMinorUnits(BigInt(minor), code);
-        const ratios = Arr.map(Arr.make(first, ...rest), (n) => BigDecimal.fromBigInt(BigInt(n)));
-        const allocated = Money.allocate(total, ratios);
-        const summed = Result.flatMap(allocated, (all) => Money.sum(code, all));
-        return (
-          Result.getOrUndefined(Result.map(allocated, (all) => all.length)) === ratios.length &&
-          Result.getOrUndefined(Result.map(summed, (sum) => Money.Equivalence(sum, total))) ===
-            true &&
-          Result.getOrUndefined(
-            Result.map(allocated, (all) =>
-              all.every((part) => Result.isSuccess(Money.toMinorUnits(part))),
-            ),
-          ) === true
-        );
-      }),
-    ).toEqual(Option.none());
-  });
+  it.effect("always sums exactly to the rounded total", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* counterexample(allocations, ({ minor, first, rest, currency }) => {
+          const code = Currency.make(currency);
+          const total = Money.fromMinorUnits(BigInt(minor), code);
+          const ratios = Arr.map(Arr.make(first, ...rest), (n) => BigDecimal.fromBigInt(BigInt(n)));
+          const allocated = Money.allocate(total, ratios);
+          const summed = Result.flatMap(allocated, (all) => Money.sum(code, all));
+          return (
+            Result.getOrUndefined(Result.map(allocated, (all) => all.length)) === ratios.length &&
+            Result.getOrUndefined(Result.map(summed, (sum) => Money.Equivalence(sum, total))) ===
+              true &&
+            Result.getOrUndefined(
+              Result.map(allocated, (all) =>
+                all.every((part) => Result.isSuccess(Money.toMinorUnits(part))),
+              ),
+            ) === true
+          );
+        }),
+      ).toEqual(Option.none());
+    }),
+  );
 });
 
 describe("Money schema", () => {
