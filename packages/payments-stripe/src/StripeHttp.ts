@@ -556,10 +556,11 @@ export const layerConfig = ({
           }),
       );
       const credentials = Effect.flatMap(ConfigProvider.ConfigProvider, (caller) =>
-        Effect.flatMap(readKey(envVar, caller), (key) =>
-          Option.isSome(key) || caller === builtUnder
-            ? Effect.succeed(key)
-            : readKey(envVar, builtUnder),
+        readKey(envVar, caller).pipe(
+          Effect.filterOrElse(
+            (key) => Option.isSome(key) || caller === builtUnder,
+            () => readKey(envVar, builtUnder),
+          ),
         ),
       ).pipe(
         Effect.flatMap(
