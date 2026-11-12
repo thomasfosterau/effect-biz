@@ -61,4 +61,4 @@ export const failed = <A>(result: Result.Result<A, BusinessRuleViolation>): Busi
 export const rejects = (
   schema: Schema.Decoder<unknown>,
   input: Schema.Json | bigint | undefined,
-): boolean => Schema.decodeUnknownExit(schema)(input)._tag === "Failure";
+): boolean => Schema.decodeExit(schema)(input)._tag === "Failure";

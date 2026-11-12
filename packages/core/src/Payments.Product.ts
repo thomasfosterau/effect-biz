@@ -24,7 +24,7 @@ export class Product extends Schema.Class<Product, { readonly brand: unique symb
   active: Schema.Boolean,
   metadata: Metadata,
   /** Creation time as a Unix timestamp in seconds. */
-  created: Schema.Number,
+  created: Schema.Int,
 }) {}
 
 /** Parameters for creating a product. */
