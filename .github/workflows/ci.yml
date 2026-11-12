@@ -68,4 +68,3 @@ jobs:
           { console.error('pre-release Node ' + process.version); process.exit(1) }"
       - name: CI
         run: vp run ci
-
