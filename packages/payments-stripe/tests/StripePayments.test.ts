@@ -112,7 +112,7 @@ const responses = {
     metadata: {},
     created: 7,
   },
-} satisfies Record<string, unknown>;
+} satisfies Record<string, Schema.Json>;
 
 /** Run `effect` against the capabilities over a stubbed API answering from `answers`. */
 const run = <A, E>(

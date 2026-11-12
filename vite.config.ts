@@ -129,13 +129,9 @@ export default defineConfig({
       // rule takes no config (`RuleNoConfig` in `@effect/tsgo`'s
       // oxlint-schema.json), so there is no allowlist.
       "effecttsgo/unstable-api-usage": "off",
-      // `casting-awareness` is an awareness prompt, not a defect rule — it
-      // fires on every `as`. Stays visible as a warning.
-      "effect/casting-awareness": "warn",
 
       // ---- Effect preset: rules this workspace's conventions cut across ----
       "effect/no-unknown-returns": "warn",
-      "effect/no-unsafe-dictionary-type": "warn",
       "typescript/no-explicit-any": "off",
       "typescript/no-empty-object-type": "off",
       "typescript/ban-ts-comment": "off",
@@ -191,7 +187,12 @@ export default defineConfig({
           // 1: a partial SDK client.
           "packages/payments-stripe/tests/Webhook.test.ts",
         ],
-        rules: { "typescript/no-unsafe-type-assertion": "off" },
+        // `effect/casting-awareness` fires on every `as`: it is held at `error`
+        // and these same files, each cast with its reason above, are exempt.
+        rules: {
+          "typescript/no-unsafe-type-assertion": "off",
+          "effect/casting-awareness": "off",
+        },
       },
       // Type-level tests: every binding exists to be asserted against, never
       // to be read.
@@ -290,7 +291,7 @@ export default defineConfig({
         cache: false,
       },
       // Every package's docgen: type-checks AND RUNS each JSDoc `@example`
-      // and each `ts` / `typescript` block of the package README (and, in
+      // and each `ts` / `typescript` block of the package README and its guides under the root `docs/<package>/` (and, in
       // payments-stripe's, of this root README) against the built `dist/`, then writes the API reference under that package's
       // (git-ignored) `docs/`.
       docgen: {

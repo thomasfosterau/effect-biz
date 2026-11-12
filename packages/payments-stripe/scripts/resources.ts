@@ -42,9 +42,9 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
-import type * as AST from "effect/SchemaAST";
 import { getAnn, getProps, hasPropAnn, nameOf } from "@distilled.cloud/core/protocol-http";
 import { httpSymbol, labelSymbol } from "@distilled.cloud/core/trait";
+import type { Exported, Operation } from "./distilled.ts";
 import { format } from "vite-plus/fmt";
 
 /** One published resource subpath and the API paths whose operations it holds. */
@@ -736,23 +736,6 @@ export const plan = (operations: ReadonlyArray<DistilledOperation>): Plan => {
 // Reading Distilled
 // ---------------------------------------------------------------------------
 
-/** A schema, as Distilled's operations expose theirs (`.input` / `.output`). */
-interface WithAst {
-  readonly ast: AST.AST;
-}
-
-/** Whether a Distilled export carries its schemas as `.input` / `.output` (`API.OperationMethod`). */
-const hasSchemas = (
-  value: unknown,
-): value is { readonly input: WithAst; readonly output: WithAst } =>
-  P.hasProperty(value, "input") &&
-  P.hasProperty(value.input, "ast") &&
-  P.hasProperty(value, "output") &&
-  P.hasProperty(value.output, "ast");
-
-/** Decodes a Distilled export, failing when it carries no schemas. */
-const decodeOperation = Schema.decodeUnknownSync(Schema.declare(hasSchemas));
-
 /** The `Http()` trait every generated input carries: method, path template and content type. */
 const decodeHttp = Schema.decodeUnknownSync(
   Schema.Struct({
@@ -771,7 +754,7 @@ const OPERATION =
  * pattern misses cannot drop an operation silently.
  */
 export const runtimeOperations = (
-  distilled: Readonly<Record<string, unknown>>,
+  distilled: Readonly<Record<string, Exported>>,
 ): ReadonlyArray<string> =>
   Arr.sort(
     R.keys(distilled).filter((name) => {
@@ -790,6 +773,21 @@ const summaryOf = (doc: string): string =>
     ?.replace(/<[^>]+>/g, "")
     .trim() ?? "";
 
+/** A declared operation the installed Distilled module does not export as one. */
+class NotAnOperation extends Schema.TaggedError<
+  NotAnOperation,
+  { readonly brand: unique symbol }
+>()("NotAnOperation", { operation: Schema.String }) {}
+
+/** The export called `name`, which must be an operation. */
+const operationNamed = (distilled: Readonly<Record<string, Exported>>, name: string): Operation => {
+  const exported = distilled[name];
+  if (exported === undefined || !("input" in exported) || !("output" in exported)) {
+    throw new NotAnOperation({ operation: name });
+  }
+  return exported;
+};
+
 /**
  * Every operation of `@distilled.cloud/stripe/stripe`: names and docs from its
  * declarations (`lib/services/stripe.d.ts`), method, path and members from
@@ -797,11 +795,13 @@ const summaryOf = (doc: string): string =>
  */
 export const readOperations = (
   declarations: string,
-  distilled: Readonly<Record<string, unknown>>,
+  distilled: Readonly<Record<string, Exported>>,
 ): ReadonlyArray<DistilledOperation> =>
   [...declarations.matchAll(OPERATION)].map((match) => {
     const { doc = "", name = "", input = "", output = "" } = match.groups ?? {};
-    const operation = decodeOperation(distilled[name]);
+    // Every `API.OperationMethod` Distilled exports carries its schemas as
+    // `.input` / `.output` (`@distilled.cloud/core/api`'s `make`).
+    const operation = operationNamed(distilled, name);
     const inputAst = operation.input.ast;
     const http = decodeHttp(getAnn(inputAst, httpSymbol));
     const props = getProps(inputAst);

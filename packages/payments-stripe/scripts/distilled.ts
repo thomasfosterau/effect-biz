@@ -14,6 +14,7 @@ import { createRequire } from "node:module";
 // oxlint-disable-next-line effect/avoid-node-imports -- see the import above
 import { pathToFileURL } from "node:url";
 import * as Schema from "effect/Schema";
+import type * as SchemaAST from "effect/SchemaAST";
 import * as Distilled from "@distilled.cloud/stripe/stripe";
 
 const Manifest = Schema.Struct({
@@ -21,10 +22,27 @@ const Manifest = Schema.Struct({
   version: Schema.String,
 });
 
+/**
+ * An operation of `@distilled.cloud/stripe/stripe`: a function that also
+ * carries its schemas as `.input` / `.output`.
+ */
+export type Operation = ((...args: ReadonlyArray<never>) => object) & {
+  readonly input: WithAst;
+  readonly output: WithAst;
+};
+
+/** A value that module exports: an {@link Operation}, or a tagged error class. */
+export type Exported = Operation | (abstract new (...args: ReadonlyArray<never>) => object);
+
+/** A schema, as Distilled's operations expose theirs (`.input` / `.output`). */
+export interface WithAst {
+  readonly ast: SchemaAST.AST;
+}
+
 /** The installed Distilled Stripe package. */
 export interface Installed {
   /** `@distilled.cloud/stripe/stripe`, the generated operations. */
-  readonly module: Readonly<Record<string, unknown>>;
+  readonly module: Readonly<Record<string, Exported>>;
   /** `lib/services/stripe.d.ts`, the declarations of that module. */
   readonly declarations: string;
   /** The package version (`1.0.0-rc.15`). */

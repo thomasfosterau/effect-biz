@@ -49,7 +49,7 @@ const layer = StripePayments.layer({ apiKey: Redacted.make("sk_test_...") }).pip
 const createCustomer = () => Effect.runPromise(program.pipe(Effect.provide(layer)));
 ```
 
-Each package's README is its API reference. Runnable payments examples are in [`packages/payments-stripe/examples`](packages/payments-stripe/examples).
+Each package's README is a short entry point; the guides are in [`docs/`](docs) and the per-export reference is in the doc comments. Runnable payments examples are in [`packages/payments-stripe/examples`](packages/payments-stripe/examples).
 
 ## Development
 
