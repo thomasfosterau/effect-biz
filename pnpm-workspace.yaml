@@ -95,7 +95,7 @@ catalog:
   # `./Authorization` imports it. Exact while it is pre-1.0. Its own peers
   # `@thomasfosterau/effect-jsonapi` and `@node-saml/node-saml` are optional
   # and serve subpaths core never imports, so they are not installed here.
-  "@thomasfosterau/effect-auth": 0.2.0
+  "@thomasfosterau/effect-auth": 0.5.2
   "@types/node": ^26.6.6
   "@vitest/coverage-istanbul": 5.1.0
   effect: 4.1.3
