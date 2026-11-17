@@ -101,7 +101,7 @@ catalog:
   effect: 4.1.3
   # Dead code, duplication, complexity and the change-set audit (`fallow
   # audit`, the agent commit gate in .claude/hooks/fallow-gate.sh). Dev-only.
-  fallow: 3.42.0
+  fallow: 3.43.1
   # Exists only for docgen: @effect/docgen requires it as a peer and spawns
   # the `tsx` binary itself to run the compiled examples. Scripts and tasks
   # never invoke it; they run TypeScript with `node` or `vpx <file>.ts`.
