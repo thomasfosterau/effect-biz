@@ -19,7 +19,7 @@ A hard delete (`Repository.Deletable`) is added only where the domain allows one
 
 - **Tenant-scoped.** Every method requires `Tenancy.TenantContext` and reads and writes only that tenant's rows: another tenant's entity is `NotFound`, never `Forbidden`.
 - **Audited.** Every entity carries `audit: Audit.AuditFields` (`createdAt`, `createdBy`, `updatedAt`, `updatedBy`, `version`, `archivedAt`): the times come from `Clock` as `DateTime.Utc`, the actors are `CurrentActor` ids (never display names). A command builds a new entity's fields with `Audit.created`; `update`, `archive` and `restore` move them on themselves (`Audit.next`), so they also require the `CurrentActor`. `update` keeps the stored creation and archive fields, whatever the caller passes.
-- **Version-guarded.** Of two writes from the same version exactly one succeeds; the other fails with `ConcurrencyConflict`, which `BizError.isRetryable` says to retry from the load step. Every write is load → decide (pure) → commit one atomic, version-guarded batch, so it works on Cloudflare D1 (no row locks, no interactive transactions) as on Postgres (#128).
+- **Version-guarded.** Of two writes from the same version exactly one succeeds; the other fails with `ConcurrencyConflict`, which `BizError.isRetryable` says to retry from the load step. Every write is load → decide (pure) → commit one atomic, version-guarded batch, so it works on Cloudflare D1 (no row locks, no interactive transactions) as on Postgres.
 - **Archived, not deleted.** `get` still finds an archived entity; `find` hides it unless the query asks. Archiving an archived entity, or restoring an active one, is `InvalidTransition`.
 
 ## Queries (`./Query`)

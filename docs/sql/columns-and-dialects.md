@@ -1,6 +1,6 @@
 # Columns and dialects
 
-How an effect-biz SQL repository layer lays out its tables and reads and writes their columns, on the three production-grade dialects: **Postgres**, **SQLite** (tests, embedded hosts) and **Cloudflare D1** (#128). The repository conventions themselves (the port, version-guarded writes, keyset paging) are core's: see [repositories](../core/repositories.md) and [the unit of work](../core/unit-of-work.md).
+How an effect-biz SQL repository layer lays out its tables and reads and writes their columns, on the three production-grade dialects: **Postgres**, **SQLite** (tests, embedded hosts) and **Cloudflare D1**. The repository conventions themselves (the port, version-guarded writes, keyset paging) are core's: see [repositories](../core/repositories.md) and [the unit of work](../core/unit-of-work.md).
 
 ## `SqlClient` comes from `effect`
 
@@ -44,7 +44,7 @@ Effect.runPromise(jsonField.pipe(Effect.provide(layer))).then(console.log); // "
 ## Table conventions
 
 - **snake_case columns** (`tenant_id`, `occurred_at`); the row schema keeps the entity's camelCase fields and renames them with `Schema.encodeKeys`, so a layer never depends on the client's name transforms (`transformResultNames` is the host's setting).
-- **`tenant_id` on every business table**, and **`company_id`** on every table whose rows belong to a company; every query filters by the current tenant (#38 builds the helpers).
+- **`tenant_id` on every business table**, and **`company_id`** on every table whose rows belong to a company; every query filters by the current tenant.
 - **`version`** (`integer`, 1 on insert, guarded on every write) and the **audit columns** matching core's `Audit.AuditFields`: `created_at`, `created_by`, `updated_at`, `updated_by`, `archived_at` (`NULL` while active).
 - **Ids are the entity's UUIDv7** (core's `Id.make`), the primary key, never a database sequence.
 - **No `REAL` / `double precision` for money or quantities**; a SQLite decimal column is `TEXT` (a `NUMERIC` affinity would turn the text into a float).
@@ -121,5 +121,5 @@ Effect.runPromise(program.pipe(Effect.provide(Testing.layerSqlite))).then(consol
 ## Testing
 
 - **Unit suites run on SQLite in-process**: `Testing.layerSqlite` (`./testing`) is a fresh `:memory:` database with its `Dialect`; build it per test (`layer(Testing.layerSqlite, { buildPerTest: true })`) for an empty database each case. It runs on `node:sqlite` (Node 22.13+), so nothing is compiled at install.
-- **Postgres suites are opt-in**: `TestingPostgres.layerPostgres` (`./testing.postgres`) connects to the scratch database at `EFFECT_BIZ_PG_URL` (read through `Config` as a `Redacted`). A suite falls back to SQLite when the variable is unset and skips its Postgres cases; the example on `layerPostgres` shows the pattern, and the opt-in CI job is #21.
+- **Postgres suites are opt-in**: `TestingPostgres.layerPostgres` (`./testing.postgres`) connects to the scratch database at `EFFECT_BIZ_PG_URL` (read through `Config` as a `Redacted`). A suite falls back to SQLite when the variable is unset and skips its Postgres cases; the example on `layerPostgres` shows the pattern.
 - **D1 has no in-process test database.** Its SQL is SQLite's, so the SQLite suites cover the statements; `Dialect.layerAs("d1")` exercises a layer's D1 branch.

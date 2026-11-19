@@ -1,6 +1,6 @@
 # Document numbering
 
-How invoices, orders and every other document get their numbers: a sequence per company and document type, formatted from a pattern, reset by period in the company's time zone, and taken inside the command's [unit of work](unit-of-work.md) so a rolled-back command consumes nothing (#31). See also [tenancy and companies](tenancy.md).
+How invoices, orders and every other document get their numbers: a sequence per company and document type, formatted from a pattern, reset by period in the company's time zone, and taken inside the command's [unit of work](unit-of-work.md) so a rolled-back command consumes nothing. See also [tenancy and companies](tenancy.md).
 
 ## Numbers are attributes, not identities
 
@@ -46,7 +46,7 @@ A resetting counter goes back to 1 when the period changes, and the period is co
 
 `NumberSequence.next(companyId, documentType)` issues the next number. Call it inside the command's `UnitOfWork.transaction`; outside one it runs a transaction of its own.
 
-- **Gap-less** (`"gap-less"`). `next` reads the committed counter, decides the number purely (the definition, the counter and the period from `Clock`), and stages a write guarded by the counter it read (the same period and value) into the command's batch. In SQL that is `UPDATE … SET last = ? WHERE period = ? AND last = ?` in the command's batch (on D1 too, #128). A concurrent command that took the number first makes the batch conflict, and the command is retried from its load step, so two commands never commit the same number; a command that fails or is interrupted applies nothing, so it consumes no number.
+- **Gap-less** (`"gap-less"`). `next` reads the committed counter, decides the number purely (the definition, the counter and the period from `Clock`), and stages a write guarded by the counter it read (the same period and value) into the command's batch. In SQL that is `UPDATE … SET last = ? WHERE period = ? AND last = ?` in the command's batch (on D1 too). A concurrent command that took the number first makes the batch conflict, and the command is retried from its load step, so two commands never commit the same number; a command that fails or is interrupted applies nothing, so it consumes no number.
 - **Gaps allowed** (`"gaps-allowed"`). The increment commits at once, outside the command's batch: it never conflicts and is cheaper under contention, but a rolled-back command leaves a gap. It still never issues a number twice.
 
 Take **at most one number per sequence per command**. With no read-your-writes, a second gap-less `next` in the same transaction reads the same committed counter, and its guard conflicts with the first.
@@ -174,4 +174,4 @@ Effect.runPromise(
 
 ## Implementations
 
-`NumberSequence.layerMemory` provides `NumberSequences` and `SequenceDefinitions` over `./Memory` stores, reading companies from `Company.CompanyRepository` and staging gap-less counter writes into the in-memory `UnitOfWork`. The pure steps a SQL layer (#40) shares are exported: `periodOf` (the period in the company's time zone), `advance` (the counter after one number: one on, or 1 in a new period), `format` and `fiscalYearOf`. Every implementation runs `./testing`'s `numberSequencesContract`: no duplicates under concurrent `next` calls in either mode, no gap after rolled-back commands in gap-less mode, and the yearly reset in the company's time zone.
+`NumberSequence.layerMemory` provides `NumberSequences` and `SequenceDefinitions` over `./Memory` stores, reading companies from `Company.CompanyRepository` and staging gap-less counter writes into the in-memory `UnitOfWork`. The pure steps a SQL layer shares are exported: `periodOf` (the period in the company's time zone), `advance` (the counter after one number: one on, or 1 in a new period), `format` and `fiscalYearOf`. Every implementation runs `./testing`'s `numberSequencesContract`: no duplicates under concurrent `next` calls in either mode, no gap after rolled-back commands in gap-less mode, and the yearly reset in the company's time zone.

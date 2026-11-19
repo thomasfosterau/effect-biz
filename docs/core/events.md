@@ -1,6 +1,6 @@
 # Domain events
 
-How a module says what happened, and how other modules react: **typed domain events, recorded into a transactional outbox in the same batch as the command's state change, and delivered at least once to idempotent subscribers** (#30). See also [the unit of work](unit-of-work.md).
+How a module says what happened, and how other modules react: **typed domain events, recorded into a transactional outbox in the same batch as the command's state change, and delivered at least once to idempotent subscribers**. See also [the unit of work](unit-of-work.md).
 
 | Module | What it holds |
 | --- | --- |
@@ -58,7 +58,7 @@ The effect `Subscriber.make` returns captures the handler's services with the `I
 The dispatcher claims outbox deliveries and runs them through their subscribers.
 
 - **Deliveries, not entries.** Each (entry, subscriber) pair is a delivery with its own status (`pending`, `dispatched`, `failed` awaiting a retry, `dead`), attempt count and lease, so a failing subscriber never holds back another.
-- **Leases, not locks.** D1 has no row locks and no `SKIP LOCKED` (#128). `claimBatch` atomically takes due deliveries whose lease is absent or expired and leases them to the claiming dispatcher for `leaseFor` (30 seconds by default), counting an attempt. A dispatcher that dies mid-delivery loses nothing: its lease expires and the delivery is claimed again.
+- **Leases, not locks.** D1 has no row locks and no `SKIP LOCKED`. `claimBatch` atomically takes due deliveries whose lease is absent or expired and leases them to the claiming dispatcher for `leaseFor` (30 seconds by default), counting an attempt. A dispatcher that dies mid-delivery loses nothing: its lease expires and the delivery is claimed again.
 - **Ordering per aggregate.** For each subscriber, a claim takes only the first unsettled delivery of each aggregate, and skips the aggregate while that one is leased or waiting for its retry. An aggregate's later event never reaches a subscriber before the earlier one is dispatched or dead-lettered; other aggregates proceed meanwhile, `concurrency` (8 by default) deliveries at a time.
 - **Retry, then dead-letter.** A failed delivery is due again after the `backoff` schedule's delay for that attempt (exponential from 1 second by default), read from `Clock`, so `TestClock` drives it in tests. On its last attempt (`maxAttempts`, 5 by default) it is dead-lettered with the failure's tag and message (a defect as `Defect` and its error's name only); then the aggregate's later events flow again. `Outbox.deadLetters` lists them.
 - **Running it.** `Dispatcher.layer(subscribers, options)` forks a relay fiber into the layer's scope that drains every `pollInterval` (1 second). `Dispatcher.layerOnDemand` runs none: a host that drives dispatch from a cron or queue trigger calls `Dispatcher.runOnce` (one batch) or `Dispatcher.drain` (batches until one claims nothing), as tests do.
@@ -195,7 +195,7 @@ In an application, provide `Dispatcher.layer(Effect.all([reserve, audit], { conc
 ## Layers
 
 - **In memory**: `Outbox.layerMemory` and `Subscriber.layerInboxMemory` stage their writes into `UnitOfWork.layerMemory`'s batches, so an event, an inbox mark and the aggregates they go with commit in one `Effect.tx`.
-- **SQL** (the `-sql` package, #40): an `outbox` table of encoded envelopes in append order, an `outbox_delivery` table keyed by (entry, subscriber) with the status, attempts, lease owner and expiry, retry time and last error, and an `inbox` table keyed by (tenant, subscriber, event id). `claimBatch` is one batch of guarded `UPDATE`s that take a lease only where it is absent or expired; `append` and the inbox mark are staged statements of the command's batch. It runs `Testing.eventsContract`.
+- **SQL** (the `-sql` package, planned): an `outbox` table of encoded envelopes in append order, an `outbox_delivery` table keyed by (entry, subscriber) with the status, attempts, lease owner and expiry, retry time and last error, and an `inbox` table keyed by (tenant, subscriber, event id). `claimBatch` is one batch of guarded `UPDATE`s that take a lease only where it is absent or expired; `append` and the inbox mark are staged statements of the command's batch. It runs `Testing.eventsContract`.
 
 ## The contract suite
 
