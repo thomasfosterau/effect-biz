@@ -29,7 +29,7 @@ import * as V2CoreAccount from "../src/V2.Core.Account.ts";
 import * as V2CoreEvent from "../src/V2.Core.Event.ts";
 
 /**
- * Every operation of every resource module on the wire (effect-finance#146): called with
+ * Every operation of every resource module on the wire: called with
  * placeholder ids (and empty params where it takes any) over
  * `StripeHttp.layer` and a stubbed `fetch`, it must reach its method and path
  * with the key and `Stripe-Version: DISTILLED_API_VERSION`, and resolve to
@@ -164,71 +164,64 @@ describe.each(R.toEntries(modules))("%s", (subpath, operations) => {
   });
 });
 
-testLayer(neverRetried)(
-  "the resources published for every remaining operation (effect-finance#154)",
-  (it) => {
-    it.effect("form-encode a /v1 write (CreditNote.create)", () =>
-      Effect.gen(function* () {
-        const { exit, calls } = run(
-          CreditNote.create({ invoice: "in_1", memo: "Goodwill", metadata: { order: "42" } }),
-          () => jsonResponse(200, BODY),
-        );
-        expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: BODY }));
-        const [request] = calls;
-        expect(request?.url.pathname).toBe("/v1/credit_notes");
-        expect(request?.headers.get("content-type")).toBe("application/x-www-form-urlencoded");
-        expect(R.fromEntries(new URLSearchParams(request?.body))).toEqual({
-          invoice: "in_1",
-          memo: "Goodwill",
-          "metadata[order]": "42",
-        });
-      }),
-    );
+testLayer(neverRetried)("the resources published for every remaining operation", (it) => {
+  it.effect("form-encode a /v1 write (CreditNote.create)", () =>
+    Effect.gen(function* () {
+      const { exit, calls } = run(
+        CreditNote.create({ invoice: "in_1", memo: "Goodwill", metadata: { order: "42" } }),
+        () => jsonResponse(200, BODY),
+      );
+      expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: BODY }));
+      const [request] = calls;
+      expect(request?.url.pathname).toBe("/v1/credit_notes");
+      expect(request?.headers.get("content-type")).toBe("application/x-www-form-urlencoded");
+      expect(R.fromEntries(new URLSearchParams(request?.body))).toEqual({
+        invoice: "in_1",
+        memo: "Goodwill",
+        "metadata[order]": "42",
+      });
+    }),
+  );
 
-    it.effect(
-      "send a /v2 write as JSON, under the pinned Stripe-Version and the caller's key",
-      () =>
-        Effect.gen(function* () {
-          const { exit, calls } = run(
-            V2CoreAccount.update(
-              "acct_1",
-              { display_name: "Jenny Rosen", metadata: { order: "42" } },
-              { idempotencyKey: "account-update-1" },
-            ),
-            () => jsonResponse(200, BODY),
-          );
-          expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: BODY }));
-          const [request] = calls;
-          expect(request?.method).toBe("POST");
-          expect(request?.url.pathname).toBe("/v2/core/accounts/acct_1");
-          expect(request?.headers.get("content-type")).toBe("application/json");
-          expect(
-            yield* Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown))(
-              request?.body ?? "null",
-            ),
-          ).toEqual({
-            display_name: "Jenny Rosen",
-            metadata: { order: "42" },
-          });
-          expect(request?.headers.get("stripe-version")).toBe(DISTILLED_API_VERSION);
-          expect(request?.headers.get("idempotency-key")).toBe("account-update-1");
-        }),
-    );
+  it.effect("send a /v2 write as JSON, under the pinned Stripe-Version and the caller's key", () =>
+    Effect.gen(function* () {
+      const { exit, calls } = run(
+        V2CoreAccount.update(
+          "acct_1",
+          { display_name: "Jenny Rosen", metadata: { order: "42" } },
+          { idempotencyKey: "account-update-1" },
+        ),
+        () => jsonResponse(200, BODY),
+      );
+      expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: BODY }));
+      const [request] = calls;
+      expect(request?.method).toBe("POST");
+      expect(request?.url.pathname).toBe("/v2/core/accounts/acct_1");
+      expect(request?.headers.get("content-type")).toBe("application/json");
+      expect(
+        yield* Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown))(request?.body ?? "null"),
+      ).toEqual({
+        display_name: "Jenny Rosen",
+        metadata: { order: "42" },
+      });
+      expect(request?.headers.get("stripe-version")).toBe(DISTILLED_API_VERSION);
+      expect(request?.headers.get("idempotency-key")).toBe("account-update-1");
+    }),
+  );
 
-    it.effect("read a /v2 page's params from the query string (V2.Core.Event.list)", () =>
-      Effect.gen(function* () {
-        const page = { data: [], next_page_url: null, previous_page_url: null };
-        const { exit, calls } = run(V2CoreEvent.list({ limit: 2, object_id: "acct_1" }), () =>
-          jsonResponse(200, page),
-        );
-        expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: page }));
-        const [request] = calls;
-        expect(request?.method).toBe("GET");
-        expect(request?.url.pathname).toBe("/v2/core/events");
-        expect(request?.url.searchParams.get("limit")).toBe("2");
-        expect(request?.url.searchParams.get("object_id")).toBe("acct_1");
-        expect(request?.body).toBeUndefined();
-      }),
-    );
-  },
-);
+  it.effect("read a /v2 page's params from the query string (V2.Core.Event.list)", () =>
+    Effect.gen(function* () {
+      const page = { data: [], next_page_url: null, previous_page_url: null };
+      const { exit, calls } = run(V2CoreEvent.list({ limit: 2, object_id: "acct_1" }), () =>
+        jsonResponse(200, page),
+      );
+      expect(yield* exit).toEqual(expect.objectContaining({ _tag: "Success", value: page }));
+      const [request] = calls;
+      expect(request?.method).toBe("GET");
+      expect(request?.url.pathname).toBe("/v2/core/events");
+      expect(request?.url.searchParams.get("limit")).toBe("2");
+      expect(request?.url.searchParams.get("object_id")).toBe("acct_1");
+      expect(request?.body).toBeUndefined();
+    }),
+  );
+});

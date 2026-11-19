@@ -13,7 +13,7 @@ import * as TestingPostgres from "../src/testing.postgres.ts";
 import { createTable, roundTrips } from "./sample.ts";
 
 /**
- * Opt-in (#21): the scratch database named by EFFECT_BIZ_PG_URL when it is
+ * Opt-in: the scratch database named by EFFECT_BIZ_PG_URL when it is
  * set; otherwise the in-memory SQLite one, on which every case skips itself.
  */
 const database: Layer.Layer<

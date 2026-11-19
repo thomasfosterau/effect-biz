@@ -43,7 +43,7 @@ import {
 import basilSubscription from "./fixtures/basil/subscription.json" with { type: "json" };
 
 /**
- * `StripeHttp` as the resource modules use it (effect-finance#146): Distilled's operations
+ * `StripeHttp` as the resource modules use it: Distilled's operations
  * called with path ids first, then params, then {@link RequestOptions}, under
  * the request policy `tests/StripePayments.wire.test.ts` checks for the
  * capability layers (the same client). `tests/resources.wire.test.ts` covers
@@ -391,7 +391,7 @@ layer(stripeHttp())("RequestOptions on a resource-module operation", (it) => {
 });
 
 /**
- * Where stripe-node 23 sends a `/v2` request differently from `/v1` (effect-finance#181):
+ * Where stripe-node 23 sends a `/v2` request differently from `/v1`:
  * it keys every `/v2` `DELETE` (`_defaultIdempotencyKey`), and it indexes
  * array query params (`include[0]=…`), where Distilled repeats `include[]`.
  */

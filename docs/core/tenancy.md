@@ -18,7 +18,7 @@ const program = Effect.all([Tenancy.currentTenant, Tenancy.currentCompany]);
 console.log(Effect.runSync(program.pipe(Tenancy.withCompany(company), Tenancy.withTenant(tenant))));
 ```
 
-Tenancy is independent of effect-auth's Organizations (#130). Whether all tenants share one database or each has its own is the host's choice, through the `TenantDatabase` resolver (#129).
+Tenancy is independent of effect-auth's Organizations. Whether all tenants share one database or each has its own is the host's choice, through the `TenantDatabase` resolver.
 
 ## Companies (`./Company`)
 
@@ -63,4 +63,4 @@ console.log(company.legalName, company.audit.version); // "Example Pty Ltd" 1
 
 ## Actors (`./Actor`)
 
-An `Actor` is who is acting: a `user`, a `system` process or an `integration`, with the host's id for it and a display name. A command reads it from `CurrentActor` for its audit fields (`createdBy` / `updatedBy` hold the actor's id) and approvals; the host provides it with `Actor.withActor`, and an effect-auth adapter derives it from effect-auth's `CurrentPrincipal` (#130). The display name is personal data: never log it or put it in an error.
+An `Actor` is who is acting: a `user`, a `system` process or an `integration`, with the host's id for it and a display name. A command reads it from `CurrentActor` for its audit fields (`createdBy` / `updatedBy` hold the actor's id) and approvals; the host provides it with `Actor.withActor`, and an effect-auth adapter derives it from effect-auth's `CurrentPrincipal`. The display name is personal data: never log it or put it in an error.

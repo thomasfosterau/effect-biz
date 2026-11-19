@@ -42,7 +42,7 @@ import customer from "./fixtures/basil/customer.json" with { type: "json" };
 import basilSubscription from "./fixtures/basil/subscription.json" with { type: "json" };
 
 /**
- * `StripePayments` on Distilled's operations (effect-finance#146): what reaches the wire,
+ * `StripePayments` on Distilled's operations: what reaches the wire,
  * and how each failure Distilled reports lands on the neutral channel. The
  * expectations are `StripeHttp`'s (`tests/StripeHttp.test.ts`).
  */

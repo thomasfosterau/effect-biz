@@ -1,17 +1,6 @@
 /**
- * @copyright Thomas Foster
- *
- * Root workspace config. Owns the repo-wide format/lint/staged passes (read
- * statically by `vp fmt` / `vp lint` / `vp staged`) and the root `check` /
- * `docgen` / `test:coverage` aggregates. Every package's own tasks (`check`,
- * `test:unit`, `build`, `docgen`) live in that package's vite.config.ts via
- * ./vite.package.ts; this file deliberately compiles nothing.
- *
- * Copied from the effect-finance repository (itself from the effect-web and
- * effect-drizzle-ext libraries and the gardeneria application), whose payments
- * packages now live here: every comment
- * that explains a load-bearing decision is part of the standard and travels
- * with the config.
+ * Root workspace config: the repo-wide format, lint and staged passes and the
+ * aggregate tasks. Each package's own tasks come from ./vite.package.ts.
  */
 
 import { defineConfig } from "vite-plus";
@@ -78,8 +67,7 @@ export default defineConfig({
     // `@effect/tsgo`'s preset (the `effecttsgo/*` rules the patched oxlint
     // carries) and `@enfect/oxlint`'s `recommended` (every `effect/*` rule,
     // anti-slop included, at `error`; registered as a JS plugin).
-    // Every rule is at `error`, with no warn tier and no inline disables
-    // (owner decision, #161); an override below turns a rule off only where it
+    // Every rule is at `error`, with no warn tier and no inline disables; an override below turns a rule off only where it
     // cannot apply, with its reason. `pedantic`, `nursery`, `style` and
     // `restriction` stay off: many of their rules contradict the conventions.
     extends: [effectTsgo, effect.configs.recommended],
@@ -140,15 +128,9 @@ export default defineConfig({
       "effecttsgo/map-some-to-as-some": "error",
       "effecttsgo/effect-succeed-with-undefined": "error",
       "effecttsgo/prefer-typed-schema-decoder": "error",
-      // Off: it fires on every use of an API tagged `@stability unstable`
-      // (73 sites before the sql package, which adds more), and the
-      // architecture mandates those modules (`effect/http` for the Stripe
-      // client and Distilled, `effect/sql` and its `@effect/sql-*` clients in
-      // the sql package, plus `effect/FileSystem`, `effect/Path` and
-      // `@effect/platform-node` in the generator script; `effect/rpc` and
-      // `effect/workflow` are planned). Effect 4 has no stable `HttpClient`/`FileSystem`, and the
-      // rule takes no config (`RuleNoConfig` in `@effect/tsgo`'s
-      // oxlint-schema.json), so there is no allowlist.
+      // Off: it fires on every `@stability unstable` API, and the architecture
+      // mandates them (`effect/http`, `effect/sql`, `effect/FileSystem`, …).
+      // The rule takes no config, so there is no allowlist.
       "effecttsgo/unstable-api-usage": "off",
       "vite-plus/prefer-vite-plus-imports": "error",
     },
@@ -208,7 +190,7 @@ export default defineConfig({
       // The SDK-based `Webhook.constructEvent*` wrappers take the SDK's own
       // `string | Buffer` payload, and their suite must hand them a `Buffer`
       // (2 sites); `node:buffer` is refused in tests too, so the global is the
-      // only way to build one. The WebCrypto `verify` (effect-finance#41) takes
+      // only way to build one. The WebCrypto `verify` takes
       // `string | Uint8Array` and its suite keeps the rule.
       {
         files: ["packages/payments-stripe/tests/Webhook.test.ts"],
@@ -311,11 +293,7 @@ export default defineConfig({
   },
   run: {
     tasks: {
-      // The whole CI pipeline as one task, in order: format + lint (type-aware,
-      // so before any build), the type gates, the unit tests, the build, the
-      // docs examples (which run against dist/) and the dependency audit.
-      // `.github/workflows/ci.yml` runs exactly `vp run ci`, so a local run is
-      // the CI run. Fail-fast: the first failing gate stops the rest.
+      // Every CI gate in order, fail-fast; ci.yml runs exactly this.
       ci: {
         command:
           "vp check && vp run --concurrency-limit 2 check && vp run -r test:unit && vp run -r build && vp run docgen && pnpm audit --audit-level high",
@@ -341,10 +319,16 @@ export default defineConfig({
         cache: false,
       },
       // Every package's unit suite under one Istanbul coverage map
-      // (`coverage/coverage-final.json`).
+      // (`coverage/coverage-final.json`), which fallow reads.
       "test:coverage": {
         command: "vp test run --coverage",
         dependsOn: packages.map((name) => `${name}#build`),
+        cache: false,
+      },
+      // The pre-commit gate: fails only on findings this change introduces.
+      "fallow:audit": {
+        command: "vp exec fallow audit --base origin/trunk --quiet",
+        dependsOn: ["test:coverage"],
         cache: false,
       },
     },

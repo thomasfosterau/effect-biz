@@ -8,7 +8,6 @@
   "author": "Thomas Foster <me@thomasfoster.au>",
   "type": "module",
   "scripts": {
-    "changeset": "changeset",
     "version": "changeset version && vp fmt && pnpm install --lockfile-only",
     "release": "vp run -r build && pnpm -r --filter './packages/*' publish --access public --no-git-checks && changeset tag",
     "prepare": "vp config && effect-tsgo patch --typescript --oxlint"
@@ -22,7 +21,6 @@
     "@enfect/oxlint": "catalog:",
     "@thomasfosterau/effect-biz": "workspace:*",
     "@thomasfosterau/effect-biz-payments-stripe": "workspace:*",
-    "@thomasfosterau/effect-biz-sql": "workspace:*",
     "@types/node": "catalog:",
     "@typescript/native": "catalog:",
     "@vitest/coverage-istanbul": "catalog:",
@@ -34,9 +32,11 @@
     "vite-plus": "catalog:",
     "vitest": "catalog:"
   },
-  "engines": {
-    "node": ">=22",
-    "pnpm": ">=11"
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "lts"
+    }
   },
   "packageManager": "pnpm@11.18.0"
 }

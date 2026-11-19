@@ -1,6 +1,6 @@
 /**
  * The two places where stripe-node 23 sends a `/v2` request differently from
- * Distilled (effect-finance#181). `StripeHttp` maps every request it hands Distilled through
+ * Distilled. `StripeHttp` maps every request it hands Distilled through
  * {@link v2RequestPolicy}, which tells a `/v2` request by its URL, as the SDK
  * does by its path (`getAPIMode`).
  *

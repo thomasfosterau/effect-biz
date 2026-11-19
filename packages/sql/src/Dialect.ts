@@ -48,7 +48,7 @@ export interface Info {
   /**
    * Whether a transaction can interleave reads and writes on one connection.
    * D1 has none (only an atomic batch), which is why every command commits one
-   * batch of version-guarded writes on every dialect (#128).
+   * batch of version-guarded writes on every dialect.
    */
   readonly interactiveTransactions: boolean;
   /** Whether `SELECT … FOR UPDATE` exists. Only Postgres has it; no effect-biz command relies on it. */

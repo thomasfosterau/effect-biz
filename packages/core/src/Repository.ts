@@ -17,7 +17,7 @@
  *   next one, or fail with `ConcurrencyConflict` when the stored version
  *   differs. Each write is load → decide (pure) → commit one atomic,
  *   version-guarded batch, so it works on Cloudflare D1 (no row locks, no
- *   interactive transactions) as on Postgres (#128); a caller retries a
+ *   interactive transactions) as on Postgres; a caller retries a
  *   conflict from its load step.
  * - **Archived, not deleted.** `archive` sets `audit.archivedAt`, `restore`
  *   clears it; `get` still finds an archived entity, `find` hides it unless

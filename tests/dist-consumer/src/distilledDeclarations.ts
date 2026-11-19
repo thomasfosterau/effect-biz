@@ -1,5 +1,5 @@
 /**
- * The consumer type-check cost of effect-finance#146: Distilled's generated operation
+ * The consumer type-check cost of Distilled: Distilled's generated operation
  * modules are large declaration files (`@distilled.cloud/stripe` puts every
  * Stripe operation in one of about 7.5 MB), and a consumer whose declarations
  * reach one type-checks all of it. `StripePayments`, `StripeHttp` and

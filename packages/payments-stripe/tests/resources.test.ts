@@ -21,7 +21,7 @@ import {
 
 /**
  * The resource modules are generated from the installed Distilled release
- * (`scripts/generate-resources.ts`, effect-finance#146): every Distilled operation is placed
+ * (`scripts/generate-resources.ts`): every Distilled operation is placed
  * in exactly one module or listed as unexposed, and the modules on disk are
  * what the generator writes. A Distilled bump that adds, moves or renames an
  * operation fails here until `scripts/resources.ts` decides where it goes and
@@ -188,7 +188,7 @@ describe("the resource plan", () => {
     expect(resources.every((subpath) => published.includes(subpath))).toBe(true);
   });
 
-  it("keeps every name a module exported before (effect-finance#146)", () => {
+  it("keeps every name a module exported before", () => {
     R.toEntries(KEPT).forEach(([subpath, names]) => {
       const exported = (planned.modules[subpath] ?? []).map((operation) => operation.exported);
       expect(exported, subpath).toEqual(expect.arrayContaining([...names]));
@@ -197,7 +197,7 @@ describe("the resource plan", () => {
     expect(R.keys(KEPT).filter((subpath) => !HashSet.has(subpaths, subpath))).toEqual([]);
   });
 
-  it("exposes the Invoice and Subscription actions (effect-finance#142)", () => {
+  it("exposes the Invoice and Subscription actions", () => {
     const names = (subpath: string) =>
       (planned.modules[subpath] ?? []).map((operation) => operation.exported);
     expect(names("Invoice")).toEqual(
@@ -233,7 +233,7 @@ describe("the resource plan", () => {
     expect(R.size(OVERRIDES)).toBeGreaterThan(0);
   });
 
-  it("leaves unexposed only the operations StripeHttp cannot run (effect-finance#154)", () => {
+  it("leaves unexposed only the operations StripeHttp cannot run", () => {
     expect(sorted(planned.unexposed)).toEqual(["CreateBillingMeterEventStream", "GetQuotePdf"]);
   });
 

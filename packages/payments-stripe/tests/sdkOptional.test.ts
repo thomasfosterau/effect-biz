@@ -8,7 +8,7 @@ import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 
 /**
- * `stripe` is an optional peer (effect-finance#39), kept only for the types of the
+ * `stripe` is an optional peer, kept only for the types of the
  * SDK-based webhook verifier (`Webhook.constructEvent*`, which runs on an SDK
  * client the program builds): no module loads it at runtime, so a Worker
  * bundle built from any of them never contains the SDK. This walks the

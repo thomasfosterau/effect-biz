@@ -1,8 +1,7 @@
 /**
  * The sample SQL repository the contract suites run: a `widgets` table of
  * one column of each comparable kind, plus a `widget_events` log, the second
- * store a unit-of-work command writes. The DDL is created here per dialect
- * (the migrator is #37).
+ * store a unit-of-work command writes. The DDL is created here per dialect.
  */
 import * as Actor from "@thomasfosterau/effect-biz/Actor";
 import * as Audit from "@thomasfosterau/effect-biz/Audit";

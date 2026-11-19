@@ -1,5 +1,5 @@
 /**
- * The declaration half of the optional `stripe` peer (effect-finance#56, effect-finance#146): no Stripe
+ * The declaration half of the optional `stripe` peer: no Stripe
  * declaration but the webhook verifier's may need the `stripe` package to
  * type-check in a consumer. Every resource module is typed with Distilled's
  * declarations; only `Webhook` (the SDK-based `constructEvent*` and its

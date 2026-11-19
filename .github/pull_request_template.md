@@ -4,7 +4,7 @@ Describe what changed and why. If this closes an issue, add `Closes #N` so it au
 
 ## Verification
 
-Run the gates in [AGENTS.md → Verification](https://github.com/thomasfosterau/effect-biz/blob/trunk/AGENTS.md#verification) and list each command with its final pass/fail. Name any gate that could not run, and why.
+Run the gates in [docs/CONTRIBUTING.md → Before pushing](https://github.com/thomasfosterau/effect-biz/blob/trunk/docs/CONTRIBUTING.md#before-pushing) and list each command with its final pass/fail. Name any gate that could not run, and why.
 
 ## Changeset
 

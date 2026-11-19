@@ -57,11 +57,11 @@ const KEY_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
  *   (including `StripeIdempotencyError`): they fail the same way again.
  * - **A window, not forever.** Providers remember a key for a limited time
  *   that differs per provider and is not promised by the type. Stripe's
- *   window is unverified (effect-finance#93). Treat a retry within a few
+ *   window is unverified. Treat a retry within a few
  *   hours as safe and a later one as a new write.
  * - **The shape is the lowest common denominator**: 1 to 64 characters from
- *   `A-Z a-z 0-9 _ -` (a UUID is 36). Stripe's limit (255) is unverified
- *   (effect-finance#93), so the shape is deliberately conservative: it
+ *   `A-Z a-z 0-9 _ -` (a UUID is 36). Stripe's limit (255) is unverified,
+ *   so the shape is deliberately conservative: it
  *   leaves room for a provider with a tighter limit.
  *
  * Create the key once per logical write and reuse it on every retry of that

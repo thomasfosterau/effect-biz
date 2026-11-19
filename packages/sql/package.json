@@ -27,7 +27,7 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE.md"
   ],
   "type": "module",
   "sideEffects": false,
@@ -90,8 +90,5 @@
     "@effect/sql-sqlite-node": {
       "optional": true
     }
-  },
-  "engines": {
-    "node": ">=22"
   }
 }

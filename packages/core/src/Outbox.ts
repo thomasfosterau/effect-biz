@@ -14,7 +14,7 @@
  * lease, so one subscriber failing never holds back another. A subscriber
  * registered later is delivered every entry the outbox still holds.
  *
- * **Leases, not locks** (#128: D1 has neither row locks nor `SKIP
+ * **Leases, not locks** (D1 has neither row locks nor `SKIP
  * LOCKED`). {@link Outbox.claimBatch} takes, in one atomic step, deliveries
  * that are due (pending, or failed with its retry time reached) and whose
  * lease is absent or expired, and leases them to the claiming owner until

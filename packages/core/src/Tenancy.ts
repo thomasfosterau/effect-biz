@@ -8,7 +8,7 @@
  * run without them fails to type-check rather than at runtime; the host app
  * provides them per request with {@link withTenant} and {@link withCompany}.
  *
- * Tenancy is independent of effect-auth's Organizations (#130).
+ * Tenancy is independent of effect-auth's Organizations.
  *
  * See {@link withTenant} for an example.
  *

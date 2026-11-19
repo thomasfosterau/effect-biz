@@ -1,6 +1,6 @@
 /**
  * The unit of work: the transaction boundary of a command, shaped for
- * databases without interactive transactions (Cloudflare D1, #128).
+ * databases without interactive transactions (Cloudflare D1).
  *
  * Every command is **load → decide (pure) → commit one batch**. Inside
  * {@link transaction}, a repository's writes are not applied: each is

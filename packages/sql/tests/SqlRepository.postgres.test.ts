@@ -11,7 +11,7 @@ import * as TestingPostgres from "../src/testing.postgres.ts";
 import { suites } from "./suite.ts";
 
 /**
- * Opt-in (#21): the scratch database named by EFFECT_BIZ_PG_URL when it is
+ * Opt-in: the scratch database named by EFFECT_BIZ_PG_URL when it is
  * set; otherwise the in-memory SQLite one, on which every case skips itself.
  * Built once per suite, so the cases share the tables: each writes under
  * tenants of its own.

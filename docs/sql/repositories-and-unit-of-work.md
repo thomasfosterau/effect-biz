@@ -1,10 +1,10 @@
 # Repositories and the unit of work over SQL
 
-How a domain package's SQL repository layer is built with `./SqlRepository`, and how `./SqlUnitOfWork` commits each command's writes, on Postgres, SQLite and Cloudflare D1 (#39). The conventions are core's: [repositories, queries and paging](../core/repositories.md) and [the unit of work](../core/unit-of-work.md). The column layout and codecs are in [columns and dialects](columns-and-dialects.md).
+How a domain package's SQL repository layer is built with `./SqlRepository`, and how `./SqlUnitOfWork` commits each command's writes, on Postgres, SQLite and Cloudflare D1. The conventions are core's: [repositories, queries and paging](../core/repositories.md) and [the unit of work](../core/unit-of-work.md). The column layout and codecs are in [columns and dialects](columns-and-dialects.md).
 
 ## No interactive transactions
 
-D1 has neither interactive transactions nor row locks (#128), so no command relies on them on any dialect. A command is **load → decide (pure) → commit one batch of version-guarded writes**:
+D1 has neither interactive transactions nor row locks, so no command relies on them on any dialect. A command is **load → decide (pure) → commit one batch of version-guarded writes**:
 
 1. It loads with plain reads, outside any SQL transaction (a read never sees the writes staged so far).
 2. It decides, and each repository write decides eagerly against a fresh read, so a stale version, a used id or a wrong state fails at once with its own error (`ConcurrencyConflict`, `AlreadyExists`, `NotFound`, `InvalidTransition`).
@@ -56,7 +56,7 @@ const unitOfWork = SqlUnitOfWork.layer().pipe(
 );
 ```
 
-**What was exercised.** A real D1 batch cannot run in-process. D1's SQL is SQLite's, so the suites run D1's commit, guard statements included, on in-memory SQLite: `Testing.layerBatch` is a `Batch` with D1's semantics (in order, all or none, failing with the first error) over a client with transactions, and `SqlUnitOfWork.layerBatch` commits through it. Core's repository and unit-of-work contracts and the conflict and rollback cases pass that way, as they do on SQLite's and Postgres's transactional commit. What remains unverified until a Worker test runs it (#21) is D1's own error text carrying the marker; it reports SQLite's message (`D1_ERROR: … SQLITE_ERROR`), and the commit searches the error's cause for it.
+**What was exercised.** A real D1 batch cannot run in-process. D1's SQL is SQLite's, so the suites run D1's commit, guard statements included, on in-memory SQLite: `Testing.layerBatch` is a `Batch` with D1's semantics (in order, all or none, failing with the first error) over a client with transactions, and `SqlUnitOfWork.layerBatch` commits through it. Core's repository and unit-of-work contracts and the conflict and rollback cases pass that way, as they do on SQLite's and Postgres's transactional commit. What remains unverified until a Worker test runs it is D1's own error text carrying the marker; it reports SQLite's message (`D1_ERROR: … SQLITE_ERROR`), and the commit searches the error's cause for it.
 
 A guarded write staged by a domain package's own statement follows the same rule: it writes nothing when its guard does not hold, and returns one row per row it writes.
 
@@ -108,7 +108,7 @@ Effect.runPromise(program.pipe(Effect.provide(layer))).then(console.log); // ["C
 
 `make` builds the whole `Repository.Port<A, I>` over one table: `table`, `entity` (the kind errors name), `id` (core's `Id.make` codec), `fields` (the domain fields' codecs from `./Column`, for the current dialect), `make` (the entity of a decoded row) and `withAudit` (as `Memory.repository`'s; the entity type is inferred from it, so type its parameters and result), plus the allow-lists. It requires `SqlClient`, `Dialect` and the `SqlUnitOfWork.Committer`, which `SqlUnitOfWork.layer` provides beside the `UnitOfWork`.
 
-- **The table**: `id` (the primary key), `tenant_id`, one column per field (the field in snake_case, or `columns`' name for it), `version` and the audit columns. The migrator is #37; until it lands a suite creates its tables itself.
+- **The table**: `id` (the primary key), `tenant_id`, one column per field (the field in snake_case, or `columns`' name for it), `version` and the audit columns. Until a migrator exists, a suite creates its tables itself.
 - **Reads** (`get`, `getMany`, `find`) read committed rows, always filtered by the `TenantContext`'s `tenant_id`, each decoded through `Schema`: the fields' codecs, the id's codec and the audit columns' (`Column.timestamp`, `nullable`). An id that is not one (`Schema.is(id)` fails) is `NotFound` without a query.
 - **Writes** decide against a fresh read and stamp the audit fields with `Audit.next` (`update` keeps the stored creation and archive fields), then stage their guarded statement.
 - **Failures.** A `SqlError`, or a stored row that does not decode, is a defect: the port has no error channel for either.
@@ -233,7 +233,7 @@ A cursor's key that is `None` (a field the item lacked, which sorts first) is be
 
 ## Row-level security
 
-Tenant scoping in the database (#38) will set the tenant inside the commit, as the batch's first statement (`set_config('app.tenant_id', …, true)` on Postgres); this slice has no hook for it, and every statement here filters by `tenant_id` itself.
+Tenant scoping in the database will set the tenant inside the commit, as the batch's first statement (`set_config('app.tenant_id', …, true)` on Postgres); this slice has no hook for it, and every statement here filters by `tenant_id` itself.
 
 ## Testing
 

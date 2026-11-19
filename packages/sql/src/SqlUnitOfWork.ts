@@ -1,7 +1,7 @@
 /**
  * The SQL unit of work: core's `UnitOfWork` over `effect/sql`, committing
  * each command's staged writes as one atomic batch of version-guarded
- * statements, on Postgres, SQLite and Cloudflare D1 (#128).
+ * statements, on Postgres, SQLite and Cloudflare D1.
  *
  * There are no interactive transactions. A command loads (plain reads,
  * outside any SQL transaction), decides purely, and *stages* its writes
@@ -26,7 +26,7 @@
  * defect: the repository port and `UnitOfWork.make`'s commit have no error
  * channel for one.
  *
- * Row-level security (#38) will set the tenant inside the commit; this
+ * Row-level security will set the tenant inside the commit; this
  * module has no hook for it yet.
  *
  * See {@link layer} for an example.

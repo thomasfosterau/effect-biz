@@ -38,9 +38,9 @@ The rules:
 - **The shape is the lowest common denominator**: 1 to 64 characters from `A-Z a-z 0-9 _ -` (a UUID is 36). `IdempotencyKey.IdempotencyKey` is the branded `Schema`; `IdempotencyKey.IdempotencyKey.make` (throws on a bad shape) or `IdempotencyKey.validate` (fails with `PaymentInvalidRequestError`) check a value of your own, and a raw string that slips past the types fails with `PaymentInvalidRequestError` before anything is sent.
 - **A window, not forever**: providers remember a key for a limited time, differing per provider. Treat a retry within a few hours as safe, and a later one as a new write. The figures:
 
-  | Provider | Key length | Kept for | Source |
-  | --- | --- | --- | --- |
-  | Stripe | 255 characters | at least 24 hours | unverified ([effect-finance#93](https://github.com/thomasfosterau/effect-finance/issues/93)) |
+  | Provider | Key length     | Kept for          | Source     |
+  | -------- | -------------- | ----------------- | ---------- |
+  | Stripe   | 255 characters | at least 24 hours | unverified |
 
   The 1 to 64 character shape stays within the unverified Stripe figure.
 

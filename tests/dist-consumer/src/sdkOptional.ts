@@ -1,12 +1,12 @@
 /**
- * The emitted-bundle half of effect-finance#39's "the `stripe` SDK is optional" guarantee
+ * The emitted-bundle half of the "the `stripe` SDK is optional" guarantee
  * (the source half is `packages/payments-stripe/tests/sdkOptional.test.ts`).
  *
  * Walks the runtime import graph of `packages/payments-stripe/dist/` from
  * every published entry point and fails if any entry can reach `stripe` —
  * through a static `import` / `export … from`, a bare `import "…"`, a dynamic
  * `import("…")` or a `require("…")`, in the entry or in any chunk it pulls in.
- * Since effect-finance#146 dropped the `./Stripe` SDK transport, no entry loads it: the
+ * No entry loads it: the
  * optional peer only types the SDK-based webhook verifier. A Worker bundle
  * built from any entry therefore never contains the SDK.
  *

@@ -12,7 +12,7 @@ import { capabilitiesOverStub, stubStripe } from "./support.ts";
 
 /**
  * A value Stripe adds to an enumeration later must decode to `Other` carrying
- * the raw string, never fail the object or the list page it sits in (effect-finance#58).
+ * the raw string, never fail the object or the list page it sits in.
  */
 const run = <A, E, R>(effect: Effect.Effect<A, E, R>, body: Schema.Json) =>
   effect.pipe(Effect.provideService(FetchHttpClient.Fetch, stubStripe(() => body).fetch));

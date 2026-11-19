@@ -1,90 +1,30 @@
-# Dependabot version-update configuration. Copied in shape from the
-# effect-finance repository.
-#
-# `groups` exist only for sets that MUST move together (one release train
-# with exact cross-pins, or a hard compatibility table), so a lockstep set
-# never drifts apart across two PRs. Everything else gets its own PR.
-# Dependabot puts a dependency in the FIRST group that matches it, so
-# `exclude-patterns` keeps a package out of a group that would otherwise
-# claim it.
-#
-# - `toolchain`: vite-plus pins the `oxlint`, `oxfmt`, `oxlint-tsgolint` and
-#   `vitest` it carries, and `effect-tsgo patch` matches the native `tsc`
-#   (@typescript/native) and vite-plus's `oxlint` / `oxlint-tsgolint` by
-#   gitHead / version, failing `pnpm install` on any pairing it has no
-#   artifact for. One PR moves them all; when it fails at install, pick the
-#   @effect/tsgo release whose `components` table covers the new oxlint /
-#   tsgolint by hand on that branch. (@enfect/oxlint takes `@oxlint/plugins`
-#   through a `^` range, so it is not tied to the set and comes on its own.)
-# - `distilled`: the two @distilled.cloud packages pin each other exactly.
-#   A Distilled bump also regenerates the Stripe resource modules, which
-#   Dependabot cannot do: finish the PR by hand (AGENTS.md, Common pitfalls).
-#   The optional `stripe` SDK peer's majors and minors follow Distilled's
-#   Stripe API version (effect-finance#160) and are ignored below: they move
-#   by hand on a Distilled bump. Its patches come on their own.
-# - `effect`: the Effect 4 release line is a lockstep-versioned singleton set,
-#   moved together with the consuming applications. @effect/docgen is on the
-#   same line: it depends on `effect` itself, which the singleton override
-#   forces onto the catalog pin, so a docgen ahead of `effect` breaks.
-#   @effect/tsgo is the toolchain's and @effect/language-service has its own
-#   release line, so neither is in it.
-#
-# By hand, because Dependabot cannot move them (AGENTS.md lists them too):
-# - the npm-alias catalog entries: `vite`
-#   (`npm:@voidzero-dev/vite-plus-core@<v>`, must equal vite-plus; `pnpm exec
-#   vp migrate` re-pins it, then drop the `minimumReleaseAgeExclude` entries
-#   it adds), `typescript` (`npm:@typescript/typescript6@<v>`) and
-#   `@typescript/native` (`npm:typescript@<v>`, a pairing @effect/tsgo
-#   supports);
-# - the `overrides` literals in pnpm-workspace.yaml (the `undici` security
-#   floor; the `vite@*` / `vitest@*` / `effect` entries follow the catalog);
-# - the Stripe resource modules after a `distilled` bump (regenerate them).
-#
-# `cooldown`: pnpm holds a new version for 8 hours (`minimumReleaseAge: 480`
-# in pnpm-workspace.yaml). Dependabot's cooldown takes whole days only, so it
-# is 1 day, longer than pnpm's wait: a Dependabot PR never proposes a version
-# pnpm would still refuse. @thomasfosterau/* is exempt from both.
+# Lockstep sets are grouped; the by-hand follow-ups are in docs/CONTRIBUTING.md.
 version: 2
 updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
     open-pull-requests-limit: 10
+    assignees:
+      - thomasfosterau
     labels:
       - "dependencies"
-    assignees:
-      - "thomasfosterau"
     commit-message:
       prefix: "chore"
-      prefix-development: "chore"
     cooldown:
       default-days: 1
       exclude:
         - "@thomasfosterau/*"
     groups:
-      # vite-plus pins oxlint and vitest exactly; @effect/tsgo's patch supports
-      # only the oxlint / TypeScript pairs its components table lists.
       toolchain:
         applies-to: version-updates
         patterns:
           - "vite-plus"
-          - "vite"
           - "@voidzero-dev/*"
           - "vitest"
           - "@vitest/*"
           - "@effect/tsgo"
-          - "@typescript/native"
-          - "typescript"
-          - "@typescript/typescript6"
-      # The @distilled.cloud packages pin each other (and core) exactly.
-      distilled:
-        applies-to: version-updates
-        patterns:
-          - "@distilled.cloud/*"
-      # One Effect release train; docgen depends on `effect` and must not run
-      # ahead of it.
       effect:
         applies-to: version-updates
         patterns:
@@ -93,42 +33,37 @@ updates:
         exclude-patterns:
           - "@effect/tsgo"
           - "@effect/language-service"
+      # The two packages pin each other exactly.
+      distilled:
+        applies-to: version-updates
+        patterns:
+          - "@distilled.cloud/*"
     ignore:
-      # The SDK is only an optional peer: its types serve the SDK-based
-      # `./Webhook` verifier (`constructEvent*`), and no module loads it
-      # (effect-finance#146). Its dev pin follows DISTILLED_API_VERSION
-      # (effect-finance#160), so its majors and minors move by hand on a
-      # Distilled bump (`tests/distilledApiVersion.test.ts` fails otherwise).
-      # Scoped to the version-update types, so security updates stay enabled.
+      # The SDK's majors and minors follow Distilled's Stripe API version and move by hand with it.
       - dependency-name: "stripe"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 5
+      interval: "daily"
+    assignees:
+      - thomasfosterau
     labels:
       - "dependencies"
-    assignees:
-      - "thomasfosterau"
     commit-message:
       prefix: "chore"
     cooldown:
       default-days: 1
-  # The Dev Container features in .devcontainer/devcontainer.json. No group:
-  # each feature updates on its own PR. The image tag is a hand move (it
-  # follows the catalog's `vite-plus` pin; see the comment beside it).
+
   - package-ecosystem: "devcontainers"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 5
+      interval: "daily"
+    assignees:
+      - thomasfosterau
     labels:
       - "dependencies"
-    assignees:
-      - "thomasfosterau"
     commit-message:
       prefix: "chore"
     cooldown:

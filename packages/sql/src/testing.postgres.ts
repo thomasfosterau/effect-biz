@@ -5,7 +5,7 @@
  * This subpath imports the optional peer `@effect/sql-pg`; nothing else in
  * the package does. A Postgres suite skips itself when {@link urlVariable} is
  * unset (see the example on {@link layerPostgres}), so the unit run needs no
- * database; the opt-in CI job sets it (#21).
+ * database; the opt-in CI job sets it.
  * The suite owns the database's contents: use a scratch database, never one
  * holding data.
  *
