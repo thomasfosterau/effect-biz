@@ -13,9 +13,9 @@ catalog:
   # Pre-1.0, so exact. Its schemas follow one Stripe API version
   # (DISTILLED_API_VERSION); a bump also regenerates the Stripe resource
   # modules (`generate:resources`), and the tests fail until it does.
-  "@distilled.cloud/stripe": 1.0.0-rc.18
+  "@distilled.cloud/stripe": 1.0.0-rc.20
   # Must equal the version @distilled.cloud/stripe pins, or two copies install.
-  "@distilled.cloud/core": 1.0.0-rc.18
+  "@distilled.cloud/core": 1.0.0-rc.20
   # Exact: it depends on `effect ^<its version>`, which the singleton
   # override below must satisfy.
   "@effect/docgen": 4.1.4
