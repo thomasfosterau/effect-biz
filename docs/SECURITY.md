@@ -10,6 +10,6 @@ Report vulnerabilities privately with GitHub's [Report a vulnerability](https://
 - **No install scripts in the release job**, and it runs only once `.github/workflows/actions.lock` verifies every action's commit.
 - **Least privilege**: workflows default to `permissions: {}`; CI holds read-only access and no secrets, so Dependabot PRs run it safely.
 - **Manual approval**: publishing runs in a protected `release` environment.
-- **Locked, delayed dependencies**: frozen-lockfile installs, and `minimumReleaseAge` holds new versions for 8 hours (Dependabot waits a day).
+- **Locked, delayed dependencies**: frozen-lockfile installs, and `minimumReleaseAge` holds new versions for 24 hours, as Dependabot does.
 
 The pipeline is described in [PUBLISHING.md](PUBLISHING.md).

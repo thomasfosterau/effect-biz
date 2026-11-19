@@ -86,7 +86,7 @@ peerDependencyRules:
     vite: "*"
     vitest: "*"
 
-# Hold new versions for 8 hours (in minutes) before installing them.
-minimumReleaseAge: 480
+# Hold new versions for 24 hours (in minutes) before installing them.
+minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - "@thomasfosterau/*"
