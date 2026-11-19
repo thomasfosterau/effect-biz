@@ -3,12 +3,8 @@
  * task graph (`check`, `build`, `test:unit`, `test:coverage`, `docgen`), the
  * `vp pack` (tsdown) settings and the vitest / coverage settings. Each
  * `packages/<name>/vite.config.ts` is a one-call instantiation of it.
- *
- * Copied from the effect-finance repository (itself adapted from the effect-web library). The difference is
- * the module layout: these packages keep one flat module per subpath
- * (`src/Party.ts`, `src/SalesOrder.Line.ts`), so the pack entries
- * are derived from the package's own `exports` map — the manifest stays the
- * single list of public entry points.
+ * Pack entries are derived from each package's `exports` (one flat module
+ * per subpath), so the manifest is the single list of entry points.
  */
 import { existsSync, readFileSync } from "node:fs";
 import * as Arr from "effect/Array";

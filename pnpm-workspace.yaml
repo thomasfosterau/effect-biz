@@ -1,28 +1,6 @@
-# pnpm workspace — the @thomasfosterau/effect-biz package family.
-#
-# The `catalog:` protocol pins versions that MUST be singletons across the
-# workspace. Effect especially: two copies of `effect` break Context / Layer /
-# Schema identity at runtime, so every package references `catalog:`.
-#
-# EVERY external dependency version lives here — package.json files reference
-# only `catalog:` / `catalog:peers` (or `workspace:` for internal packages).
-# `catalogMode: strict` makes `pnpm add` enforce this at add time and
-# `pnpm install` reject non-catalog specifiers. After editing this catalog,
-# ALWAYS run `pnpm install` and commit the regenerated pnpm-lock.yaml — a stale
-# lockfile fails CI at once with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
-#
-# The toolchain entries (vite-plus, the TypeScript 6/7 pair, @effect/tsgo,
-# changesets) and the Effect pin came from the effect-finance repository,
-# whose payments packages now live here.
-#
-# Lockstep sets (each one Dependabot group in .github/dependabot.yml):
-# `toolchain` (vite-plus and the oxlint / oxfmt / oxlint-tsgolint / vitest it
-# pins, @vitest/*, @effect/tsgo, the TypeScript 6/7 pair), `distilled`
-# (@distilled.cloud/*), `effect` (effect + @effect/*, @effect/docgen
-# included); everything else is its own Dependabot PR. By hand, because
-# Dependabot cannot: the npm-alias entries `vite` (must equal vite-plus),
-# `typescript` and `@typescript/native` (a pairing @effect/tsgo supports), and
-# the `overrides` literals below.
+# Every external version lives here (`catalogMode: strict`); package.json files
+# use `catalog:`, `catalog:peers` or `workspace:*`. After an edit, run
+# `vp install` and commit pnpm-lock.yaml.
 packages:
   - packages/*
   - tests/*
@@ -32,169 +10,73 @@ catalogMode: strict
 catalog:
   "@changesets/changelog-github": ^1.0.1
   "@changesets/cli": ^3.0.3
-  # Distilled's Stripe client (alchemy-run/distilled, Apache-2.0): the
-  # operations, wire encoding and typed errors `StripePayments` and every
-  # Stripe resource module run on (effect-finance#146). A runtime dependency of
-  # @thomasfosterau/effect-biz-payments-stripe, pinned EXACTLY: it is pre-1.0 and
-  # ships a new rc every week or two, so a release moves only through the
-  # ordinary dependency-update flow. Its schemas are generated from Stripe's
-  # 2026-09-30.endive spec, which the wrapper pins in `Stripe-Version`
-  # (DISTILLED_API_VERSION) on every request. A bump also regenerates the
-  # resource modules (`generate:resources`) and updates the followed version
-  # (`tests/distilledApiVersion.test.ts` and `tests/resources.test.ts` fail
-  # until both are done).
+  # Pre-1.0, so exact. Its schemas follow one Stripe API version
+  # (DISTILLED_API_VERSION); a bump also regenerates the Stripe resource
+  # modules (`generate:resources`), and the tests fail until it does.
   "@distilled.cloud/stripe": 1.0.0-rc.18
-  # Distilled's shared runtime, a direct dependency too: the wrapper pins its
-  # `ResponseValidation` reference to lenient. MUST equal the version
-  # @distilled.cloud/stripe depends on (it pins core exactly), or two copies
-  # of core install.
+  # Must equal the version @distilled.cloud/stripe pins, or two copies install.
   "@distilled.cloud/core": 1.0.0-rc.18
-  # Compiles AND RUNS every JSDoc `@example` (the `docgen` task). Exact, like
-  # the Effect pin: 4.0.1 and 4.0.2 depend on `effect ^4.0.1` / `^4.0.2`,
-  # which the `effect` singleton override below would contradict. Needs `tsx`
-  # and a TypeScript JS API (peer `typescript <7`) — the TS6 alias below
-  # satisfies it; the examples themselves type-check under the native `tsc`.
+  # Exact: it depends on `effect ^<its version>`, which the singleton
+  # override below must satisfy.
   "@effect/docgen": 4.1.4
   "@effect/language-service": ^0.87.5
   "@effect/platform-node": 4.1.4
-  # Effect's SQL clients, dev dependencies of @thomasfosterau/effect-biz-sql
-  # and OPTIONAL peers there (`catalogs.peers`): `./testing` imports the
-  # SQLite one (`node:sqlite`, no native build), `./testing.postgres` the
-  # Postgres one (a pure-TypeScript wire client), and nothing else does.
-  # `SqlClient` itself lives in `effect` (`effect/sql`), so there is no
-  # separate `@effect/sql` package. Exact, in the `effect` lockstep set: each
-  # release's own peer is `effect ^<its version>` (4.1.3 → `^4.1.3`, the
-  # workspace pin), so 4.1.4+ would need an `effect` bump first.
+  # Dev dependencies and optional peers of the sql package's testing subpaths.
   "@effect/sql-pg": 4.1.4
   "@effect/sql-sqlite-node": 4.1.4
-  # Effect-aware test runner (`it.effect`, `it.layer`, TestClock). Exact, like
-  # the Effect pin: 4.1.2 is the release whose peer is `effect ^4.1.2`, the
-  # workspace pin; 4.1.3+ would need an effect bump. Peer `vitest >=5 <6`.
   "@effect/vitest": 4.1.4
-  # Effect Language Service as a native (TypeScript-Go) binary — the TS7 side
-  # of the 6/7 split. `effect-tsgo patch` overwrites the native `tsc` binary
-  # with an Effect-patched build matched by gitHead, so this pins in lockstep
-  # with `@typescript/native` below (0.67.3 ships against typescript 7.0.2) and
-  # with the `oxlint` that `vite-plus` pulls in (0.67.3 patches the oxlint
-  # 1.91.0 and oxlint-tsgolint 7.0.2005 that vite-plus 1.5.0 carries).
-  # Each @effect/tsgo release hard-errors (UnsupportedTargetPackageVersionError)
-  # on any other component version, failing `pnpm install` itself. Read the
+  # Patches the native `tsc` and vite-plus's oxlint / oxlint-tsgolint, and
+  # fails `vp install` on any version it has no build for: read the
   # `components` table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs
-  # before bumping any of the three.
+  # before moving it, `@typescript/native` or `vite-plus`.
   "@effect/tsgo": 0.69.0
-  # The Effect lint rules (`effect/*`, anti-slop included), registered as an
-  # oxlint JS plugin through `configs.recommended` in vite.config.ts. It
-  # depends on `effect` 4.1.0 exactly, but the `effect` override below forces
-  # it onto the workspace singleton, which it lints fine against. Not in the
-  # `toolchain` group (its `@oxlint/plugins` range is a `^`): a release can
-  # add rules at `error`, so its own PR lands with a `vp check` run.
   "@enfect/oxlint": ^0.10.0
-  # The policy kernel core's `./Authorization` runs on (#130): its
-  # `Authorizer`, `CurrentPrincipal`, `EntityRef` and `EntityResolver`. A dev
-  # dependency of core and an OPTIONAL peer there (`catalogs.peers`): only
-  # `./Authorization` imports it. Exact while it is pre-1.0. Its own peers
-  # `@thomasfosterau/effect-jsonapi` and `@node-saml/node-saml` are optional
-  # and serve subpaths core never imports, so they are not installed here.
+  # Exact while pre-1.0; an optional peer of core's `./Authorization`.
   "@thomasfosterau/effect-auth": 0.5.2
   "@types/node": ^26.6.6
   "@vitest/coverage-istanbul": 5.1.0
   effect: 4.1.4
-  # Dead code, duplication, complexity and the change-set audit (`fallow
-  # audit`, the agent commit gate in .claude/hooks/fallow-gate.sh). Dev-only.
   fallow: 3.43.1
-  # Exists only for docgen: @effect/docgen requires it as a peer and spawns
-  # the `tsx` binary itself to run the compiled examples. Scripts and tasks
-  # never invoke it; they run TypeScript with `node` or `vpx <file>.ts`.
+  # Only because @effect/docgen requires it as a peer.
   tsx: ^4.23.15
-  # The official Stripe SDK: a dev dependency of
-  # @thomasfosterau/effect-biz-payments-stripe, and an OPTIONAL peer there
-  # (`catalogs.peers`). Its types serve only the SDK-based `./Webhook`
-  # verifier (`constructEvent*`), and its client is built only by the tests
-  # and doc `@example`s that run that verifier; no module loads it at runtime
-  # (effect-finance#146). Pinned EXACTLY to a release whose API version is
-  # DISTILLED_API_VERSION (23.0.0 ships `2026-09-30.endive`), so the tests
-  # and examples type the events Distilled's `Stripe-Version` produces
-  # (effect-finance#160). It moves with
-  # DISTILLED_API_VERSION on a Distilled bump, never on its own:
-  # `tests/distilledApiVersion.test.ts` fails when the SDK's API_VERSION
-  # differs.
+  # Dev only (an optional peer for the SDK-based webhook verifier's types).
+  # Exact, at the release whose API version is DISTILLED_API_VERSION;
+  # `tests/distilledApiVersion.test.ts` fails when they differ.
   stripe: 23.0.1
-  # TypeScript 6/7 side-by-side: TS7 (the native Go compiler) ships no JS API
-  # until 7.1, so JS-API consumers (@effect/language-service, tsdown's
-  # declaration bundler, @effect/docgen's peer) stay on TS6 while native `tsc`
-  # type-checks. The alias keeps the package importable as `typescript`
-  # name-stable at the TS6 JS compiler (bin `tsc6`); `@typescript/native` is
-  # TS7 (bin `tsc`). Pinned exact: @typescript/native's gitHead must match
-  # @effect/tsgo's bundled binary.
+  # TypeScript 6 for JS-API consumers (docgen, tsdown's declaration bundler,
+  # the language service); TypeScript 7 (`@typescript/native`, bin `tsc`) for
+  # the type gate, at a version @effect/tsgo supports.
   typescript: "npm:@typescript/typescript6@6.0.2"
   "@typescript/native": "npm:typescript@7.0.2"
-  # vite-plus pins `oxlint`, `oxfmt` and `vitest` to exact versions, so this
-  # entry decides the oxlint version `effect-tsgo patch --oxlint` has to
-  # support (see the @effect/tsgo note above). `vite` is the same release
-  # under its aliased core package, and `vitest` (and
-  # `@vitest/coverage-istanbul`, whose peer is exact) must match vite-plus's
-  # exact pin (1.5.0 → 5.1.0) because the `vitest: "catalog:"` override forces
-  # every resolution to the catalog singleton.
+  # `vite` must equal `vite-plus`; `vitest` and `@vitest/*` follow its exact pin.
   vite-plus: 1.6.0
-  vite: npm:@voidzero-dev/vite-plus-core@1.5.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.6.0
   vitest: 5.1.0
 
-# Peer ranges the PUBLISHED packages declare. Kept as a named catalog so the
-# strict catalog mode still governs them while they stay ranges. `pnpm publish`
-# replaces `catalog:peers` with these ranges in the published manifest.
+# Peer ranges the published packages declare: `^4.0.0` for `effect` unless a
+# package's own dependencies require more.
 catalogs:
   peers:
-    # The peer-range policy: `^4.0.0` for every package, raised per package
-    # only when that package's own dependencies require more (never because
-    # our code wants a newer API: make it work on the floor instead). The
-    # core stays here; the Distilled-based Stripe provider uses
-    # `distilled-peers` below.
     effect: ^4.0.0
-    # Optional (`peerDependenciesMeta`): only the types of the SDK-based
-    # `./Webhook` verifier (`constructEvent*`, which runs on an SDK client the
-    # program builds) name it; no module loads it (effect-finance#146). Caret, not `>=`:
-    # the verifier's `Stripe.Event` is the SDK's type at its API version.
-    # The floor is the first stripe-node release for DISTILLED_API_VERSION
-    # (23.0.0, `2026-09-30.endive`); the caret admits the later monthly endive
-    # releases of the same major, and moves with the next major (effect-finance#160).
+    # Optional: only the webhook verifier's types name it.
     stripe: ^23.0.0
-    # Optional (`peerDependenciesMeta`): only core's `./Authorization` imports
-    # it (#130). Its own `effect` peer is `^4.1.0`; core's `effect` peer stays
-    # `^4.0.0`, since a host without effect-auth is unaffected, and one with it
-    # meets effect-auth's floor through effect-auth's own peer.
+    # Optional: only core's `./Authorization` imports it.
     "@thomasfosterau/effect-auth": ^0.2.0
-    # Optional (`peerDependenciesMeta`) peers of @thomasfosterau/effect-biz-sql:
-    # only its `./testing` (SQLite) and `./testing.postgres` (Postgres)
-    # import them; the rest of the package runs on whichever `SqlClient` the
-    # host provides (D1, libSQL, PGlite, …). Each client's own `effect` peer
-    # is its own version's, met through that client, so the sql package's
-    # `effect` peer stays `^4.0.0` (the `SqlClient.driver` its D1 detection
-    # reads arrived in 4.0.6; below that a D1 layer is named explicitly).
+    # Optional: only the sql package's testing subpaths import them.
     "@effect/sql-pg": ^4.0.0
     "@effect/sql-sqlite-node": ^4.0.0
-  # The Stripe provider's own floor: its runtime dependencies
-  # @distilled.cloud/stripe and -core (1.0.0-rc.16 and later; the pinned
-  # 1.0.0-rc.18) declare `effect: ^4.0.5`. Move it with Distilled's own
-  # peer range, and keep the other packages on `peers`.
+  # The Stripe provider's floor: Distilled declares `effect: ^4.0.5`.
   distilled-peers:
     effect: ^4.0.5
 
 overrides:
-  # undici <8.12.2 — GHSA-xjj6-f33q-929c (high): an unhandled error on a
-  # response with excessive content-encodings is a denial of service
-  # (effect-finance#213). Reached transitively (@effect/platform-node > undici), whose
-  # range admits the fix but whose lockfile resolution stayed below it.
-  # Drop once that resolution reaches >=8.12.2 on its own.
-  undici: ^8.12.2
-  # `effect` MUST be a singleton (see the header): force every resolution to
-  # the catalog version so a hoisting reshuffle cannot introduce a second copy.
+  # `effect` must be a singleton: two copies break Context / Layer / Schema identity.
   effect: "catalog:"
   vite@*: "catalog:"
   vitest@*: "catalog:"
 nodeLinker: hoisted
 allowBuilds:
   esbuild: true
-  # fallow's postinstall links its native binary.
   fallow: true
 peerDependencyRules:
   allowAny:
@@ -204,11 +86,7 @@ peerDependencyRules:
     vite: "*"
     vitest: "*"
 
-# Supply-chain delay (owner's policy, 2026-10-30): hold newly published
-# versions for 8 hours (unit: MINUTES) before pnpm will install them.
-# Dependabot's `cooldown` (whole days only) is 1 day, longer than this, so it
-# never proposes a version pnpm would still refuse.
+# Hold new versions for 8 hours (in minutes) before installing them.
 minimumReleaseAge: 480
 minimumReleaseAgeExclude:
-  # @thomasfosterau/* is first-party — exempt so our own releases install immediately.
   - "@thomasfosterau/*"
