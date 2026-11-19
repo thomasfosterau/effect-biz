@@ -83,7 +83,7 @@ export const stripeCustomerAtVersion = StripeCustomer.retrieve(
     stripeAccount: "acct_123",
   },
 );
-/** An Invoice action the modules did not expose before they re-exported Distilled (effect-finance#142). */
+/** An Invoice action the modules did not expose before they re-exported Distilled. */
 export const stripeInvoicePaid = StripeInvoice.pay("in_123");
 export const stripeCheckoutSession = StripeCheckoutSession.create({
   mode: "payment",
@@ -95,14 +95,13 @@ export const stripePortalSession = StripeBillingPortalSession.create({
   return_url: "https://example.com/account",
 });
 /**
- * A resource module the `stripe` package's types described before effect-finance#146,
- * checked so its emitted `.d.ts` resolves Distilled's type rather than a
+ * A resource module checked so its emitted `.d.ts` resolves Distilled's type rather than a
  * silent `any`: every resource module is Distilled-typed now.
  */
 export const stripeVerificationSession = StripeVerificationSession.retrieve("vs_123");
-/** A namespaced resource module published by effect-finance#154. */
+/** A namespaced resource module. */
 export const stripeBillingMeter = BillingMeter.retrieve("mtr_123");
-/** A `/v2` resource module (effect-finance#154), whose params go out as a JSON body. */
+/** A `/v2` resource module, whose params go out as a JSON body. */
 export const stripeV2Account = V2CoreAccount.retrieve("acct_123", { include: ["identity"] });
 export const event = Webhook.constructEvent("{}", "t=1,v1=sig", "whsec_123");
 

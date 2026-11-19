@@ -8,7 +8,7 @@ export default defineConfig({
       // that no declaration but the webhook verifier's names it
       // (src/declarationsFreeOfSdk.ts), and that only the Stripe resource
       // modules' declarations reach Distilled's generated operations
-      // (src/distilledDeclarations.ts, effect-finance#146). Depends on every package's build so
+      // (src/distilledDeclarations.ts). Depends on every package's build so
       // `vp run check` at the root always exercises fresh `dist/` output.
       check: {
         command:

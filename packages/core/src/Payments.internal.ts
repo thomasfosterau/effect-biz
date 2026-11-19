@@ -1,40 +1,10 @@
 /**
- * Helpers shared by the provider packages in this repository.
+ * Helpers shared by the payments providers in this repository, which may
+ * import nothing else of this workspace.
  *
- * **Internal, and exempt from semver.** This subpath exists only so the
- * providers in this repository can share code, since a provider may import
- * nothing but this package. It is not part of the public API: its exports can
- * change or disappear in any release, minor and patch included. Do not import
- * it from application code.
- *
- * It holds these vendor-neutral pieces:
- *
- * - {@link shareLogin}: one in-flight token login shared by every caller that
- *   needs a token while it runs.
- * - The integer money core: {@link exponentFrom}, {@link scaleToMinor}, {@link parseDecimal},
- *   {@link decimalText}, {@link formatDecimal} and {@link checkMinorUnits}.
- *   Everything is parameterised by a fraction-digit count, so the per-currency
- *   exponent tables and the wire adapters stay in each provider.
- * - The token-login plumbing of an OAuth-style provider: {@link tokenCache},
- *   {@link send} (with {@link networkError} and {@link timedOut}),
- *   {@link timeoutOf}, {@link isAbsoluteHttpUrl} and {@link isOk}. Each takes
- *   the provider's name for its messages; the login request, its response
- *   schema and the vendor error mapping stay in each provider.
- * - The request helpers of a provider built over a generated operation
- *   client: {@link omitUndefined}, {@link checkId}, {@link stringField},
- *   {@link observeResponses} and {@link rejectedError}. None names a vendor or
- *   a client library: each provider keeps its own client wiring, retry and
- *   validation policy, and error classification.
- * - The response handling of a REST provider: {@link responseDecoder} (a
- *   wire body decoded and mapped onto a neutral value), {@link epochSecondsOf}
- *   (an ISO-8601 timestamp as the neutral Unix seconds) and
- *   {@link errorFromStatus} (an HTTP error status as the neutral error). Each
- *   provider keeps its wire schemas, its status spellings and the reading of
- *   its own error body.
- * - The paging of a page-numbered list: {@link pageNumberedList} (a
- *   `startingAfter` cursor as the vendor page to request, and the page's
- *   `nextCursor`). Each provider keeps its first page number, its page
- *   parameters and the filters it refuses.
+ * **Internal, and exempt from semver**: exports can change or disappear in any
+ * release. Do not import it from application code. Nothing here names a
+ * vendor or a client library.
  *
  * @module
  */

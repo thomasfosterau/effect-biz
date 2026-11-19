@@ -1,5 +1,5 @@
 /**
- * Runs every example in `examples/` (effect-finance#127): each file exports its Effect
+ * Runs every example in `examples/`: each file exports its Effect
  * program, and this suite runs it over a stubbed `fetch` answering with canned
  * Stripe responses, then asserts what a reader would see: the requests sent,
  * the result, and the lines printed. `examples covered` fails when a file in

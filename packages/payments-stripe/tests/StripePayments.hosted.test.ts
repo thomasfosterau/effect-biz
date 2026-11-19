@@ -24,9 +24,7 @@ import {
 } from "./support.ts";
 
 /**
- * The hosted-page capabilities (effect-finance#40): Checkout and the Billing Portal. The
- * behavioural spec is gardeneria's `createCheckoutSession` → URL and
- * `createPortalSession`: a price id (never an amount) with quantity 1, the
+ * The hosted-page capabilities, Checkout and the Billing Portal: a price id (never an amount) with quantity 1, the
  * account id carried as subscription metadata, the return URL forwarded, and a
  * 2xx with no URL a failure rather than an invented redirect.
  */

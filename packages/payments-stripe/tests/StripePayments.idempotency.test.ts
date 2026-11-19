@@ -31,7 +31,7 @@ import {
 } from "./support.ts";
 
 /**
- * The neutral `idempotencyKey` (effect-finance#55, closing effect-finance#66) on the create and confirm
+ * The neutral `idempotencyKey` on the create and confirm
  * operations: mapped onto Stripe's `Idempotency-Key`, and a retried write
  * after a lost response is one logical write.
  */
@@ -171,7 +171,7 @@ describe("Stripe maps the neutral idempotencyKey to Idempotency-Key", () => {
 });
 
 layer(Layer.provide(noRetries, FetchHttpClient.layer))(
-  "a retried write after a lost response is one logical write (effect-finance#66)",
+  "a retried write after a lost response is one logical write",
   (it) => {
     const customer = {
       id: "cus_1",

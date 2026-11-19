@@ -1,7 +1,6 @@
 /**
  * The default, WebCrypto webhook verifier (`Webhook.verify`) and the event
- * vocabulary. Ported from gardeneria's `packages/billing/tests/webhook.test.ts`
- * (the behavioural spec), plus the cases the port adds: byte payloads,
+ * vocabulary, including byte payloads,
  * a configurable tolerance, fail-closed tolerance values and the handled-event
  * decoder.
  *

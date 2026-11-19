@@ -5,7 +5,8 @@
  * repository layer shares, on Postgres, SQLite and Cloudflare D1, with
  * in-process test databases in `./testing` (SQLite) and `./testing.postgres`.
  *
- * Each module is its own subpath; this entry point carries only the name.
+ * Each module is also its own subpath; `./testing` and `./testing.postgres`
+ * (optional client peers) are subpath-only.
  * See {@link name} for an example.
  *
  * @module
@@ -22,3 +23,8 @@
  * ```
  */
 export const name = "@thomasfosterau/effect-biz-sql";
+
+export * as Column from "./Column.js";
+export * as Dialect from "./Dialect.js";
+export * as SqlRepository from "./SqlRepository.js";
+export * as SqlUnitOfWork from "./SqlUnitOfWork.js";

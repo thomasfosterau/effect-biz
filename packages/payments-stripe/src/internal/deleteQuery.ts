@@ -1,6 +1,6 @@
 /**
  * A Stripe `DELETE`'s params in the query string, where Distilled sends them
- * as a form body (effect-finance#146). `StripeHttp` maps every request it hands Distilled
+ * as a form body. `StripeHttp` maps every request it hands Distilled
  * through {@link deleteParamsToQuery}.
  *
  * @module

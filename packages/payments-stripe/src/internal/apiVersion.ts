@@ -13,7 +13,7 @@
  * moves its Distilled pin, so create the webhook endpoints whose events a
  * program reads at this version.
  *
- * Where it comes from (owner decision on effect-finance#146: follow Distilled): the
+ * Where it comes from: the
  * `info.version` of `specs/openapi.spec3.sdk.json` in the
  * `packages/stripe/specs/spec-mirror-stripe` submodule at alchemy-run/distilled's
  * release commit (`fa243232` for `1.0.0-rc.18`; until `1.0.0-rc.15`, the

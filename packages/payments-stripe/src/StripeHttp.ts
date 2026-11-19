@@ -1,52 +1,9 @@
 /**
  * The Stripe client every resource module and capability layer runs on:
- * Distilled's generated operations (`@distilled.cloud/stripe`), run under the
- * request policy this package has always applied to Stripe.
- *
- * Distilled builds and sends each request (the bearer key from its
- * `Credentials`, Stripe's bracketed form encoding, the `Idempotency-Key` /
- * `Stripe-Account` / `Stripe-Version` headers from `withRequestOptions`) and
- * reads the response, over `effect/http`'s `HttpClient`: no Node API and no
- * SDK, so it runs in a Cloudflare Worker (with `nodejs_compat`, since
- * Distilled reads `process.env` on every request) — provide
- * `FetchHttpClient.layer` in production, or a stubbed `FetchHttpClient.Fetch`
- * in tests. Around every operation {@link StripeHttp.call}:
- *
- * - **pins `Stripe-Version`** to {@link DISTILLED_API_VERSION}, the version
- *   Distilled's schemas are generated from, unless configured
- *   ({@link StripeHttpConfig.apiVersion}) or overridden for one call
- *   ({@link RequestOptions.apiVersion}). Distilled sends the header only when
- *   asked, and otherwise the account's dashboard default would decide the
- *   wire shape;
- * - **sends a `DELETE`'s params in the query string**, as the Stripe SDKs
- *   do (`Subscription.cancel(id, { invoice_now: true })`), where Distilled
- *   would form-encode them into a body;
- * - **indexes a `/v2` request's array query params**
- *   (`include[0]=a&include[1]=b`), as the SDKs send them, where Distilled
- *   repeats `include[]`;
- * - **pins lenient response validation**, so a response is never refused
- *   over a field nobody reads: Distilled's schemas mark fields required that
- *   a response at an older configured `apiVersion` lacks. The capability
- *   layers decode the fields they map instead; the resource modules return
- *   the response as Stripe sent it;
- * - **owns retries**: Distilled's are switched off, and an attempt that failed
- *   to connect, or answered `409` / `5xx` (as `Stripe-Should-Retry` allows),
- *   is retried with the SDK's backoff, reusing one `Idempotency-Key` across
- *   the attempts of a `POST`, and of a `/v2` `DELETE` (as the SDK keys them);
- * - **times out** each attempt and **refuses redirects**, which would replay
- *   the `Authorization` header to whatever host they named;
- * - **classifies failures** onto the neutral {@link PaymentsError} channel with
- *   the package's one Stripe error mapping. Distilled's error classes carry
- *   neither the HTTP status (which decides 401, 403 and 429 whatever the body
- *   says) nor the whole vendor error object, so the client watches the
- *   response through the `HttpClient` it hands Distilled and classifies that.
- *   A failure with no response behind it is a connection failure
- *   (`PaymentNetworkError`), or a Distilled error mapped to
- *   `PaymentProviderError` by its tag.
- *
- * The key stays a `Redacted` until Distilled sets the header; a connection
- * failure's `cause` is the underlying error, never the request that carries
- * the header.
+ * Distilled's operations over `effect/http`, with `Stripe-Version` pinned,
+ * the SDK's retry policy, per-attempt timeouts, redirects refused and every
+ * failure mapped onto {@link PaymentsError}. See
+ * `docs/payments-stripe/runtime.md` and `configuration.md`.
  *
  * @module
  */
@@ -134,14 +91,13 @@ export interface RequestOptions {
    * Create it once, before the first attempt, and pass the same value on
    * every retry of that write; a fresh key per attempt defeats the
    * deduplication. It is sent on whatever method you pass it to; Stripe is
-   * understood to ignore it on a `GET` and `DELETE` (unverified,
-   * effect-finance#93). An
+   * understood to ignore it on a `GET` and `DELETE` (unverified). An
    * empty key, like an empty `stripeAccount` or `apiVersion`, fails with
    * `PaymentInvalidRequestError` before anything is sent. Without one, a
    * `POST` or a `/v2` `DELETE` that may be retried by the client gets a
    * generated key shared by all of its attempts (which covers the client's
    * retries only, never a caller's). The client sends the value verbatim; Stripe accepts up to 255
-   * characters (unverified, effect-finance#93) and rejects the same key reused with
+   * characters (unverified) and rejects the same key reused with
    * different parameters.
    */
   readonly idempotencyKey?: string;

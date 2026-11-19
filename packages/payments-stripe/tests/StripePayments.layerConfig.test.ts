@@ -21,9 +21,7 @@ import * as StripePayments from "../src/StripePayments.ts";
 import { jsonResponse, stubFetch } from "./support.ts";
 
 /**
- * The "not configured ≡ down" posture (effect-finance#42). The behavioural spec is
- * gardeneria's `stripeStubLayer` / call-time `STRIPE_SECRET_KEY` read: with no
- * key the layer still builds, every call fails with the same typed
+ * The "not configured ≡ down" posture: with no key the layer still builds, every call fails with the same typed
  * "unavailable" failure (a 503 to an HTTP API), and the key is read on each
  * call, so a key configured later is picked up without rebuilding anything.
  */

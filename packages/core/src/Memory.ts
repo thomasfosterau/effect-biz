@@ -10,7 +10,7 @@
  * `UnitOfWork.transaction`'s batch (or committed at once outside one). A
  * batch commits in one `Effect.tx`, so its writes to several stores apply
  * all or none, and of two writes from the same version exactly one commits
- * (the shape every command has, #128). {@link Log} is an append-only
+ * (the shape every command has). {@link Log} is an append-only
  * companion store, the shape of an outbox. Reads see committed rows only:
  * a transaction does not read its own staged writes. {@link repository}
  * builds a whole `Repository.Port` from a store; a domain package adds its

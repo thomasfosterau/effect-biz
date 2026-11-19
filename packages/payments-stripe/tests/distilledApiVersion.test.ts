@@ -15,8 +15,7 @@ import { DISTILLED_API_VERSION } from "../src/StripePayments.ts";
 
 /**
  * The capability layers pin `Stripe-Version` to the API version the pinned
- * Distilled release is generated from (owner decision on effect-finance#146: follow
- * Distilled). Distilled exposes no such constant, so this table records it
+ * Distilled release is generated from. Distilled exposes no such constant, so this table records it
  * per release: the `version` of the `com.stripe.api#Stripe` service in
  * `packages/stripe/.generated-specs/stripe.json` at the release's commit in
  * alchemy-run/distilled (`063c844c` for `1.0.0-rc.15`). From `1.0.0-rc.18` the
@@ -63,7 +62,7 @@ describe("DISTILLED_API_VERSION", () => {
 
   // The optional `stripe` peer types `Webhook.constructEvent*`'s `Stripe.Event`
   // at the SDK's own API version, so the dev pin (`catalog:` in
-  // pnpm-workspace.yaml) follows DISTILLED_API_VERSION too (effect-finance#160): on a
+  // pnpm-workspace.yaml) follows DISTILLED_API_VERSION too: on a
   // Distilled bump, move it, and the `catalogs.peers` range, to the stripe-node
   // release for the new version.
   it("is the API version of the installed stripe SDK", () => {
