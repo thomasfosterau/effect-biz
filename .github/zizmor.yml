@@ -7,3 +7,8 @@ rules:
     ignore:
       # The Changesets action pushes the version branch with the job-scoped token.
       - release.yml
+  unpinned-uses:
+    config:
+      # Exact tags, locked to commits by .github/workflows/actions.lock.
+      policies:
+        "*": ref-pin

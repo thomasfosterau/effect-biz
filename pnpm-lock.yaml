@@ -109,9 +109,6 @@ importers:
       '@thomasfosterau/effect-biz-payments-stripe':
         specifier: workspace:*
         version: link:packages/payments-stripe
-      '@thomasfosterau/effect-biz-sql':
-        specifier: workspace:*
-        version: link:packages/sql
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6

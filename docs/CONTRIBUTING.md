@@ -68,4 +68,4 @@ Every external version is in the `pnpm-workspace.yaml` catalog. After editing it
 
 ## Adding a package
 
-Add a row to the root README's package table, an `AGENTS.md` (and a `CLAUDE.md` holding `@AGENTS.md`), a `docgen.json`, its name in the `packages` list of the root `vite.config.ts`, its reference in the root `tsconfig.json`, a `workspace:*` devDependency in the root `package.json`, and a boundary zone and rule in `.fallowrc.json`.
+Add a row to the root README's package table, an `AGENTS.md` (and a `CLAUDE.md` holding `@AGENTS.md`), a `docgen.json`, its name in the `packages` list of the root `vite.config.ts`, its reference in the root `tsconfig.json`, and a boundary zone and rule in `.fallowrc.json`.
