@@ -9,3 +9,7 @@ Read [README.md](README.md) and [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) fir
 - **Don't hand-edit the Stripe resource modules** (`packages/payments-stripe/src/<Resource>.ts`): they are generated, and a test fails when they differ from the generator's output.
 - **`vp run docgen` runs every example**, in doc comments, READMEs and `docs/<package>/` guides, against `dist/`: each must be complete and hermetic.
 - **`"sideEffects": false`** is a claim about `dist/`: no top-level statements with effects.
+
+## Fallow
+
+The `fallow` agent skill is linked into `.claude/skills/` from the installed `fallow` package after `vp install`; repository-specific rules (the pre-commit audit, tracing before deleting) are in docs/CONTRIBUTING.md.
