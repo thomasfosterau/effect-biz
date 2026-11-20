@@ -41,7 +41,7 @@ jobs:
     permissions:
       contents: write # the version commit, tags and the Version Packages branch
       pull-requests: write # open/update the Version Packages PR
-      id-token: write # npm trusted publishing
+      id-token: write # npm trusted publishing, done by `pnpm publish`
     env:
       # Otherwise pnpm re-installs with scripts before the first `pnpm run`,
       # undoing --ignore-scripts below.
