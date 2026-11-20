@@ -13,9 +13,9 @@ catalog:
   # Pre-1.0, so exact. Its schemas follow one Stripe API version
   # (DISTILLED_API_VERSION); a bump also regenerates the Stripe resource
   # modules (`generate:resources`), and the tests fail until it does.
-  "@distilled.cloud/stripe": 1.0.0-rc.18
+  "@distilled.cloud/stripe": 1.0.0-rc.20
   # Must equal the version @distilled.cloud/stripe pins, or two copies install.
-  "@distilled.cloud/core": 1.0.0-rc.18
+  "@distilled.cloud/core": 1.0.0-rc.20
   # Exact: it depends on `effect ^<its version>`, which the singleton
   # override below must satisfy.
   "@effect/docgen": 4.1.4
@@ -42,7 +42,7 @@ catalog:
   # Dev only (an optional peer for the SDK-based webhook verifier's types).
   # Exact, at the release whose API version is DISTILLED_API_VERSION;
   # `tests/distilledApiVersion.test.ts` fails when they differ.
-  stripe: 23.0.1
+  stripe: 23.1.0
   # TypeScript 6 for JS-API consumers (docgen, tsdown's declaration bundler,
   # the language service); TypeScript 7 (`@typescript/native`, bin `tsc`) for
   # the type gate, at a version @effect/tsgo supports.
@@ -59,7 +59,7 @@ catalogs:
   peers:
     effect: ^4.0.0
     # Optional: only the webhook verifier's types name it.
-    stripe: ^23.0.0
+    stripe: ^23.1.0
     # Optional: only core's `./Authorization` imports it.
     "@thomasfosterau/effect-auth": ^0.2.0
     # Optional: only the sql package's testing subpaths import them.

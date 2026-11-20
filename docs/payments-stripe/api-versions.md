@@ -2,7 +2,7 @@
 
 The `Stripe-Version` every request pins, and how to override it.
 
-Every request, from a capability layer or a resource module, pins `Stripe-Version` to `DISTILLED_API_VERSION` (exported by `StripePayments` and `StripeHttp`), **`2026-09-30.endive`**: the version `@distilled.cloud/stripe` `1.0.0-rc.18`'s schemas are generated from. It follows Distilled, so a release of this package that moves the Distilled pin moves it too, and its changelog says so. An explicit `apiVersion` passed to `layer` or `layerConfig` wins, and a resource-module call can override both (`RequestOptions.apiVersion`).
+Every request, from a capability layer or a resource module, pins `Stripe-Version` to `DISTILLED_API_VERSION` (exported by `StripePayments` and `StripeHttp`), **`2026-10-28.endive`**: the version `@distilled.cloud/stripe` `1.0.0-rc.20`'s schemas are generated from. It follows Distilled, so a release of this package that moves the Distilled pin moves it too, and its changelog says so. An explicit `apiVersion` passed to `layer` or `layerConfig` wins, and a resource-module call can override both (`RequestOptions.apiVersion`).
 
 Stripe delivers a webhook event at the receiving endpoint's API version (or the account default), not at this one. Create the endpoints whose events you read at `DISTILLED_API_VERSION`, and keep any code of yours that reads Stripe's JSON directly (event payloads) on the same version.
 
