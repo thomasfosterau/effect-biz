@@ -41,7 +41,7 @@ jobs:
     permissions:
       contents: write # the version commit, tags and the Version Packages branch
       pull-requests: write # open/update the Version Packages PR
-      id-token: write # npm trusted publishing, done by `pnpm publish`
+      id-token: write # npm trusted publishing, done by `vp pm publish` (pnpm)
     env:
       # Otherwise pnpm re-installs with scripts before the first `pnpm run`,
       # undoing --ignore-scripts below.
@@ -65,7 +65,9 @@ jobs:
         uses: changesets/action@v2.1.2
         with:
           version-script: pnpm run version
-          publish-script: pnpm run release
+          # `vp run release` (vite.config.ts): builds, `vp pm publish -r`, then
+          # `changeset git-tag` reports the new tags through CHANGESETS_OUTPUT.
+          publish-script: vp run release
           commit-message: "chore: version packages"
           pr-title: "chore: version packages"
         env:

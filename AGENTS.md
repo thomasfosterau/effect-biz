@@ -8,6 +8,7 @@ Read [README.md](README.md) and [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) fir
 - **Money is exact.** Never a JavaScript `number` for an amount, quantity, price or rate.
 - **Don't hand-edit the Stripe resource modules** (`packages/payments-stripe/src/<Resource>.ts`): they are generated, and a test fails when they differ from the generator's output.
 - **`vp run docgen` runs every example**, in doc comments, READMEs and `docs/<package>/` guides, against `dist/`: each must be complete and hermetic.
+- **Publish only through the Release workflow** (`vp run release`: `vp pm publish -r`, then `changeset git-tag`). Release-path registry calls go through `vp pm`, never `npm` / `pnpm` directly.
 - **`"sideEffects": false`** is a claim about `dist/`: no top-level statements with effects.
 
 ## Fallow
