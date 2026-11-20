@@ -32,7 +32,7 @@ catalog:
   "@effect/tsgo": 0.69.0
   "@enfect/oxlint": ^0.10.0
   # Exact while pre-1.0; an optional peer of core's `./Authorization`.
-  "@thomasfosterau/effect-auth": 0.5.2
+  "@thomasfosterau/effect-auth": 0.7.0
   "@types/node": ^26.6.6
   "@vitest/coverage-istanbul": 5.1.0
   effect: 4.1.4
