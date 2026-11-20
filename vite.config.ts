@@ -303,11 +303,12 @@ export default defineConfig({
       },
       // The CI typecheck gate, as one task: every package's `check`, plus the
       // dist-consumer check that type-checks a consumer fixture against the
-      // EMITTED declarations. A pure graph node. The packages are named explicitly — a
+      // EMITTED declarations, then the root configs (tsconfig.config.json), which
+      // no package covers. The packages are named explicitly — a
       // `from: "dependencies"` edge does not traverse the workspace root's own
       // devDependencies.
       check: {
-        command: "echo 'check: every type gate green'",
+        command: "tsc -p tsconfig.config.json",
         dependsOn: [...packages.map((name) => `${name}#check`), "@effect-biz/dist-consumer#check"],
         cache: false,
       },
