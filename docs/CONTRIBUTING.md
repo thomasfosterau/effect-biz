@@ -57,7 +57,7 @@ Say in the PR body which gates couldn't run. CI ([ci.yml](../.github/workflows/c
 
 ## Changesets
 
-Every change to a published package's behaviour carries a changeset (`vp exec changeset`); docs-, CI- and tooling-only changes need none. A doc-comment change that reaches the emitted `.d.ts` is a `patch`. All packages version together (one `fixed` group). Never version or publish by hand: the Release workflow opens the "Version Packages" PR and the owner merges it ([PUBLISHING.md](PUBLISHING.md)).
+Every change to a published package's behaviour carries a changeset (`vp exec changeset`); docs-, CI- and tooling-only changes need none. A doc-comment change that reaches the emitted `.d.ts` is a `patch`. All packages version together (one `fixed` group). Never version or publish by hand: the Release workflow opens the "Version Packages" PR, the owner merges it, and the workflow publishes with `vp run release` (`vp pm publish -r`, then `changeset git-tag`; there is no publish script). `vp run release:dry-run` shows what it would publish ([PUBLISHING.md](PUBLISHING.md)).
 
 ## Dependencies
 
