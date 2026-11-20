@@ -1187,9 +1187,7 @@ const epochMillis = (iso: string): number => DateTime.toEpochMillis(DateTime.mak
 
 /** Runs `self` on a `TestClock` of its own, whatever clock the runner provides. */
 const onTestClock = <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
-  Effect.scoped(
-    Effect.flatMap(TestClock.make(), (clock) => Effect.provideService(self, Clock.Clock, clock)),
-  );
+  Effect.scoped(Effect.provideServiceEffect(self, Clock.Clock, TestClock.make()));
 
 const numberingCases = (): ReadonlyArray<readonly [string, NumberingBody]> => [
   [
