@@ -28,7 +28,7 @@ import basilSubscription from "./fixtures/basil/subscription.json" with { type: 
 
 /**
  * Responses at the API version every request now pins
- * (`DISTILLED_API_VERSION`, `2026-09-30.endive`). The fixtures under
+ * (`DISTILLED_API_VERSION`, `2026-10-28.endive`). The fixtures under
  * `fixtures/endive/` are the basil ones with the members endive's schemas
  * require added (among them the subscription's
  * `cancellation_details.feedback_option`, `items.data[].current_trial` and

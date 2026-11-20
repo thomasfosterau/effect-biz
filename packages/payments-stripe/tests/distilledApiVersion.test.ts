@@ -21,9 +21,13 @@ import { DISTILLED_API_VERSION } from "../src/StripePayments.ts";
  * alchemy-run/distilled (`063c844c` for `1.0.0-rc.15`). From `1.0.0-rc.18` the
  * spec is the `info.version` of `specs/openapi.spec3.sdk.json` in the
  * `packages/stripe/specs/spec-mirror-stripe` submodule at the release commit
- * (`fa243232`, submodule `e89a05bc`).
+ * (`fa243232`, submodule `e89a05bc`, for `1.0.0-rc.18`; `76335549`, submodule
+ * `30df269f`, for `1.0.0-rc.20`).
  */
-const FOLLOWED = HashMap.make(["1.0.0-rc.18", "2026-09-30.endive"]);
+const FOLLOWED = HashMap.make(
+  ["1.0.0-rc.18", "2026-09-30.endive"],
+  ["1.0.0-rc.20", "2026-10-28.endive"],
+);
 
 const Manifest = Schema.Struct({
   name: Schema.Literal("@distilled.cloud/stripe"),

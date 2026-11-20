@@ -207,6 +207,54 @@ export const RESOURCES: ReadonlyArray<Resource> = [
   { subpath: "V2.Core.AccountToken", paths: ["/v2/core/account_tokens"] },
   { subpath: "V2.Core.Event", paths: ["/v2/core/events"] },
   { subpath: "V2.Core.EventDestination", paths: ["/v2/core/event_destinations"] },
+  { subpath: "V2.Core.Vault.GbBankAccount", paths: ["/v2/core/vault/gb_bank_accounts"] },
+  { subpath: "V2.Core.Vault.UsBankAccount", paths: ["/v2/core/vault/us_bank_accounts"] },
+  { subpath: "V2.MoneyManagement.Adjustment", paths: ["/v2/money_management/adjustments"] },
+  {
+    subpath: "V2.MoneyManagement.FinancialAccount",
+    paths: ["/v2/money_management/financial_accounts"],
+  },
+  {
+    subpath: "V2.MoneyManagement.FinancialAddress",
+    paths: [
+      "/v2/money_management/financial_addresses",
+      "/v2/money_management/test_helpers/financial_addresses",
+    ],
+  },
+  {
+    subpath: "V2.MoneyManagement.InboundTransfer",
+    paths: ["/v2/money_management/inbound_transfers"],
+  },
+  {
+    subpath: "V2.MoneyManagement.OutboundPayment",
+    paths: ["/v2/money_management/outbound_payments"],
+  },
+  {
+    subpath: "V2.MoneyManagement.OutboundSetupIntent",
+    paths: ["/v2/money_management/outbound_setup_intents"],
+  },
+  { subpath: "V2.MoneyManagement.PayoutIntent", paths: ["/v2/money_management/payout_intents"] },
+  { subpath: "V2.MoneyManagement.PayoutMethod", paths: ["/v2/money_management/payout_methods"] },
+  {
+    subpath: "V2.MoneyManagement.PayoutMethodsBankAccountSpec",
+    paths: ["/v2/money_management/payout_methods_bank_account_spec"],
+  },
+  {
+    subpath: "V2.MoneyManagement.ReceivedCredit",
+    paths: ["/v2/money_management/received_credits"],
+  },
+  {
+    subpath: "V2.MoneyManagement.RecipientVerification",
+    paths: [
+      "/v2/money_management/recipient_verifications",
+      "/v2/test_helpers/money_management/recipient_verifications",
+    ],
+  },
+  { subpath: "V2.MoneyManagement.Transaction", paths: ["/v2/money_management/transactions"] },
+  {
+    subpath: "V2.MoneyManagement.TransactionEntry",
+    paths: ["/v2/money_management/transaction_entries"],
+  },
   { subpath: "WebhookEndpoint", paths: ["/v1/webhook_endpoints"] },
 ];
 
@@ -272,6 +320,10 @@ export const OVERRIDES = {
   GetCreditNotesPreviewLines: { name: "listPreviewLines" },
   // `DELETE /v1/subscriptions/{id}` cancels; the module has always called it `cancel`.
   DeleteSubscription: { name: "cancel" },
+  // `/v2` test helpers sit under the resource's own path or under
+  // `/v2/test_helpers/…`; either way they take the `testHelpers` prefix.
+  CreateMoneyManagementTestHelpersFinancialAddressCredit: { name: "testHelpersCredit" },
+  CreateTestHelpersMoneyManagementRecipientVerification: { name: "testHelpersCreate" },
 } satisfies Overrides;
 
 /** Retyped members by Distilled operation name, then member name: the member's type. */

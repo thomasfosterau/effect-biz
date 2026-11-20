@@ -570,6 +570,66 @@
       "types": "./dist/V2.Core.EventDestination.d.ts",
       "default": "./dist/V2.Core.EventDestination.js"
     },
+    "./V2.Core.Vault.GbBankAccount": {
+      "types": "./dist/V2.Core.Vault.GbBankAccount.d.ts",
+      "default": "./dist/V2.Core.Vault.GbBankAccount.js"
+    },
+    "./V2.Core.Vault.UsBankAccount": {
+      "types": "./dist/V2.Core.Vault.UsBankAccount.d.ts",
+      "default": "./dist/V2.Core.Vault.UsBankAccount.js"
+    },
+    "./V2.MoneyManagement.Adjustment": {
+      "types": "./dist/V2.MoneyManagement.Adjustment.d.ts",
+      "default": "./dist/V2.MoneyManagement.Adjustment.js"
+    },
+    "./V2.MoneyManagement.FinancialAccount": {
+      "types": "./dist/V2.MoneyManagement.FinancialAccount.d.ts",
+      "default": "./dist/V2.MoneyManagement.FinancialAccount.js"
+    },
+    "./V2.MoneyManagement.FinancialAddress": {
+      "types": "./dist/V2.MoneyManagement.FinancialAddress.d.ts",
+      "default": "./dist/V2.MoneyManagement.FinancialAddress.js"
+    },
+    "./V2.MoneyManagement.InboundTransfer": {
+      "types": "./dist/V2.MoneyManagement.InboundTransfer.d.ts",
+      "default": "./dist/V2.MoneyManagement.InboundTransfer.js"
+    },
+    "./V2.MoneyManagement.OutboundPayment": {
+      "types": "./dist/V2.MoneyManagement.OutboundPayment.d.ts",
+      "default": "./dist/V2.MoneyManagement.OutboundPayment.js"
+    },
+    "./V2.MoneyManagement.OutboundSetupIntent": {
+      "types": "./dist/V2.MoneyManagement.OutboundSetupIntent.d.ts",
+      "default": "./dist/V2.MoneyManagement.OutboundSetupIntent.js"
+    },
+    "./V2.MoneyManagement.PayoutIntent": {
+      "types": "./dist/V2.MoneyManagement.PayoutIntent.d.ts",
+      "default": "./dist/V2.MoneyManagement.PayoutIntent.js"
+    },
+    "./V2.MoneyManagement.PayoutMethod": {
+      "types": "./dist/V2.MoneyManagement.PayoutMethod.d.ts",
+      "default": "./dist/V2.MoneyManagement.PayoutMethod.js"
+    },
+    "./V2.MoneyManagement.PayoutMethodsBankAccountSpec": {
+      "types": "./dist/V2.MoneyManagement.PayoutMethodsBankAccountSpec.d.ts",
+      "default": "./dist/V2.MoneyManagement.PayoutMethodsBankAccountSpec.js"
+    },
+    "./V2.MoneyManagement.ReceivedCredit": {
+      "types": "./dist/V2.MoneyManagement.ReceivedCredit.d.ts",
+      "default": "./dist/V2.MoneyManagement.ReceivedCredit.js"
+    },
+    "./V2.MoneyManagement.RecipientVerification": {
+      "types": "./dist/V2.MoneyManagement.RecipientVerification.d.ts",
+      "default": "./dist/V2.MoneyManagement.RecipientVerification.js"
+    },
+    "./V2.MoneyManagement.Transaction": {
+      "types": "./dist/V2.MoneyManagement.Transaction.d.ts",
+      "default": "./dist/V2.MoneyManagement.Transaction.js"
+    },
+    "./V2.MoneyManagement.TransactionEntry": {
+      "types": "./dist/V2.MoneyManagement.TransactionEntry.d.ts",
+      "default": "./dist/V2.MoneyManagement.TransactionEntry.js"
+    },
     "./Webhook": {
       "types": "./dist/Webhook.d.ts",
       "default": "./dist/Webhook.js"

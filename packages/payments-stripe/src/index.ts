@@ -166,6 +166,21 @@ export * as V2CoreAccountPersonToken from "./V2.Core.AccountPersonToken.js";
 export * as V2CoreAccountToken from "./V2.Core.AccountToken.js";
 export * as V2CoreEvent from "./V2.Core.Event.js";
 export * as V2CoreEventDestination from "./V2.Core.EventDestination.js";
+export * as V2CoreVaultGbBankAccount from "./V2.Core.Vault.GbBankAccount.js";
+export * as V2CoreVaultUsBankAccount from "./V2.Core.Vault.UsBankAccount.js";
+export * as V2MoneyManagementAdjustment from "./V2.MoneyManagement.Adjustment.js";
+export * as V2MoneyManagementFinancialAccount from "./V2.MoneyManagement.FinancialAccount.js";
+export * as V2MoneyManagementFinancialAddress from "./V2.MoneyManagement.FinancialAddress.js";
+export * as V2MoneyManagementInboundTransfer from "./V2.MoneyManagement.InboundTransfer.js";
+export * as V2MoneyManagementOutboundPayment from "./V2.MoneyManagement.OutboundPayment.js";
+export * as V2MoneyManagementOutboundSetupIntent from "./V2.MoneyManagement.OutboundSetupIntent.js";
+export * as V2MoneyManagementPayoutIntent from "./V2.MoneyManagement.PayoutIntent.js";
+export * as V2MoneyManagementPayoutMethod from "./V2.MoneyManagement.PayoutMethod.js";
+export * as V2MoneyManagementPayoutMethodsBankAccountSpec from "./V2.MoneyManagement.PayoutMethodsBankAccountSpec.js";
+export * as V2MoneyManagementReceivedCredit from "./V2.MoneyManagement.ReceivedCredit.js";
+export * as V2MoneyManagementRecipientVerification from "./V2.MoneyManagement.RecipientVerification.js";
+export * as V2MoneyManagementTransaction from "./V2.MoneyManagement.Transaction.js";
+export * as V2MoneyManagementTransactionEntry from "./V2.MoneyManagement.TransactionEntry.js";
 export * as Webhook from "./Webhook.js";
 
 /** Every failure of a Stripe call: the neutral `PaymentsError` channel. */

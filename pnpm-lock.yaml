@@ -58,8 +58,8 @@ catalogs:
       specifier: 3.43.1
       version: 3.43.1
     stripe:
-      specifier: 23.0.1
-      version: 23.0.1
+      specifier: 23.1.0
+      version: 23.1.0
     tsx:
       specifier: ^4.23.15
       version: 4.23.15
@@ -199,7 +199,7 @@ importers:
         version: 4.1.4
       stripe:
         specifier: 'catalog:'
-        version: 23.0.1(@types/node@26.6.6)
+        version: 23.1.0(@types/node@26.6.6)
       vitest:
         specifier: 'catalog:'
         version: 5.1.0(@types/node@26.6.6)(@vitest/browser-preview@5.1.0)(@vitest/coverage-istanbul@5.1.0)(@vitest/ui@5.1.0)(@voidzero-dev/vite-plus-core@1.6.0(@types/node@26.6.6)(@typescript/typescript6@6.0.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
@@ -245,7 +245,7 @@ importers:
         version: 4.1.4
       stripe:
         specifier: 'catalog:'
-        version: 23.0.1(@types/node@26.6.6)
+        version: 23.1.0(@types/node@26.6.6)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -2127,8 +2127,8 @@ packages:
     resolution: {integrity: sha512-p9LsUieSjWNNAxVCXLeilaDlmuUOrDS5/dF9znM1nZc7EGX5+zEFC0bEevsNIaldjlks+2jns5Siz6F9iK6jwA==}
     engines: {node: '>=0.10.0'}
 
-  stripe@23.0.1:
-    resolution: {integrity: sha512-VFLs9IAzSZ8GIm6/vqhjqOL0fbYrSNYCpgZ3LS3YkSi/i5RnyMpu/Hf9YxPTOCYwc3mZKU3IJvuvKffQH2NLMg==}
+  stripe@23.1.0:
+    resolution: {integrity: sha512-fVUfMSfTPoukfoV//MUKAx2+YxyKmYaYtnAL9VkfnHfaPNQylFdWZMD+zgUFerI8rjbaiER8Vzj2XEUQ2AhAsQ==}
     engines: {node: '>=20'}
     peerDependencies:
       '@types/node': '>=20'
@@ -3795,7 +3795,7 @@ snapshots:
 
   strip-color@0.1.0: {}
 
-  stripe@23.0.1(@types/node@26.6.6):
+  stripe@23.1.0(@types/node@26.6.6):
     optionalDependencies:
       '@types/node': 26.6.6
 
