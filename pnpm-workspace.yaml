@@ -29,12 +29,12 @@ catalog:
   # fails `vp install` on any version it has no build for: read the
   # `components` table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs
   # before moving it, `@typescript/native` or `vite-plus`.
-  "@effect/tsgo": 0.69.0
+  "@effect/tsgo": 0.70.0
   "@enfect/oxlint": ^0.10.0
   # Exact while pre-1.0; an optional peer of core's `./Authorization`.
   "@thomasfosterau/effect-auth": 0.5.2
   "@types/node": ^26.6.6
-  "@vitest/coverage-istanbul": 5.1.0
+  "@vitest/coverage-istanbul": 5.1.1
   effect: 4.1.4
   fallow: 3.43.2
   # Only because @effect/docgen requires it as a peer.
@@ -49,9 +49,9 @@ catalog:
   typescript: "npm:@typescript/typescript6@6.0.2"
   "@typescript/native": "npm:typescript@7.0.2"
   # `vite` must equal `vite-plus`; `vitest` and `@vitest/*` follow its exact pin.
-  vite-plus: 1.6.0
+  vite-plus: 1.7.0
   vite: npm:@voidzero-dev/vite-plus-core@1.6.0
-  vitest: 5.1.0
+  vitest: 5.1.1
 
 # Peer ranges the published packages declare: `^4.0.0` for `effect` unless a
 # package's own dependencies require more.
