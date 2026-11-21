@@ -61,7 +61,7 @@ Every change to a published package's behaviour carries a changeset (`vp exec ch
 
 ## Dependencies
 
-Every external version is in the `pnpm-workspace.yaml` catalog. After editing it, run `vp install` and commit `pnpm-lock.yaml`. On Dependabot's grouped PRs, by hand:
+Every external version is in the `pnpm-workspace.yaml` catalog. After editing it, run `vp install` and commit `pnpm-lock.yaml`. Dependabot groups the sets that must move together, but can't make these moves: make them in a PR from a new branch started from its PR's head (never push to a `dependabot/*` branch, which stops it rebasing), and Dependabot closes its own PR once yours merges.
 
 - **Toolchain** (`vite-plus`): `vp dlx --package=vite-plus@<v> vp migrate --no-interactive` re-pins `vite` and `vitest`; drop any `minimumReleaseAgeExclude` entries it adds, and bump the Dev Container image tag. `typescript` / `@typescript/native` move only with an `@effect/tsgo` that supports them.
 - **Distilled**: regenerate the Stripe resource modules (`generate:resources`) and move `stripe` and `DISTILLED_API_VERSION` to the new Stripe API version; the tests fail until all three agree.
