@@ -120,9 +120,7 @@ describe("shareLogin", () => {
         // replay the stale error instead of logging in afresh.
         const waiter = yield* fork(
           Effect.flip(getToken).pipe(
-            Effect.flatMap((first) =>
-              Effect.map(Effect.exit(getToken), (second) => ({ first, second })),
-            ),
+            Effect.zipWith(Effect.exit(getToken), (first, second) => ({ first, second })),
           ),
         );
         yield* settle;

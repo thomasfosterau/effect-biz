@@ -25,11 +25,11 @@ catalog:
   "@effect/sql-pg": 4.1.4
   "@effect/sql-sqlite-node": 4.1.4
   "@effect/vitest": 4.1.4
-  # Patches the native `tsc` and vite-plus's oxlint / oxlint-tsgolint, and
+  # Patches the native `tsc` and vite-plus's oxlint / tsrs, and
   # fails `vp install` on any version it has no build for: read the
   # `components` table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs
   # before moving it, `@typescript/native` or `vite-plus`.
-  "@effect/tsgo": 0.69.0
+  "@effect/tsgo": 0.73.2
   "@enfect/oxlint": ^0.10.0
   # Exact while pre-1.0; an optional peer of core's `./Authorization`.
   "@thomasfosterau/effect-auth": 0.7.0
@@ -48,9 +48,10 @@ catalog:
   # the type gate, at a version @effect/tsgo supports.
   typescript: "npm:@typescript/typescript6@6.0.2"
   "@typescript/native": "npm:typescript@7.0.2"
-  # `vite` must equal `vite-plus`; `vitest` and `@vitest/*` follow its exact pin.
-  vite-plus: 1.6.0
-  vite: npm:@voidzero-dev/vite-plus-core@1.6.0
+  # `vite`, `vitest` and `@vitest/*` equal what vite-plus itself depends on
+  # (`npm view vite-plus@<v> dependencies`); `vite` no longer equals vite-plus.
+  vite-plus: 1.7.0
+  vite: npm:@voidzero-dev/vite-plus-core@8.3.8000
   vitest: 5.1.0
 
 # Peer ranges the published packages declare: `^4.0.0` for `effect` unless a
@@ -87,14 +88,6 @@ permissions:
     skills: [fallow]
 skills:
   dirs: [.claude/skills]
-peerDependencyRules:
-  allowAny:
-    - vite
-    - vitest
-  allowedVersions:
-    vite: "*"
-    vitest: "*"
-
 # Hold new versions for 24 hours (in minutes) before installing them.
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:

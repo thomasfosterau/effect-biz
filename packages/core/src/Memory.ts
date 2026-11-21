@@ -60,8 +60,8 @@ const rowsOf = <I extends string, A>(
 export const rows = <I extends string, A>(
   store: Store<I, A>,
 ): Effect.Effect<Rows<I, A>, never, Tenancy.TenantContext> =>
-  Effect.flatMap(Tenancy.currentTenant, (tenantId) =>
-    Effect.map(TxRef.get(store.partitions), (partitions) => rowsOf(partitions, tenantId)),
+  Effect.zipWith(Tenancy.currentTenant, TxRef.get(store.partitions), (tenantId, partitions) =>
+    rowsOf(partitions, tenantId),
   );
 
 /** Stages an in-memory write into the open transaction, or commits it at once outside one. */
@@ -149,10 +149,8 @@ export const makeLog = <A>(): Effect.Effect<Log<A>> =>
 export const entries = <A>(
   log: Log<A>,
 ): Effect.Effect<ReadonlyArray<A>, never, Tenancy.TenantContext> =>
-  Effect.flatMap(Tenancy.currentTenant, (tenantId) =>
-    Effect.map(TxRef.get(log.entries), (all) =>
-      Option.getOrElse(HashMap.get(all, tenantId), (): ReadonlyArray<A> => []),
-    ),
+  Effect.zipWith(Tenancy.currentTenant, TxRef.get(log.entries), (tenantId, all) =>
+    Option.getOrElse(HashMap.get(all, tenantId), (): ReadonlyArray<A> => []),
   );
 
 /**

@@ -275,14 +275,16 @@ export default defineConfig({
         },
       },
     ],
-    // Type-aware linting through oxlint-tsgolint (bundled with Vite+, patched
-    // by `effect-tsgo patch --oxlint`). tsgolint reads each file's nearest
+    // Type-aware linting through tsrs (bundled with Vite+, patched by
+    // `effect-tsgo patch --tsrs`). tsrs reads each file's nearest
     // `tsconfig.json`; every package's covers `src` and `tests`. `typeCheck`
-    // also reports compiler diagnostics; `vp run check` (native,
-    // Effect-patched tsc) stays the type gate of record.
+    // stays off: tsrs reports every Effect language-service warning as an
+    // error, which `ignoreEffectWarningsInTscExitCode` can't relax and no
+    // override can scope. `vp run check` (native, Effect-patched tsc) is the
+    // type gate.
     options: {
       typeAware: true,
-      typeCheck: true,
+      typeCheck: false,
     },
     jsPlugins: [
       {
@@ -301,11 +303,12 @@ export default defineConfig({
       },
       // The CI typecheck gate, as one task: every package's `check`, plus the
       // dist-consumer check that type-checks a consumer fixture against the
-      // EMITTED declarations. A pure graph node. The packages are named explicitly — a
+      // EMITTED declarations, then the root configs (tsconfig.config.json), which
+      // no package covers. The packages are named explicitly — a
       // `from: "dependencies"` edge does not traverse the workspace root's own
       // devDependencies.
       check: {
-        command: "echo 'check: every type gate green'",
+        command: "tsc -p tsconfig.config.json",
         dependsOn: [...packages.map((name) => `${name}#check`), "@effect-biz/dist-consumer#check"],
         cache: false,
       },
