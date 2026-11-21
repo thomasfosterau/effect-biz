@@ -36,7 +36,7 @@ catalog:
   "@types/node": ^26.6.6
   "@vitest/coverage-istanbul": 5.1.0
   effect: 4.1.4
-  fallow: 3.43.2
+  fallow: 3.44.0
   # Only because @effect/docgen requires it as a peer.
   tsx: ^4.23.15
   # Dev only (an optional peer for the SDK-based webhook verifier's types).
