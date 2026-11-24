@@ -29,7 +29,7 @@ catalog:
   # fails `vp install` on any version it has no build for: read the
   # `components` table in node_modules/@effect/tsgo/dist/effect-tsgo.cjs
   # before moving it, `@typescript/native` or `vite-plus`.
-  "@effect/tsgo": 0.73.2
+  "@effect/tsgo": 0.73.4
   "@enfect/oxlint": ^0.10.0
   # Exact while pre-1.0; an optional peer of core's `./Authorization`.
   "@thomasfosterau/effect-auth": 0.8.0
