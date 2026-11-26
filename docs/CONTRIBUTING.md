@@ -61,6 +61,8 @@ Every change to a published package's behaviour carries a changeset (`vp exec ch
 
 ## Dependencies
 
+Dependabot ([dependabot.yml](../.github/dependabot.yml)) opens `@thomasfosterau/*` updates daily and every other update weekly, on Wednesday morning Melbourne time: the named runtime sets (`effect` and the like) each in one PR, and every other development dependency in the single `toolchain` group. Security updates skip the schedule and open as soon as an advisory lands, one PR each. Vite+ selects Node.js from `.node-version` and pnpm from `packageManager`; pnpm's own switching is off (`runtimeOnFail` / `pmOnFail`), so one version of each is installed and used.
+
 Every external version is in the `pnpm-workspace.yaml` catalog. After editing it, run `vp install` and commit `pnpm-lock.yaml`. Dependabot groups the sets that must move together, but can't make these moves: make them in a PR from a new branch started from its PR's head (never push to a `dependabot/*` branch, which stops it rebasing), and Dependabot closes its own PR once yours merges.
 
 - **Toolchain** (`vite-plus`): `vp dlx --package=vite-plus@<v> vp migrate --no-interactive` re-pins `vite` and `vitest`; drop any `minimumReleaseAgeExclude` entries it adds, and bump the Dev Container image tag. `typescript` / `@typescript/native` move only with an `@effect/tsgo` that supports them.
