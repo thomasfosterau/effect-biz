@@ -34,7 +34,7 @@ catalog:
   # Exact while pre-1.0; an optional peer of core's `./Authorization`.
   "@thomasfosterau/effect-auth": 0.8.0
   "@types/node": ^26.6.10
-  "@vitest/coverage-istanbul": 5.1.1
+  "@vitest/coverage-istanbul": 5.1.2
   effect: 4.1.5
   fallow: 3.48.0
   # Dev only (an optional peer for the SDK-based webhook verifier's types).
@@ -50,7 +50,7 @@ catalog:
   # (`npm view vite-plus@<v> dependencies`); `vite` no longer equals vite-plus.
   vite-plus: 1.8.0
   vite: npm:@voidzero-dev/vite-plus-core@8.3.8000
-  vitest: 5.1.1
+  vitest: 5.1.2
 
 # Peer ranges the published packages declare: `^4.0.0` for `effect` unless a
 # package's own dependencies require more.
