@@ -160,8 +160,10 @@ export const packageConfig = ({ url, rootReadme = false }: PackageConfigOptions)
         // docgen resolves a flag to an absolute path, then joins it onto the
         // working directory. With `rootReadme`, the root README's blocks are
         // written alongside (a module of their own) and run in the same pass.
+        // docgen runs examples with a `tsx` binary; `scripts/bin/tsx`, first on
+        // PATH, hands them to vpx instead.
         docgen: {
-          command: `docgen && node ../../scripts/readme-examples.ts ${readmes} && DOCGEN_SRC=docs/readme/src DOCGEN_OUT=docs/readme docgen`,
+          command: `PATH="$(cd ../../scripts/bin && pwd):$PATH" sh -c 'docgen && node ../../scripts/readme-examples.ts ${readmes} && DOCGEN_SRC=docs/readme/src DOCGEN_OUT=docs/readme docgen'`,
           dependsOn: ["build"],
           cache: {
             input: [
