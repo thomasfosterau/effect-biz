@@ -219,8 +219,8 @@ catalogs:
       specifier: npm:typescript@7.0.2
       version: 7.0.2
     '@vitest/coverage-istanbul':
-      specifier: 5.1.1
-      version: 5.1.1
+      specifier: 5.1.2
+      version: 5.1.2
     fallow:
       specifier: 3.48.0
       version: 3.48.0
@@ -280,7 +280,7 @@ importers:
         version: typescript@7.0.2
       '@vitest/coverage-istanbul':
         specifier: 'catalog:'
-        version: 5.1.1(vitest@5.1.1)
+        version: 5.1.2(vitest@5.1.1)
       effect:
         specifier: 4.1.5
         version: 4.1.5
@@ -295,10 +295,10 @@ importers:
         version: '@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1)'
       vite-plus:
         specifier: 'catalog:'
-        version: 1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(yaml@2.9.1)
+        version: 1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(yaml@2.9.1)
       vitest:
         specifier: 5.1.1
-        version: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
+        version: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
 
   packages/core:
     devDependencies:
@@ -319,13 +319,13 @@ importers:
         version: 26.6.10
       '@vitest/coverage-istanbul':
         specifier: 'catalog:'
-        version: 5.1.1(vitest@5.1.1)
+        version: 5.1.2(vitest@5.1.1)
       effect:
         specifier: 4.1.5
         version: 4.1.5
       vitest:
         specifier: 5.1.1
-        version: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
+        version: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
 
   packages/payments-stripe:
     dependencies:
@@ -353,7 +353,7 @@ importers:
         version: 26.6.10
       '@vitest/coverage-istanbul':
         specifier: 'catalog:'
-        version: 5.1.1(vitest@5.1.1)
+        version: 5.1.2(vitest@5.1.1)
       effect:
         specifier: 4.1.5
         version: 4.1.5
@@ -362,7 +362,7 @@ importers:
         version: 23.1.0(@types/node@26.6.10)
       vitest:
         specifier: 5.1.1
-        version: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
+        version: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
 
   packages/sql:
     dependencies:
@@ -387,13 +387,13 @@ importers:
         version: 26.6.10
       '@vitest/coverage-istanbul':
         specifier: 'catalog:'
-        version: 5.1.1(vitest@5.1.1)
+        version: 5.1.2(vitest@5.1.1)
       effect:
         specifier: 4.1.5
         version: 4.1.5
       vitest:
         specifier: 5.1.1
-        version: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
+        version: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
 
   tests/dist-consumer:
     dependencies:
@@ -1370,8 +1370,8 @@ packages:
     peerDependencies:
       vitest: 5.1.1
 
-  '@vitest/coverage-istanbul@5.1.1':
-    resolution: {integrity: sha512-bcn7v3+FrcH3E9RwzS7zIGo8RXAQL5n0Eu4B46jVUZGQ1LVoz4VmtAnm3eOvrjLFnv8AMWcfabMFmHdOFxXeIw==}
+  '@vitest/coverage-istanbul@5.1.2':
+    resolution: {integrity: sha512-ce5GR1nKAn3E+YEbkzC0K6QrRSWlKE7qVXmrmlxg6AQZXdpNLALolW2gwJJpRwPeQ6o5jqJaXWz0SGXaw+3Ngw==}
     peerDependencies:
       vitest: 5.1.1
 
@@ -2592,7 +2592,7 @@ snapshots:
   '@effect/vitest@4.1.5(effect@4.1.5)(vitest@5.1.1)':
     dependencies:
       effect: 4.1.5
-      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
+      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
 
   '@emnapi/core@2.0.0-beta.2':
     dependencies:
@@ -3032,7 +3032,7 @@ snapshots:
       '@testing-library/dom': 10.4.2
       '@testing-library/user-event': 14.6.8(@testing-library/dom@10.4.2)
       '@vitest/browser': 5.1.1(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))(vitest@5.1.1)
-      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
+      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -3049,7 +3049,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
+      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
       ws: 8.23.0
     transitivePeerDependencies:
       - bufferutil
@@ -3057,7 +3057,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-istanbul@5.1.1(vitest@5.1.1)':
+  '@vitest/coverage-istanbul@5.1.2(vitest@5.1.1)':
     dependencies:
       '@vitest/istanbul-lib-coverage': 2.1.1
       '@vitest/istanbul-lib-instrument': 2.1.1
@@ -3066,7 +3066,7 @@ snapshots:
       magicast: 0.5.5
       obug: 3.0.0
       tinyrainbow: 3.2.0
-      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
+      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
 
   '@vitest/istanbul-lib-coverage@2.1.1': {}
 
@@ -3119,7 +3119,7 @@ snapshots:
       pathe: 2.0.3
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
+      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
 
   '@vitest/utils@5.1.1':
     dependencies:
@@ -3538,7 +3538,7 @@ snapshots:
 
   obug@3.0.0: {}
 
-  oxfmt@0.79.0(vite-plus@1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(yaml@2.9.1)):
+  oxfmt@0.79.0(vite-plus@1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(yaml@2.9.1)):
     dependencies:
       tinypool: 2.2.0
     optionalDependencies:
@@ -3561,9 +3561,9 @@ snapshots:
       '@oxfmt/binding-win32-arm64-msvc': 0.79.0
       '@oxfmt/binding-win32-ia32-msvc': 0.79.0
       '@oxfmt/binding-win32-x64-msvc': 0.79.0
-      vite-plus: 1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(yaml@2.9.1)
+      vite-plus: 1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(yaml@2.9.1)
 
-  oxlint@1.94.0(vite-plus@1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(yaml@2.9.1)):
+  oxlint@1.94.0(vite-plus@1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(yaml@2.9.1)):
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.94.0
       '@oxlint/binding-android-arm64': 1.94.0
@@ -3584,7 +3584,7 @@ snapshots:
       '@oxlint/binding-win32-arm64-msvc': 1.94.0
       '@oxlint/binding-win32-ia32-msvc': 1.94.0
       '@oxlint/binding-win32-x64-msvc': 1.94.0
-      vite-plus: 1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(yaml@2.9.1)
+      vite-plus: 1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(yaml@2.9.1)
 
   package-manager-detector@1.9.0: {}
 
@@ -3797,7 +3797,7 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  vite-plus@1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(yaml@2.9.1):
+  vite-plus@1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(yaml@2.9.1):
     dependencies:
       '@oxc-project/runtime': 0.159.0
       '@oxc-project/types': 0.159.0
@@ -3809,11 +3809,11 @@ snapshots:
       '@vitest/snapshot': 5.1.1
       '@vitest/spy': 5.1.1
       '@vitest/utils': 5.1.1
-      oxfmt: 0.79.0(vite-plus@1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(yaml@2.9.1))
-      oxlint: 1.94.0(vite-plus@1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(yaml@2.9.1))
+      oxfmt: 0.79.0(vite-plus@1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(yaml@2.9.1))
+      oxlint: 1.94.0(vite-plus@1.8.0(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(yaml@2.9.1))
       tsrs: 7.1.0-beta.tsrs4
       vite: '@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1)'
-      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
+      vitest: 5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
     optionalDependencies:
       '@voidzero-dev/vite-plus-darwin-arm64': 1.8.0
       '@voidzero-dev/vite-plus-darwin-x64': 1.8.0
@@ -3859,7 +3859,7 @@ snapshots:
       - vue-tsc
       - yaml
 
-  vitest@5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.1)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1)):
+  vitest@5.1.1(@types/node@26.6.10)(@vitest/browser-preview@5.1.1)(@vitest/coverage-istanbul@5.1.2)(@vitest/ui@5.1.1)(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.1.1(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))
@@ -3878,7 +3878,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 26.6.10
       '@vitest/browser-preview': 5.1.1(@voidzero-dev/vite-plus-core@8.3.8001(@types/node@26.6.10)(@typescript/typescript6@6.0.2)(yaml@2.9.1))(vitest@5.1.1)
-      '@vitest/coverage-istanbul': 5.1.1(vitest@5.1.1)
+      '@vitest/coverage-istanbul': 5.1.2(vitest@5.1.1)
       '@vitest/ui': 5.1.1(vitest@5.1.1)
     transitivePeerDependencies:
       - msw
