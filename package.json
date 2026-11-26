@@ -25,7 +25,6 @@
     "@vitest/coverage-istanbul": "catalog:",
     "effect": "catalog:",
     "fallow": "catalog:",
-    "tsx": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
