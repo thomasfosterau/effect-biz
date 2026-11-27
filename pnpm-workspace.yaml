@@ -33,7 +33,7 @@ catalog:
   "@enfect/oxlint": ^0.10.0
   # Exact while pre-1.0; an optional peer of core's `./Authorization`.
   "@thomasfosterau/effect-auth": 0.8.0
-  "@types/node": ^26.6.10
+  "@types/node": ^26.6.11
   "@vitest/coverage-istanbul": 5.1.1
   effect: 4.1.5
   fallow: 3.48.0
