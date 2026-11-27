@@ -49,6 +49,11 @@ updates:
       # The SDK's majors and minors follow Distilled's Stripe API version and move by hand with it.
       - dependency-name: "stripe"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # `vite` (aliased to vite-plus-core), `vitest` and `@vitest/*` are pinned
+      # to what `vite-plus` depends on and move by hand with it.
+      - dependency-name: "vite"
+      - dependency-name: "vitest"
+      - dependency-name: "@vitest/*"
     # A dependency joins the first group it matches, so the named sets come
     # first and `toolchain` takes every other development dependency.
     # Production dependencies outside a named set get a PR each.
